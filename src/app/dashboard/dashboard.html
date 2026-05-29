@@ -1,0 +1,140 @@
+<div class="flex flex-col gap-6">
+
+  <!-- SALUDO -->
+  @if (currentUser) {
+  <div>
+    <h2 class="text-2xl font-bold" style="color:#002E42">
+      Hola, {{ currentUser.fullName | firstName }}
+    </h2>
+    <p class="text-sm text-gray-500 mt-1">
+      {{ isAdmin()
+        ? 'Bienvenido al portal de administración de Gestión Integral'
+        : 'Bienvenido al portal de evaluaciones de Gestión Integral' }}
+    </p>
+  </div>
+  }
+
+  <!-- MÓDULOS -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+    @for (module of modules; track module.title) {
+    <div
+      class="relative bg-white rounded-2xl p-6 flex flex-col gap-4
+             shadow-sm border border-gray-100 cursor-pointer
+             transition-all duration-200 hover:-translate-y-1 hover:shadow-md
+             overflow-hidden"
+      [routerLink]="module.route">
+
+      <div class="absolute top-0 left-0 right-0 h-1 rounded-t-2xl"
+           [style.background]="module.accentColor ?? '#00649B'"></div>
+
+      <div class="w-12 h-12 rounded-xl flex items-center justify-center"
+           [style.background]="(module.accentColor ?? '#00649B') + '18'">
+        <i [class]="module.icon" class="text-xl"
+           [style.color]="module.accentColor ?? '#00649B'"></i>
+      </div>
+
+      <div class="flex flex-col gap-1 flex-1">
+        <h3 class="text-lg font-bold leading-tight" style="color:#002E42">
+          {{ module.title }}
+        </h3>
+        <p class="text-sm text-gray-500 leading-relaxed">
+          {{ module.description }}
+        </p>
+      </div>
+
+    </div>
+    }
+  </div>
+
+  <!-- SECCIÓN EXTRA SOLO PARA USUARIOS REGULARES -->
+  @if (!isAdmin()) {
+
+  <!-- Formularios asignados -->
+  <div class="bg-white rounded-2xl border border-[#E6EEF2] shadow-sm overflow-hidden">
+
+    <div class="flex items-center justify-between px-6 py-4 border-b border-[#E6EEF2]">
+      <div>
+        <h3 class="text-base font-semibold text-[#002E42]">
+          Mis formularios asignados
+        </h3>
+        <p class="text-xs text-[#7A96A3] mt-0.5">
+          Formularios pendientes por diligenciar
+        </p>
+      </div>
+      <a routerLink="/formularios"
+         class="text-xs font-semibold text-[#00649B] hover:opacity-70 transition">
+        Ver todos <i class="pi pi-arrow-right text-xs ml-1"></i>
+      </a>
+    </div>
+
+    @if (loadingForms()) {
+    <div class="flex flex-col gap-3 p-6">
+      @for (i of [1,2,3]; track i) {
+      <div class="h-14 rounded-xl bg-gray-50 animate-pulse"></div>
+      }
+    </div>
+    } @else if (myForms().length === 0) {
+    <div class="flex flex-col items-center gap-2 py-10 text-[#7A96A3]">
+      <i class="pi pi-inbox text-4xl opacity-30"></i>
+      <p class="text-sm">No tienes formularios asignados</p>
+    </div>
+    } @else {
+    <div class="flex flex-col">
+      @for (form of myForms().slice(0, 5); track form.code) {
+      <a [routerLink]="['/formularios/details', form.code]"
+         class="flex items-center gap-4 px-6 py-4 border-b border-[#E6EEF2]
+                last:border-none hover:bg-[#F8FAFB] transition cursor-pointer">
+
+        <div class="w-9 h-9 rounded-xl bg-[#00649B]/10 flex items-center
+                    justify-center shrink-0">
+          <i class="pi pi-file-edit text-sm text-[#00649B]"></i>
+        </div>
+
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold text-[#002E42] truncate">
+            {{ form.name }}
+          </p>
+          <p class="text-xs text-[#7A96A3] mt-0.5 font-mono">
+            {{ form.code }}
+          </p>
+        </div>
+
+        <span class="text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0"
+              [style.background]="'#00649B18'"
+              [style.color]="'#00649B'">
+          {{ form.category }}
+        </span>
+
+        <i class="pi pi-chevron-right text-xs text-[#D1DCE2]"></i>
+
+      </a>
+      }
+    </div>
+    }
+
+  </div>
+
+  }
+
+</div>
+
+<!-- MASCOTA -->
+<div class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+
+  @if (mascotaVisible) {
+  <div class="bg-white rounded-xl rounded-tr-none px-3 py-2 shadow-md
+              text-xs font-medium text-center leading-snug max-w-[140px]
+              cursor-pointer transition-all duration-200 hover:shadow-lg"
+       style="color:#002E42"
+       (click)="toggleMascota()">
+    Bienvenido al sistema de evaluaciones de SGI
+    <div class="text-gray-300 text-[10px] mt-1">clic para cerrar</div>
+  </div>
+  }
+
+  <img src="/mascota.png" alt="mascota"
+       class="w-24 h-auto object-contain drop-shadow-lg cursor-pointer
+              transition-transform duration-200 hover:scale-110"
+       (click)="toggleMascota()" />
+
+</div>

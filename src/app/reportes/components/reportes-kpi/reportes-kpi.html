@@ -1,0 +1,43 @@
+<div class="grid grid-cols-4 gap-3">
+
+  <div class="bg-white rounded-xl border border-[#E6EEF2] p-4">
+    <div class="flex items-center justify-between mb-3">
+      <p class="text-xs text-[#7A96A3]">Total respuestas</p>
+      <div class="w-7 h-7 rounded-lg bg-[#E6F1FB] flex items-center justify-center">
+        <i class="pi pi-file-check text-[#0C447C] text-sm"></i>
+      </div>
+    </div>
+    <p class="text-3xl font-medium text-[#002E42]">{{ totalRespuestas }}</p>
+  </div>
+
+  <div class="bg-white rounded-xl border border-[#E6EEF2] p-4">
+    <div class="flex items-center justify-between mb-3">
+      <p class="text-xs text-[#7A96A3]">Usuarios asignados</p>
+      <div class="w-7 h-7 rounded-lg bg-[#E1F5EE] flex items-center justify-center">
+        <i class="pi pi-users text-[#085041] text-sm"></i>
+      </div>
+    </div>
+    <p class="text-3xl font-medium text-[#002E42]">{{ totalAsignados }}</p>
+  </div>
+
+  <div class="bg-white rounded-xl border border-[#E6EEF2] p-4">
+    <div class="flex items-center justify-between mb-3">
+      <p class="text-xs text-[#7A96A3]">Formularios activos</p>
+      <div class="w-7 h-7 rounded-lg bg-[#EEEDFE] flex items-center justify-center">
+        <i class="pi pi-list text-[#3C3489] text-sm"></i>
+      </div>
+    </div>
+    <p class="text-3xl font-medium text-[#002E42]">{{ totalFormularios }}</p>
+  </div>
+
+  <div class="bg-white rounded-xl border border-[#E6EEF2] p-4">
+    <div class="flex items-center justify-between mb-3">
+      <p class="text-xs text-[#7A96A3]">Tasa de respuesta</p>
+      <div class="w-7 h-7 rounded-lg bg-[#FAEEDA] flex items-center justify-center">
+        <i class="pi pi-chart-pie text-[#633806] text-sm"></i>
+      </div>
+    </div>
+    <p class="text-3xl font-medium text-[#002E42]">{{ tasaGlobal }}%</p>
+  </div>
+
+</div>

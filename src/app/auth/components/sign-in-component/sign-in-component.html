@@ -1,0 +1,70 @@
+<div class="login-page">
+  <router-outlet/>
+<p-toast />
+  <!-- FONDO -->
+  <div class="login-bg">
+  </div>
+
+  <!-- CARD -->
+  <div class="login-card">
+    <!-- TÍTULO -->
+    <div class="login-title">
+      <h1>BIENVENIDO A<br>FORMULARIOS DE<br>DESEMPEÑO DE SGI</h1>
+    </div>
+
+    <!-- LOGO -->
+    <div class="login-logo">
+      <!-- Aquí va el logo -->
+      <img src="/logo nuevo.png" alt="fondo" class="logo-img" />
+      <span class="logo-name">Gestion Pharma</span>
+    </div>
+
+    <!-- FORMULARIO -->
+    <form [formGroup]="myForm" (submit)="signIn()">
+      <div class="login-form">
+        <div class="field-group">
+          <p-iconfield>
+            <p-inputicon class="pi pi-user" />
+            <input formControlName="username" pInputText type="text" placeholder="Ingrese su usario"
+              class="login-input" />
+          </p-iconfield>
+          @if (myForm.get('username')?.touched) {
+          <div>
+            @if (myForm.get('username')?.errors) {
+            <small class="error-text">
+              El usuario es obligatorio
+            </small>
+            }
+          </div>
+          }
+        </div>
+
+        <div class="field-group">
+          <p-password formControlName="password" placeholder="Ingrese su contraseña" [feedback]="false"
+            [toggleMask]="true" styleClass="w-full" inputStyleClass="login-input w-full" />
+            @if (myForm.get('password')?.touched) {
+          <div>
+            @if (myForm.get('password')?.errors) {
+            <small class="error-text">
+              la contraseña es obligatoria
+            </small>
+            }
+          </div>
+          }
+        </div>
+
+        <button (submit)="signIn()" pButton label="Iniciar Sesión" class="btn-login"></button>
+      </div>
+    </form>
+
+    <!-- MASCOTA -->
+    <div class="mascota-bubble">
+      <!-- Aquí va la mascota -->
+      <div class="bubble-text">
+        Bienvenido al sistema de evaluaciones de SGI
+      </div>
+      <div class="mascota-placeholder">
+        <img src="/mascota.png" alt="mascota" class="mascota-img" />
+      </div>
+    </div>
+  </div>

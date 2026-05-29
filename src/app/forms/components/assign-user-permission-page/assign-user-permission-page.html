@@ -1,0 +1,141 @@
+<p-dialog header="Asignar acceso al formulario" [modal]="true" [visible]="visible" [style]="{ width: '38rem' }"
+  [draggable]="false" [resizable]="false" [closable]="true" styleClass="rounded-2xl overflow-hidden"
+  (visibleChange)="visibleChange.emit($event)">
+
+  <div class="flex flex-col gap-5 pt-2">
+
+    <!-- DESCRIPCIÓN -->
+    <div>
+      <p class="text-sm text-[#4A6A7A]">
+        Seleccione los usuarios que tendrán acceso al formulario
+      </p>
+    </div>
+
+    <!-- ESTADO VACÍO -->
+    @if (usuarios.length === 0) {
+
+    <div class="flex flex-col items-center justify-center
+               gap-3 py-10 rounded-xl
+               border border-dashed border-[#D1DCE2]
+               bg-[#F8FAFB]">
+
+      <i class="pi pi-users text-4xl text-[#B8C7D1]"></i>
+
+      <div class="text-center">
+
+        <p class="text-sm font-semibold text-[#002E42]">
+          No hay usuarios disponibles
+        </p>
+
+        <p class="text-xs text-[#7A96A3] mt-1">
+          Intente nuevamente más tarde
+        </p>
+
+      </div>
+
+    </div>
+
+    } @else {
+
+    <!-- SELECT -->
+    <div class="flex flex-col gap-2">
+
+      <label class="text-sm font-semibold text-[#002E42]">
+        Usuarios
+      </label>
+      <p-multiSelect [(ngModel)]="selectedUsers" [options]="usuarios" optionLabel="fullName" optionValue="username"
+        placeholder="Seleccionar usuarios" display="chip" [filter]="true" filterBy="fullName,email,username"
+        [showClear]="true" styleClass="w-full" panelStyleClass="rounded-xl overflow-hidden" appendTo="body">
+
+        <!-- ITEM -->
+        <ng-template let-user pTemplate="item">
+
+          <div class="flex items-center gap-3 py-1">
+
+            <!-- Avatar -->
+            <div class="w-9 h-9 rounded-full
+                       bg-[#00649B]/10
+                       text-[#00649B]
+                       text-xs font-bold
+                       flex items-center justify-center">
+
+              {{ user.fullName.charAt(0) }}
+
+            </div>
+
+            <!-- INFO -->
+            <div class="flex flex-col">
+
+              <span class="text-sm font-medium text-[#002E42]">
+                {{ user.fullName }}
+              </span>
+
+              <span class="text-xs text-[#7A96A3]">
+                {{ user.email }}
+              </span>
+
+            </div>
+
+          </div>
+
+        </ng-template>
+
+      </p-multiSelect>
+
+    </div>
+
+    }
+
+    <!-- INFO -->
+    @if (selectedUsers.length > 0) {
+
+    <div class="rounded-xl border border-[#32C6C6]/20
+               bg-[#32C6C6]/5 p-3">
+
+      <p class="text-sm text-[#002E42]">
+
+        <span class="font-semibold">
+          {{ selectedUsers.length }}
+        </span>
+
+        usuario(s) seleccionado(s)
+
+      </p>
+
+    </div>
+
+    }
+
+    <!-- ACTIONS -->
+    <div class="flex justify-end gap-3 pt-4 border-t border-[#E6EEF2]">
+
+      <button type="button" (click)="visibleChange.emit(false)" class="px-4 py-2 rounded-xl
+               border border-[#D1DCE2]
+               text-sm font-medium text-[#4A6A7A]
+               hover:bg-[#F4F7F9]
+               transition cursor-pointer">
+
+        Cancelar
+
+      </button>
+
+      <button type="button" (click)="assignPermissions()" [disabled]="selectedUsers.length === 0" class="px-5 py-2 rounded-xl
+               bg-[#00649B]
+               text-sm font-semibold text-white
+               hover:bg-[#00517D]
+               disabled:opacity-50
+               disabled:cursor-not-allowed
+               transition cursor-pointer
+               flex items-center gap-2">
+
+        <i class="pi pi-user-plus text-xs"></i>
+
+        Agregar acceso
+
+      </button>
+
+    </div>
+
+  </div>
+
+</p-dialog>

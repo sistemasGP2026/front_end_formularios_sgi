@@ -1,0 +1,118 @@
+<p-toast/>
+<p-dialog
+  (visibleChange)="visibleChange.emit($event)"
+  (onHide)="closeModal()"
+  header="Editar usuario"
+  [modal]="true"
+  [(visible)]="visible"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="true"
+  [style]="{ width: '42rem' }"
+  styleClass="rounded-2xl overflow-hidden">
+
+  @if (user) {
+
+  <div class="flex flex-col gap-5">
+
+    <!-- FORM -->
+    <div class="grid grid-cols-2 gap-4">
+
+      <!-- NOMBRE -->
+      <div class="flex flex-col gap-2 col-span-2">
+        <label class="text-sm font-semibold text-[#002E42]">Nombre completo</label>
+        <input pInputText [(ngModel)]="user.fullName" class="w-full" />
+      </div>
+
+      <!-- EMAIL -->
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-semibold text-[#002E42]">Correo</label>
+        <input pInputText [(ngModel)]="user.email" class="w-full" />
+      </div>
+
+      <!-- USERNAME -->
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-semibold text-[#002E42]">Usuario</label>
+        <input pInputText [(ngModel)]="user.username" class="w-full" />
+      </div>
+
+      <!-- ROL -->
+      <div class="flex flex-col gap-2 col-span-2">
+        <label class="text-sm font-semibold text-[#002E42]">Rol del usuario</label>
+        <p-select
+          [(ngModel)]="selectedRole"
+          [options]="roles"
+          placeholder="Seleccionar rol"
+          class="w-full"
+          appendTo="body">
+          <ng-template let-role pTemplate="option">
+            <div class="flex items-center gap-2 py-1">
+              <div class="w-2 h-2 rounded-full bg-[#00649B]"></div>
+              <span class="text-sm text-[#002E42]">{{ role }}</span>
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+
+    </div>
+
+    <!-- INFO -->
+    <div class="rounded-xl border border-[#E6EEF2] bg-[#F8FAFB] p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <i class="pi pi-info-circle text-[#32C6C6]"></i>
+        <span class="text-sm font-semibold text-[#002E42]">Información</span>
+      </div>
+      <p class="text-sm text-[#7A96A3] leading-relaxed">
+        Los cambios realizados se aplicarán inmediatamente al perfil del usuario.
+      </p>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="flex items-center justify-between pt-4 border-t border-[#E6EEF2]">
+
+      <!-- Eliminar -->
+      <button
+        type="button"
+        (click)="deleteUser()"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
+               border border-red-200 text-red-500 text-sm font-medium
+               hover:bg-red-50 transition cursor-pointer">
+        <i class="pi pi-trash text-xs"></i>
+        Desactivar usuario
+      </button>
+
+      <!-- Cancelar + Guardar -->
+      <div class="flex items-center gap-3">
+        <button
+          type="button"
+          (click)="closeModal()"
+          class="px-4 py-2 rounded-xl border border-[#D1DCE2]
+                 text-sm font-medium text-[#4A6A7A]
+                 hover:bg-[#F4F7F9] transition cursor-pointer">
+          Cancelar
+        </button>
+
+        <button
+          type="button"
+          (click)="updateUser()"
+          [disabled]="saving"
+          class="inline-flex items-center gap-2 px-5 py-2 rounded-xl
+                 bg-[#00649B] text-sm font-semibold text-white
+                 hover:bg-[#00517D] transition cursor-pointer
+                 disabled:opacity-60 disabled:cursor-not-allowed">
+          @if (saving) {
+            <i class="pi pi-spin pi-spinner text-xs"></i>
+            Guardando...
+          } @else {
+            <i class="pi pi-save text-xs"></i>
+            Guardar cambios
+          }
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+  }
+
+</p-dialog>

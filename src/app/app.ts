@@ -1,12 +1,18 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { PrimeNG } from 'primeng/config';
 
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.css',
 })
-export class App {
-  protected readonly title = signal('front_end_formularios_sgi');
+export class App implements OnInit {
+  protected readonly title = signal('Formularios SGI');
+  constructor(private primeng: PrimeNG) { }
+
+  ngOnInit() {
+    this.primeng.ripple.set(true);
+  }
 }

@@ -1,0 +1,153 @@
+<p-dialog header="Crear usuario" [modal]="true" [(visible)]="visible" [draggable]="false"
+    (visibleChange)="visibleChange.emit($event)" [resizable]="false" [closable]="true" [style]="{ width: '42rem' }"
+    styleClass="rounded-2xl overflow-hidden">
+
+    <div class="flex flex-col gap-6 pt-2">
+
+        <!-- DESCRIPCIÓN -->
+        <div>
+            <p class="text-sm text-[#4A6A7A]">
+                Ingrese la información del nuevo usuario
+            </p>
+        </div>
+
+        <!-- FORM -->
+        <form class="flex flex-col gap-5" autocomplete="off" [formGroup]="myForm" (ngSubmit)="guardarUsuario()">
+
+            <!-- NOMBRE -->
+            <div class="flex flex-col gap-2">
+
+                <label class="text-sm font-semibold text-[#002E42]">
+                    Nombre completo
+                </label>
+
+                <input formControlName="fullName" pInputText id="fullname" autocomplete="off" class="w-full rounded-xl"
+                    [ngClass]="{
+            'ng-invalid ng-dirty border-red-500':
+            hasError('fullName')
+          }" />
+
+                @if (hasError('fullName')) {
+
+                <small class="text-red-500 text-xs">
+                    {{ getError('fullName') }}
+                </small>
+
+                }
+
+            </div>
+
+            <!-- USERNAME -->
+            <div class="flex flex-col gap-2">
+
+                <label for="username" class="text-sm font-semibold text-[#002E42]">
+                    Username
+                </label>
+
+                <input formControlName="username" pInputText id="username" autocomplete="off" class="w-full rounded-xl"
+                    [ngClass]="{'ng-invalid ng-dirty border-red-500':hasError('username')}" />
+
+                @if (hasError('username')) {
+
+                <small class="text-red-500 text-xs">
+                    {{ getError('username') }}
+                </small>
+
+                }
+
+            </div>
+
+            <!-- EMAIL -->
+            <div class="flex flex-col gap-2">
+
+                <label for="email" class="text-sm font-semibold text-[#002E42]">
+                    Email
+                </label>
+
+                <input [autocomplete]="false" formControlName="email" pInputText id="email" autocomplete="off"
+                    class="w-full rounded-xl" [ngClass]="{
+            'ng-invalid ng-dirty border-red-500':
+            hasError('email')
+          }" />
+
+                @if (hasError('email')) {
+
+                <small class="text-red-500 text-xs">
+                    {{ getError('email') }}
+                </small>
+
+                }
+
+            </div>
+
+            <!-- PASSWORD -->
+            <div class="flex flex-col gap-2">
+
+                <label for="password" class="text-sm font-semibold text-[#002E42]">
+                    Contraseña
+                </label>
+
+                <p-password formControlName="password" inputId="password" [toggleMask]="true" [feedback]="false"
+                    styleClass="w-full" inputStyleClass="w-full rounded-xl" [ngClass]="{
+            'ng-invalid ng-dirty':
+            hasError('password')
+          }" />
+
+                @if (hasError('password')) {
+
+                <small class="text-red-500 text-xs">
+                    {{ getError('password') }}
+                </small>
+
+                }
+
+            </div>
+
+            <!-- ROL -->
+            <div class="flex flex-col gap-2">
+
+                <label for="role" class="text-sm font-semibold text-[#002E42]">
+                    Seleccione el rol
+                </label>
+
+                <p-autocomplete formControlName="roles" inputId="role" [dropdown]="true" [suggestions]="filteredRoles()"
+                    (completeMethod)="searchEvent($event)" appendTo="body" styleClass="w-full"
+                    inputStyleClass="w-full rounded-xl" panelStyleClass="rounded-xl overflow-hidden" [ngClass]="{
+                    'ng-invalid ng-dirty':
+                    hasError('roles')
+          }" />
+
+                @if (hasError('roles')) {
+
+                <small class="text-red-500 text-xs">
+                    {{ getError('roles') }}
+                </small>
+
+                }
+
+            </div>
+
+            <!-- BOTONES -->
+            <div class="flex justify-end gap-3 pt-4 border-t border-[#E6EEF2]">
+
+                <button 
+                type="button" 
+                (click)="visible = false" class="px-4 py-2 rounded-xl border border-[#D1DCE2]
+                    text-sm font-medium text-[#4A6A7A]
+                    hover:bg-[#F4F7F9] transition cursor-pointer">
+                    Cancelar
+                </button>
+
+                <button type="submit" class="px-5 py-2 rounded-xl bg-[#00649B]
+                        text-sm font-semibold text-white
+                        hover:bg-[#00517D] transition cursor-pointer">
+                    Guardar
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</p-dialog>

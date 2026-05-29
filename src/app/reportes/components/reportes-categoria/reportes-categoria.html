@@ -1,0 +1,28 @@
+<div class="bg-white rounded-xl border border-[#E6EEF2] p-5">
+  <p class="text-sm font-medium text-[#002E42] mb-4">Respuestas por categoría</p>
+
+  @if (catStatsComputed.length === 0) {
+  <p class="text-xs text-[#7A96A3] text-center py-6">Sin datos disponibles</p>
+  } @else {
+  <div class="flex flex-col gap-3">
+    @for (cat of catStatsComputed; track cat.cat) {
+    <div class="flex items-center gap-3">
+      <span class="text-xs px-2 py-0.5 rounded-md shrink-0"
+            [style.background]="getCatColor(cat.cat).bg"
+            [style.color]="getCatColor(cat.cat).text">
+        {{ cat.cat }}
+      </span>
+      <div class="flex-1 bg-[#F4F7F9] rounded-full h-2 overflow-hidden">
+        <div class="h-full rounded-full bg-[#00649B] transition-all"
+             [style.width.%]="cat.pct">
+        </div>
+      </div>
+      <span class="text-xs text-[#002E42] font-medium w-24 text-right shrink-0">
+        {{ cat.count }} resp. · {{ cat.pct }}%
+      </span>
+    </div>
+    }
+  </div>
+  }
+
+</div>

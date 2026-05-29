@@ -1,0 +1,52 @@
+<aside
+  class="flex flex-col transition-all duration-300 shrink-0 h-full overflow-hidden"
+  [style.width]="collapsed ? '0px' : '256px'"
+  style="background: linear-gradient(180deg, #002E42 0%, #00649B 100%)"
+>
+  <!-- LOGO -->
+  <div class="flex flex-col items-center gap-2 py-6 px-4 border-b border-white/10 shrink-0">
+    <img
+      src="/logo nuevo.png"
+      alt="logo"
+      class="w-16 h-16 rounded-full object-cover"
+      style="border: 2px solid #CCBA86"
+    />
+    <span class="text-sm font-semibold tracking-wide whitespace-nowrap"
+          style="color:#CCBA86">
+      GestiónPharma
+    </span>
+  </div>
+
+  <!-- NAV -->
+  <nav class="flex flex-col gap-1 p-3 flex-1 overflow-y-auto">
+    @for (item of navItems; track item.route) {
+      <a
+        [routerLink]="item.route"
+        routerLinkActive="nav-active"
+        class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl
+               text-white/70 text-sm font-medium transition-all duration-200
+               hover:bg-white/10 hover:text-white cursor-pointer no-underline
+               whitespace-nowrap"
+      >
+        <i [class]="item.icon" class="text-base w-5 text-center shrink-0"></i>
+        <span>{{ item.label }}</span>
+      </a>
+    }
+  </nav>
+
+  <!-- FOOTER -->
+  <div class="shrink-0 px-4 py-4 border-t border-white/10">
+    <p class="text-white/30 text-xs text-center whitespace-nowrap">
+      © 2026 GestiónPharma
+    </p>
+  </div>
+
+</aside>
+
+<style>
+  .nav-active {
+    background: rgba(255,255,255,0.15) !important;
+    color: #ffffff !important;
+    border-left: 3px solid #CCBA86;
+  }
+</style>

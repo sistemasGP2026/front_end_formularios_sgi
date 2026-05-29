@@ -1,0 +1,101 @@
+<div class="bg-white rounded-xl border border-[#E6EEF2] p-5">
+  <p class="text-sm font-medium text-[#002E42] mb-4">Detalle por formulario</p>
+
+  <!-- Cabecera -->
+  <div class="grid grid-cols-[2fr_80px_80px_130px_140px] text-xs text-[#7A96A3] px-2 pb-3 border-b border-[#E6EEF2]">
+    <span>Formulario</span>
+    <span class="text-center">Asignados</span>
+    <span class="text-center">Respuestas</span>
+    <span class="text-center">Pendientes</span>
+    <span class="text-center">Progreso</span>
+  </div>
+
+  <!-- Filas -->
+  @for (s of stats; track s.form.code; let last = $last) {
+  <div class="grid grid-cols-[2fr_80px_80px_130px_140px] items-center px-2 py-3"
+       [class.border-b]="!last"
+       [class.border-[#E6EEF2]]="!last">
+
+    <!-- Nombre -->
+    <div class="min-w-0">
+      <p class="text-xs font-medium text-[#002E42] truncate">{{ s.form.name }}</p>
+      <span class="text-[10px] px-2 py-0.5 rounded-md mt-1 inline-block"
+            [style.background]="getCatColor(s.form.category).bg"
+            [style.color]="getCatColor(s.form.category).text">
+        {{ s.form.category }} · {{ s.form.code }}
+      </span>
+    </div>
+
+    <!-- Asignados -->
+    <div class="text-center text-sm font-medium text-[#002E42]">
+      {{ s.asignados }}
+    </div>
+
+    <!-- Respuestas -->
+    <div class="text-center text-sm font-medium text-[#002E42]">
+      {{ s.respuestas }}
+    </div>
+
+    <!-- Pendientes -->
+    <div class="flex justify-center relative">
+      @if (s.pendientes.length === 0) {
+      <span class="text-xs font-medium text-[#085041] bg-[#E1F5EE] px-2 py-1 rounded-lg flex items-center gap-1">
+        <i class="pi pi-check text-xs"></i> Al día
+      </span>
+      } @else {
+      <span class="text-xs font-medium text-[#791F1F] bg-[#FCEBEB] px-2 py-1 rounded-lg
+                   flex items-center gap-1 cursor-pointer hover:bg-[#F7C1C1] transition select-none"
+            (mouseenter)="showTooltip($index)"
+            (mouseleave)="hideTooltip()">
+        <i class="pi pi-user text-xs"></i>
+        {{ s.pendientes.length }} pendiente{{ s.pendientes.length !== 1 ? 's' : '' }}
+      </span>
+
+      <!-- Tooltip -->
+      @if (tooltipIdx === $index) {
+      <div class="absolute bottom-full left-0 mb-2 z-50 bg-white border border-[#E6EEF2]
+                  rounded-xl p-3 min-w-[210px] shadow-sm"
+           (mouseenter)="showTooltip($index)"
+           (mouseleave)="hideTooltip()">
+        <p class="text-[10px] font-medium text-[#7A96A3] uppercase tracking-wide mb-2">
+          Sin responder — {{ s.form.code }}
+        </p>
+        <div class="flex flex-col gap-2">
+          @for (u of s.pendientes; track u.username) {
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 rounded-full bg-[#FCEBEB] flex items-center justify-center
+                        text-[9px] font-medium text-[#791F1F] shrink-0">
+              {{ getInitials(u.name) }}
+            </div>
+            <div>
+              <p class="text-xs text-[#002E42]">{{ u.name }}</p>
+              <p class="text-[10px] text-[#7A96A3]">&#64;{{ u.username }}</p>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+      }
+      }
+    </div>
+
+    <!-- Progreso -->
+    <div class="px-2">
+      <div class="flex items-center gap-2">
+        <div class="flex-1 h-1.5 bg-[#F4F7F9] rounded-full overflow-hidden">
+          <div class="h-full rounded-full transition-all"
+               [style.width.%]="s.pct"
+               [style.background]="getBarColor(s.pct)">
+          </div>
+        </div>
+        <span class="text-xs font-medium min-w-[28px] text-right"
+              [style.color]="getBarColor(s.pct)">
+          {{ s.pct }}%
+        </span>
+      </div>
+    </div>
+
+  </div>
+  }
+
+</div>

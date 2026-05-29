@@ -1,0 +1,61 @@
+@if (!loading()) {
+
+  @if (isAdmin()) {
+    <!-- CATEGORÍAS — solo admin -->
+    @if (categoriasVisibles().length === 0) {
+      <div class="flex flex-col items-center gap-3 py-16 text-[#7A96A3]">
+        <i class="pi pi-inbox text-5xl opacity-30"></i>
+        <p class="text-sm">No hay formularios disponibles</p>
+      </div>
+    } @else {
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        @for (cat of categoriasVisibles(); track cat.code) {
+          <!-- igual que antes -->
+        }
+      </div>
+    }
+
+  } @else {
+    <!-- LISTA DIRECTA — usuarios normales -->
+    @if (forms().length === 0) {
+      <div class="flex flex-col items-center gap-3 py-16 text-[#7A96A3]">
+        <i class="pi pi-inbox text-5xl opacity-30"></i>
+        <p class="text-sm">No tienes formularios asignados</p>
+      </div>
+    } @else {
+      <div class="flex flex-col gap-3">
+        @for (form of forms(); track form.code) {
+        <a [routerLink]="['/formularios', form.code]"
+           [queryParams]="{ mode: 'respond' }"
+           class="bg-white border border-[#E6EEF2] rounded-2xl px-5 py-4
+                  flex items-center gap-4 hover:border-[#00649B]
+                  hover:shadow-sm transition cursor-pointer">
+
+          <div class="w-10 h-10 rounded-xl bg-[#00649B]/10 flex items-center
+                      justify-center shrink-0">
+            <i class="pi pi-file-edit text-sm text-[#00649B]"></i>
+          </div>
+
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-[#002E42] truncate">
+              {{ form.name }}
+            </p>
+            <p class="text-xs text-[#7A96A3] mt-0.5 font-mono">
+              {{ form.code }}
+            </p>
+          </div>
+
+          <span class="text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0"
+                style="background:#E6F1FB; color:#0C447C">
+            {{ form.category }}
+          </span>
+
+          <i class="pi pi-chevron-right text-xs text-[#D1DCE2]"></i>
+
+        </a>
+        }
+      </div>
+    }
+  }
+
+}

@@ -1,0 +1,240 @@
+<p-toast/>
+<div class="flex flex-col gap-5">
+  <!-- BANNER -->
+  @if (mode === 'preview' || mode === 'view') {
+  <div class="flex items-center gap-3 rounded-xl border border-[#CCBA86]/40 bg-[#CCBA86]/10 px-4 py-3 text-sm text-[#8A6B1F]">
+    <i class="pi pi-eye"></i>
+    <span>
+      @if (mode === 'view') {
+        Respuesta registrada — solo lectura
+      } @else {
+        Vista previa — los campos están deshabilitados
+      }
+    </span>
+  </div>
+} @else {
+  <div class="flex items-center gap-3 rounded-xl border border-[#32C6C6]/30 bg-[#32C6C6]/10 px-4 py-3 text-sm text-[#00649B]">
+    <i class="pi pi-pencil"></i>
+    <span>Completa los campos del formulario</span>
+  </div>
+}
+
+  <!-- SECCIONES -->
+  <form [formGroup]="formGroup" (ngSubmit)="onSubmit()">
+
+    @for (sw of sectionsWithFields; track $index) {
+    <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm mb-5">
+
+      <!-- HEADER SECCIÓN -->
+      <div class="flex items-center gap-4 border-b border-gray-100 bg-[#002E42]/[0.03] px-6 py-4">
+        <div class="flex h-9 w-9 items-center justify-center rounded-full bg-[#00649B] text-sm font-bold text-white">
+          {{ $index + 1 }}
+        </div>
+        <h3 class="text-base font-semibold text-[#002E42]">{{ sw.section.title }}</h3>
+      </div>
+
+      <!-- CAMPOS -->
+      <div class="flex flex-col gap-6 p-6">
+
+        @for (field of sw.fields; track field.id) {
+        @if (isFieldActive(field.id)) {
+        <div class="flex flex-col gap-1">
+
+          <!-- LABEL -->
+          <label class="flex items-center gap-1 text-sm font-semibold text-[#002E42]">
+            {{ field.label }}
+            @if (field.required) {
+            <span class="text-red-500">*</span>
+            }
+          </label>
+
+          <!-- HELP TEXT -->
+          @if (field.helpText) {
+          <small class="text-xs text-gray-500 mb-1">{{ field.helpText }}</small>
+          }
+
+          <!-- TEXT / EMAIL / NUMBER / DATE / TIME / DATETIME -->
+          @if (isSimpleInput(field.type)) {
+          <input [formControlName]="field.id"
+          [type]="getInputType(field.type)"
+          [placeholder]="field.placeholder ?? ''"
+          class="w-full rounded-xl border px-4 py-3 text-sm text-gray-700 outline-none transition"
+          [class.border-gray-200]="!isFieldInvalid(field.id)" [class.bg-gray-50]="!isFieldInvalid(field.id)"
+          [class.border-red-400]="isFieldInvalid(field.id)" [class.bg-red-50]="isFieldInvalid(field.id)"
+          (input)="onFieldChange(field.id, $any($event.target).value, field.type)" (blur)="evaluateConditionals()" />
+          }
+
+          <!-- TEXTAREA -->
+          @if (field.type === 'textarea') {
+          <textarea [formControlName]="field.id" [placeholder]="field.placeholder ?? ''" rows="4"
+            class="w-full rounded-xl border px-4 py-3 text-sm text-gray-700 outline-none transition resize-none"
+            [class.border-gray-200]="!isFieldInvalid(field.id)" [class.bg-gray-50]="!isFieldInvalid(field.id)"
+            [class.border-red-400]="isFieldInvalid(field.id)" [class.bg-red-50]="isFieldInvalid(field.id)"></textarea>
+          }
+
+          <!-- SELECT -->
+          @if (field.type === 'select') {
+          <select [formControlName]="field.id"
+            class="w-full rounded-xl border px-4 py-3 text-sm text-gray-700 outline-none transition"
+            [class.border-gray-200]="!isFieldInvalid(field.id)" [class.bg-gray-50]="!isFieldInvalid(field.id)"
+            [class.border-red-400]="isFieldInvalid(field.id)" [class.bg-red-50]="isFieldInvalid(field.id)"
+            (change)="evaluateConditionals()">
+            <option value="" disabled>{{ field.placeholder ?? 'Seleccione una opción' }}</option>
+            @for (opt of getOptionsForField(field); track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+          }
+
+          <!-- RADIO -->
+          @if (field.type === 'radio') {
+          <div class="flex flex-col gap-3 pt-1">
+            @for (opt of field.options; track opt.value) {
+            <label class="flex items-center gap-3 text-sm text-gray-700 cursor-pointer">
+              <input type="radio" [name]="field.id" [value]="opt.value" [disabled]="isPreview"
+                class="h-4 w-4 accent-[#00649B]" (change)="onFieldChange(field.id, opt.value)" />
+              <span>{{ opt.label }}</span>
+            </label>
+            }
+          </div>
+          }
+
+          <!-- CHECKBOX -->
+          @if (field.type === 'checkbox') {
+          <div class="flex flex-col gap-3 pt-1">
+            @for (opt of field.options; track opt.value) {
+            <label class="flex items-center gap-3 text-sm text-gray-700 cursor-pointer">
+              <input type="checkbox" [value]="opt.value" [checked]="isOptionChecked(field.id, opt.value)"
+                [disabled]="isPreview" class="h-4 w-4 rounded accent-[#00649B]"
+                (change)="onCheckboxChange(field.id, opt.value, $any($event.target).checked)" />
+              <span>{{ opt.label }}</span>
+            </label>
+            }
+          </div>
+          }
+
+          <!-- FILE -->
+          @if (field.type === 'file') {
+          @if (isPreview) {
+          <div
+            class="flex w-fit items-center gap-3 rounded-xl border-2 border-dashed border-[#32C6C6]/40 bg-[#32C6C6]/5 px-5 py-3 text-sm font-medium text-[#00649B]">
+            <i class="pi pi-upload"></i>
+            <span>Seleccionar archivo</span>
+          </div>
+          } @else {
+          <input type="file" class="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700"
+            (change)="onFieldChange(field.id, $any($event.target).files[0])" />
+          }
+          }
+
+          <!-- SIGNATURE -->
+          @if (field.type === 'signature') {
+          <div
+            class="flex h-28 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#00649B]/30 bg-[#00649B]/5 text-[#00649B]">
+            <i class="pi pi-pen-to-square text-2xl"></i>
+            <span class="text-sm font-medium">{{ isPreview ? 'Área de firma' : 'Haz clic para firmar' }}</span>
+          </div>
+          }
+
+          <!-- TABLAS -->
+          @if (isTableType(field.type)) {
+          <div class="overflow-x-auto rounded-2xl border border-gray-200">
+            <table class="min-w-full border-collapse text-sm">
+              <thead class="bg-[#002E42]/[0.04]">
+                <tr>
+                  <th
+                    class="border-b border-gray-200 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#002E42]">
+                    Ítem
+                  </th>
+                  @for (col of field.columns; track col.key) {
+                  <th
+                    class="border-b border-gray-200 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#002E42]">
+                    {{ col.label }}
+                    @if (col.required) { <span class="text-red-500">*</span> }
+                  </th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of field.rows; track row.id) {
+                <tr class="border-b border-gray-100 last:border-none hover:bg-gray-50">
+                  <td class="px-4 py-3 font-medium text-[#002E42]">
+                    {{ row.label }}
+                    @if (row.unitLabel) {
+                    <span class="text-xs text-gray-400 ml-1">({{ row.unitLabel }})</span>
+                    }
+                  </td>
+                  @for (col of field.columns; track col.key) {
+                  <td class="px-4 py-3">
+
+                    @if (col.inputType === 'select') {
+                    <select
+                      class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-[#32C6C6] focus:bg-white"
+                      [disabled]="isPreview" [value]="getTableCellValue(field.id, row.id, col.key)"
+                      (change)="onTableCellChange(field.id, row.id, col.key, $any($event.target).value)">
+                      <option value="" disabled selected>—</option>
+                      @for (opt of col.options ?? []; track opt.value) {
+                      <option [value]="opt.value">{{ opt.label }}</option>
+                      }
+                    </select>
+                    }
+
+                    @if (col.inputType === 'textarea') {
+                    <textarea rows="1"
+                      class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-[#32C6C6] focus:bg-white resize-none"
+                      [disabled]="isPreview"
+                      (input)="onTableCellChange(field.id, row.id, col.key, $any($event.target).value)">{{ getTableCellValue(field.id, row.id, col.key) }}</textarea>
+                    }
+
+                    @if (col.inputType !== 'select' && col.inputType !== 'textarea') {
+                    <input
+                      class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-[#32C6C6] focus:bg-white"
+                      [type]="getInputType(col.inputType)" [disabled]="isPreview"
+                      [value]="getTableCellValue(field.id, row.id, col.key) ?? ''"
+                      (input)="onTableCellChange(field.id, row.id, col.key, $any($event.target).value)" />
+                    }
+
+                  </td>
+                  }
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          }
+
+          <!-- MENSAJE DE ERROR -->
+          @if (getFieldError(field); as errorMsg) {
+          <span class="flex items-center gap-1 text-xs text-red-500 mt-1">
+            <i class="pi pi-exclamation-circle text-xs"></i>
+            {{ errorMsg }}
+          </span>
+          }
+
+        </div>
+        }
+        }
+
+      </div>
+    </div>
+    }
+
+    <!-- SUBMIT -->
+    @if (!isPreview && !submitSuccess) {
+    <div class="flex justify-end pt-2">
+      <button type="submit" [disabled]="submitting"
+        class="inline-flex items-center gap-2 rounded-xl bg-[#00649B] px-6 py-3 text-sm font-semibold text-white shadow transition hover:bg-[#00517D] disabled:opacity-60 disabled:cursor-not-allowed">
+        @if (submitting) {
+        <i class="pi pi-spin pi-spinner"></i>
+        Enviando...
+        } @else {
+        <i class="pi pi-send"></i>
+        Enviar respuesta
+        }
+      </button>
+    </div>
+    }
+
+  </form>
+
+</div>

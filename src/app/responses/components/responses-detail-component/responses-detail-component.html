@@ -1,0 +1,79 @@
+<div class="max-w-5xl mx-auto p-6 flex flex-col gap-6 bg-[#F8FAFB] min-h-screen">
+
+  @if (!responses()) {
+    <div class="flex flex-col items-center gap-4 py-16 text-[#00649B]">
+      <i class="pi pi-exclamation-triangle text-5xl text-[#CCBA86] opacity-80"></i>
+      <p class="text-base text-gray-500">No se pudo cargar la respuesta</p>
+      <button
+        pButton
+        icon="pi pi-arrow-left"
+        label="Volver"
+        class="p-button-outlined p-button-sm"
+        (click)="goBack()"
+      ></button>
+    </div>
+  }
+
+  @if (ready() && responses() && form()) {
+
+    <div class="bg-white rounded-xl border border-[#E6EEF2] p-6 shadow-sm">
+      <button
+        (click)="goBack()"
+        class="flex items-center gap-2 text-sm font-semibold text-[#00649B] mb-4 hover:opacity-70"
+      >
+        <i class="pi pi-arrow-left"></i> Volver
+      </button>
+
+      <div class="flex flex-wrap justify-between gap-4 mb-4">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider
+                       bg-[#CCBA8620] text-[#002E42] px-2 py-1 rounded">
+            {{ form()!.code }}
+          </span>
+          <h1 class="text-2xl font-bold text-[#002E42] mt-2">{{ form()!.name }}</h1>
+          @if (form()!.description) {
+            <p class="text-sm text-[#4A6A7A] mt-1">{{ form()!.description }}</p>
+          }
+        </div>
+        <div class="flex flex-wrap items-start gap-2">
+          <p-tag [value]="form()!.category" severity="info" />
+          <span class="text-xs font-semibold bg-[#E6EEF2] text-[#002E42] px-2 py-1 rounded">
+            v{{ form()!.version }}
+          </span>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-4 pt-4 border-t border-[#E6EEF2]">
+        <div class="flex items-center gap-2 text-sm text-[#4A6A7A]">
+          <i class="pi pi-user text-[#32C6C6] text-xs"></i>
+          Respondido por
+          <strong class="text-[#002E42]">{{ responses()!.filledBy.fullName }}</strong>
+        </div>
+        <div class="flex items-center gap-2 text-sm text-[#4A6A7A]">
+          <i class="pi pi-envelope text-[#32C6C6] text-xs"></i>
+          {{ responses()!.filledBy.email }}
+        </div>
+        <div class="flex items-center gap-2 text-sm text-[#4A6A7A]">
+          <i class="pi pi-calendar text-[#32C6C6] text-xs"></i>
+          {{ responses()!.submittedAt | date: 'dd/MM/yyyy HH:mm' }}
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-[#E6EEF2] p-6 shadow-sm">
+      <h2 class="text-base font-semibold text-[#002E42] mb-4 flex items-center gap-2">
+        <i class="pi pi-file-check text-[#32C6C6]"></i>
+        Respuestas registradas
+      </h2>
+      <form-preview
+        [sectionsWithFields]="sectionsWithFields()"
+        [formName]="form()!.name"
+        [form]="form()!"
+        [mode]="mode"
+        [responseData]="responses()!.data"
+      />
+    </div>
+
+  }
+
+</div>

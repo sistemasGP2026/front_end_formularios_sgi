@@ -1,0 +1,172 @@
+<div class="p-3">
+  <div>
+    <div class="w-full mb-4">
+
+      <div class="relative w-full">
+
+        <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2
+                text-[#7A96A3] text-sm">
+        </i>
+
+        <input type="text" pInputText [(ngModel)]="search" placeholder="Buscar formulario..." class="w-full pl-10 pr-4 py-3 rounded-xl
+               border border-[#DCE7EC]
+               focus:border-[#00649B]
+               focus:ring-2 focus:ring-[#00649B]/10
+               text-sm transition bg-white" />
+
+      </div>
+
+    </div>
+
+      <div class="flex flex-wrap gap-2.5 justify-start items-start">
+  
+        @for (form of formList(); track form._id) {
+  
+        <div class="bg-white rounded-xl border border-[#E6EEF2]
+                  shadow-sm hover:shadow-md hover:-translate-y-0.5
+                  transition-all duration-200
+                  flex flex-col
+                  p-2.5 gap-1.5
+                  max-w-[320px] w-full">
+  
+          <div class="flex flex-col gap-0.5">
+  
+            <div class="flex items-start justify-between gap-2">
+  
+              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded
+                         bg-[#00649B]/10 text-[#00649B]
+                         whitespace-nowrap">
+                {{ form.code }}
+              </span>
+  
+            </div>
+  
+            <h3 class="text-[13px] font-semibold text-[#002E42]
+                     leading-[17px] line-clamp-2 min-h-[34px]">
+              {{ form.name }}
+            </h3>
+  
+          </div>
+  
+          <p class="text-[10.5px] leading-[15px] text-[#6B7280]
+                  line-clamp-1 min-h-[15px]">
+            {{ form.description ?? 'Sin descripción' }}
+          </p>
+  
+          <div class="bg-[#F8FAFB]
+                    rounded-lg border border-[#E6EEF2]
+                    p-2
+                    text-[10.5px]
+                    flex flex-col gap-1.5">
+  
+            @for (section of getSectionPreviews(form); track $index) {
+  
+            <div>
+  
+              <span class="flex items-center gap-1
+                         font-semibold text-[#00649B]">
+  
+                <i class="pi pi-folder-open text-[9px]"></i>
+  
+                <span class="truncate">
+                  {{ section.title }}
+                </span>
+  
+              </span>
+  
+              <ul class="ml-2.5 mt-0.5 text-[#6B7280] flex flex-col gap-0">
+  
+                @for (field of section.fields; track $index) {
+  
+                <li class="truncate leading-[14px]">
+                  • {{ field.label }}
+                </li>
+  
+                }
+  
+              </ul>
+  
+            </div>
+  
+            }
+  
+            @if (getSectionCount(form) > 2) {
+  
+            <span class="text-[#00649B] font-semibold text-[10px] mt-0.5">
+              +{{ getSectionCount(form) - 2 }} más...
+            </span>
+  
+            }
+  
+          </div>
+  
+          <div class="flex items-center justify-between
+                    pt-1.5 border-t border-[#E6EEF2]
+                    text-[9.5px]">
+  
+            <div class="flex gap-2 text-[#6B7280]">
+  
+              <span class="flex items-center gap-0.5">
+                <i class="pi pi-th-large text-[9px]"></i>
+                {{ getSectionCount(form) }}
+              </span>
+  
+              <span class="flex items-center gap-0.5">
+                <i class="pi pi-list text-[9px]"></i>
+                {{ getFieldCount(form) }}
+              </span>
+  
+              <span class="flex items-center gap-0.5">
+                <i class="pi pi-code text-[9px]"></i>
+                v{{ form.version }}
+              </span>
+  
+            </div>
+  
+            <div class="text-right text-[#9CA3AF] leading-[12px]">
+  
+              <div class="line-clamp-1 max-w-[105px]">
+                {{ form.createdBy.name }}
+              </div>
+  
+              <div>
+                {{ form.createdAt | date:'dd/MM/yyyy' }}
+              </div>
+  
+            </div>
+  
+          </div>
+  
+          <div class="flex gap-1.5 pt-1.5 border-t border-[#E6EEF2]">
+  
+            <a class="flex-1 flex items-center justify-center gap-1
+                    text-[10.5px] font-semibold
+                    py-1 rounded-md
+                    bg-[#00649B]/10 text-[#00649B]
+                    hover:bg-[#00649B]/20
+                    transition" [routerLink]="['/formularios/', form.code]" [queryParams]="{ mode: 'preview' }">
+  
+              <i class="pi pi-eye text-[10px]"></i>
+              Preview
+  
+            </a>
+  
+            <a class="flex-1 flex items-center justify-center gap-1
+                    text-[10.5px] font-semibold
+                    py-1 rounded-md
+                    bg-[#00649B] text-white
+                    hover:bg-[#002E42]
+                    transition" [routerLink]="['/formularios/', form.code]" [queryParams]="{ mode: 'respond' }">
+  
+              <i class="pi pi-pencil text-[10px]"></i>
+              Responder
+  
+            </a>
+  
+          </div>
+  
+        </div>
+  
+        }
+      </div>
+  </div>

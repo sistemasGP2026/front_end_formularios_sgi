@@ -1,0 +1,515 @@
+<p-toast />
+
+<div class="h-screen overflow-hidden bg-[#F4F7FA] flex flex-col">
+
+    <!-- TOPBAR -->
+
+    <div class="h-[72px] bg-white border-b border-[#E6EEF2]
+              flex items-center justify-between px-6 shrink-0">
+
+        <div>
+
+            <h1 class="text-[22px] font-bold text-[#002E42] leading-none">
+                Constructor de Formularios
+            </h1>
+
+            <p class="text-sm text-[#7A96A3] mt-1">
+                Diseñe formularios dinámicos empresariales
+            </p>
+
+        </div>
+
+        <div class="flex items-center gap-3">
+
+            <button pButton severity="secondary" outlined icon="pi pi-eye" label="Preview">
+            </button>
+
+            <button pButton icon="pi pi-save" label="Guardar formulario" (click)="createForm()">
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- CONTENT -->
+
+    <div class="flex-1 overflow-hidden grid grid-cols-[340px_1fr_360px]">
+
+        <!-- LEFT PANEL -->
+
+        <div class="bg-white border-r border-[#E6EEF2]
+                overflow-y-auto p-5">
+
+            <!-- GENERAL -->
+
+            <div>
+
+                <div class="flex items-center gap-2 mb-5">
+
+                    <div class="w-9 h-9 rounded-xl bg-[#00649B]/10
+                      flex items-center justify-center">
+
+                        <i class="pi pi-file-edit text-[#00649B]"></i>
+
+                    </div>
+
+                    <div>
+
+                        <h2 class="font-bold text-[#002E42]">
+                            Configuración General
+                        </h2>
+
+                        <p class="text-xs text-[#7A96A3]">
+                            Información principal del formulario
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="flex flex-col gap-4">
+
+                    <!-- CODE -->
+
+                    <div class="flex flex-col gap-2">
+
+                        <label class="text-sm font-semibold text-[#002E42]">
+                            Código
+                        </label>
+
+                        <input pInputText [(ngModel)]="form().code" placeholder="Ej: SST-001" class="w-full" />
+
+                    </div>
+
+                    <!-- NAME -->
+
+                    <div class="flex flex-col gap-2">
+
+                        <label class="text-sm font-semibold text-[#002E42]">
+                            Nombre
+                        </label>
+
+                        <input pInputText [(ngModel)]="form().name" placeholder="Nombre del formulario"
+                            class="w-full" />
+
+                    </div>
+
+                    <!-- DESCRIPTION -->
+
+                    <div class="flex flex-col gap-2">
+
+                        <label class="text-sm font-semibold text-[#002E42]">
+                            Descripción
+                        </label>
+
+                        <textarea pTextarea rows="4" [(ngModel)]="form().description" placeholder="Descripción general"
+                            class="w-full resize-none">
+            </textarea>
+
+                    </div>
+
+                    <!-- CATEGORY -->
+
+                    <div class="flex flex-col gap-2">
+
+                        <label class="text-sm font-semibold text-[#002E42]">
+                            Categoría
+                        </label>
+
+                        <p-select [options]="categories" optionLabel="label" optionValue="value"
+                            [(ngModel)]="form().category" placeholder="Seleccione">
+                        </p-select>
+
+                    </div>
+
+                    <!-- ACCESS -->
+
+                    <div class="flex flex-col gap-2">
+
+                        <label class="text-sm font-semibold text-[#002E42]">
+                            Tipo de acceso
+                        </label>
+
+                        <p-select [options]="accessTypes" optionLabel="label" optionValue="value"
+                            [(ngModel)]="form().accessType">
+                        </p-select>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- USERS -->
+
+            @if(form().accessType === 'RESTRICTED') {
+
+            <div class="mt-8">
+
+                <div class="flex items-center justify-between mb-4">
+
+                    <div>
+
+                        <h2 class="font-bold text-[#002E42]">
+                            Usuarios autorizados
+                        </h2>
+
+                        <p class="text-xs text-[#7A96A3]">
+                            Acceso restringido al formulario
+                        </p>
+
+                    </div>
+
+                    <button (click)="openModal()" pButton size="small" icon="pi pi-plus" label="Agregar">
+                    </button>
+                    <assign-user-permission-page [usuarios]="userList()" [(visible)]="visible"
+                        (assign)="addUsersToForm($event)">
+                    </assign-user-permission-page>
+                </div>
+
+                <div class="flex flex-col gap-2">
+
+                    @for(user of form().permissions.users; track user.username) {
+
+                    <div class="border border-[#E6EEF2]
+                          rounded-xl px-3 py-2
+                          flex items-center justify-between">
+
+                        <div>
+
+                            <p class="text-sm font-semibold text-[#002E42]">
+                                {{ user.name }}
+                            </p>
+
+                            <p class="text-xs text-[#7A96A3]">
+                                {{ user.username }}
+                            </p>
+
+                        </div>
+
+                        <button pButton icon="pi pi-times" severity="danger" text>
+                        </button>
+
+                    </div>
+
+                    }
+
+                </div>
+
+            </div>
+
+            }
+
+            <!-- SETTINGS -->
+
+            <div class="mt-8">
+
+                <h2 class="font-bold text-[#002E42] mb-4">
+                    Configuración avanzada
+                </h2>
+
+                <div class="flex flex-col gap-4">
+
+                    <div class="flex items-center justify-between">
+
+                        <div>
+
+                            <p class="text-sm font-semibold text-[#002E42]">
+                                Requiere sede
+                            </p>
+
+                            <p class="text-xs text-[#7A96A3]">
+                                Solicita sede obligatoriamente
+                            </p>
+
+                        </div>
+
+                        <p-toggleswitch [(ngModel)]="form().settings.requiresSede">
+                        </p-toggleswitch>
+
+                    </div>
+
+                    <div class="flex items-center justify-between">
+
+                        <div>
+
+                            <p class="text-sm font-semibold text-[#002E42]">
+                                Mostrar cumplimiento
+                            </p>
+
+                            <p class="text-xs text-[#7A96A3]">
+                                Mostrar indicadores
+                            </p>
+
+                        </div>
+
+                        <p-toggleswitch [(ngModel)]="form().settings.showCompliance">
+                        </p-toggleswitch>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- CENTER -->
+
+        <div class="overflow-y-auto p-6">
+
+            <div class="max-w-5xl mx-auto flex flex-col gap-5">
+
+                <!-- EMPTY -->
+
+                @if(orderedSections().length === 0) {
+
+                <div class="bg-white rounded-3xl border border-dashed
+                      border-[#D6E4EC] p-16 text-center">
+
+                    <div class="w-20 h-20 rounded-full
+                        bg-[#00649B]/10
+                        flex items-center justify-center mx-auto">
+
+                        <i class="pi pi-file-edit text-3xl text-[#00649B]"></i>
+
+                    </div>
+
+                    <h2 class="text-xl font-bold text-[#002E42] mt-6">
+                        Empiece creando una sección
+                    </h2>
+
+                    <p class="text-sm text-[#7A96A3] mt-2 max-w-lg mx-auto">
+                        Organice el formulario en bloques visuales para una mejor experiencia.
+                    </p>
+
+                    <button pButton class="mt-6" icon="pi pi-plus" label="Agregar primera sección"
+                        (click)="addSection()">
+                    </button>
+
+                </div>
+
+                }
+
+                <!-- SECTION -->
+
+                @for(section of orderedSections(); track section.id) {
+
+                <div class="bg-white rounded-3xl
+                      border border-[#E6EEF2]
+                      overflow-hidden shadow-sm">
+
+                    <!-- HEADER -->
+
+                    <div class="px-6 py-5 border-b border-[#EEF3F6]
+                        flex items-center justify-between">
+
+                        <div class="flex-1">
+
+                            <input pInputText [(ngModel)]="section.title" class="w-full border-none shadow-none
+                         text-xl font-bold text-[#002E42]
+                         bg-transparent px-0" />
+
+                            <input pInputText [(ngModel)]="section.code" class="w-full border-none shadow-none
+                         text-sm text-[#7A96A3]
+                         bg-transparent px-0 mt-1" />
+
+                        </div>
+
+                        <button pButton icon="pi pi-trash" severity="danger" text rounded
+                            (click)="deleteSection(section.id)">
+                        </button>
+
+                    </div>
+
+                    <!-- BODY -->
+
+                    <div class="p-6 flex flex-col gap-4">
+
+                        @for(field of getFieldsBySection(section.id); track field.id) {
+
+                        <div class="border border-[#E8EEF2]
+                            rounded-2xl p-5
+                            bg-[#FAFCFD]">
+
+                            <!-- FIELD HEADER -->
+
+                            <div class="flex items-center justify-between">
+
+                                <div class="flex items-center gap-2">
+
+                                    <div class="w-9 h-9 rounded-xl
+                                  bg-[#00649B]/10
+                                  flex items-center justify-center">
+
+                                        <i class="pi pi-box text-[#00649B]"></i>
+
+                                    </div>
+
+                                    <div>
+
+                                        <p class="font-semibold text-[#002E42]">
+                                            {{ field.label || 'Nuevo campo' }}
+                                        </p>
+
+                                        <p class="text-xs text-[#7A96A3]">
+                                            {{ field.type }}
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+                                <button pButton icon="pi pi-trash" severity="danger" text rounded
+                                    (click)="deleteField(field.id)">
+                                </button>
+
+                            </div>
+
+                            <!-- CONFIG -->
+
+                            <div class="grid grid-cols-2 gap-4 mt-5">
+
+                                <div class="flex flex-col gap-2">
+
+                                    <label class="text-sm font-semibold">
+                                        Label
+                                    </label>
+
+                                    <input pInputText [(ngModel)]="field.label" />
+
+                                </div>
+
+                                <div class="flex flex-col gap-2">
+
+                                    <label class="text-sm font-semibold">
+                                        Name
+                                    </label>
+
+                                    <input pInputText [(ngModel)]="field.name" />
+
+                                </div>
+
+                                <div class="col-span-2 flex flex-col gap-2">
+
+                                    <label class="text-sm font-semibold">
+                                        Placeholder
+                                    </label>
+
+                                    <input pInputText [(ngModel)]="field.placeholder" />
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        }
+
+                        <!-- ADD FIELD -->
+
+                        <div class="border-2 border-dashed border-[#D9E6ED]
+                          rounded-2xl p-5">
+
+                            <p class="font-semibold text-[#002E42] mb-4">
+                                Agregar campo
+                            </p>
+
+                            <div class="flex flex-wrap gap-2">
+
+                                @for(type of fieldTypes; track type.value) {
+
+                                <button pButton outlined size="small" [label]="type.label"
+                                    (click)="addField(type.value, section.id)">
+                                </button>
+
+                                }
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                }
+
+            </div>
+
+        </div>
+
+        <!-- RIGHT PANEL -->
+
+        <div class="bg-white border-l border-[#E6EEF2]
+                overflow-y-auto p-5">
+
+            <div class="sticky top-0">
+
+                <h2 class="text-lg font-bold text-[#002E42]">
+                    Preview
+                </h2>
+
+                <p class="text-sm text-[#7A96A3] mt-1">
+                    Vista previa del formulario
+                </p>
+
+                <div class="mt-5 bg-[#F7FAFC]
+                    border border-[#E6EEF2]
+                    rounded-2xl p-4">
+
+                    <h3 class="font-bold text-[#002E42]">
+                        {{ form().name || 'Formulario sin nombre' }}
+                    </h3>
+
+                    <p class="text-sm text-[#7A96A3] mt-1">
+                        {{ form().description || 'Descripción del formulario' }}
+                    </p>
+
+                    <div class="mt-5 flex flex-col gap-4">
+
+                        @for(section of orderedSections(); track section.id) {
+
+                        <div>
+
+                            <p class="font-semibold text-[#002E42]">
+                                {{ section.title }}
+                            </p>
+
+                            <div class="mt-2 flex flex-col gap-2">
+
+                                @for(field of getFieldsBySection(section.id); track field.id) {
+
+                                <div class="bg-white border border-[#E6EEF2]
+                                rounded-xl p-3">
+
+                                    <label class="text-sm font-semibold text-[#002E42]">
+                                        {{ field.label || 'Campo' }}
+                                    </label>
+
+                                    <div class="mt-2 h-10 rounded-lg
+                                  bg-[#F4F7FA]
+                                  border border-[#E6EEF2]">
+                                    </div>
+
+                                </div>
+
+                                }
+
+                            </div>
+
+                        </div>
+
+                        }
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

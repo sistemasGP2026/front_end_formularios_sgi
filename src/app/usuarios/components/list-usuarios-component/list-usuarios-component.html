@@ -1,0 +1,234 @@
+<div class="flex flex-col gap-6 p-2 bg-[#F8FAFB] min-h-screen">
+  <p-toast />
+  <!-- TÍTULO -->
+  <div>
+    <h1 class="text-2xl font-bold text-[#002E42]">Administración de Usuarios</h1>
+    <p class="text-sm text-[#7A96A3] mt-1">Gestiona los usuarios del sistema</p>
+  </div>
+
+  <!-- STATS -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+    <div class="bg-white rounded-2xl border border-[#E6EEF2] p-5 shadow-sm
+                flex items-center gap-4">
+      <div class="flex h-12 w-12 items-center justify-center rounded-xl
+                  bg-[#00649B]/10 text-[#00649B]">
+        <i class="pi pi-users text-xl"></i>
+      </div>
+      <div>
+        <p class="text-3xl font-bold text-[#002E42]">{{ totalUsuarios() }}</p>
+        <p class="text-sm text-[#7A96A3]">Total Usuarios</p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-[#E6EEF2] p-5 shadow-sm
+                flex items-center gap-4">
+      <div class="flex h-12 w-12 items-center justify-center rounded-xl
+                  bg-[#32C6C6]/10 text-[#32C6C6]">
+        <i class="pi pi-user-plus text-xl"></i>
+      </div>
+      <div>
+        <p class="text-3xl font-bold text-[#002E42]">
+          {{ users().filter(u => u.active).length }}
+        </p>
+        <p class="text-sm text-[#7A96A3]">Usuarios Activos</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BUSCADOR + BOTÓN -->
+  <div class="bg-white rounded-2xl border border-[#E6EEF2] p-5 shadow-sm">
+    <div class="flex flex-wrap items-center gap-3">
+
+      <p-iconfield class="flex-1 min-w-[200px]">
+        <p-inputicon class="pi pi-search" />
+        <input pInputText type="text" placeholder="Buscar por nombre, email o rol..." class="w-full text-sm"
+          [(ngModel)]="search" />
+      </p-iconfield>
+
+      <button pButton icon="pi pi-user-plus" label="Crear Usuario" class="p-button-sm shrink-0"
+        style="background:#00649B; border-color:#00649B" (click)="abrirModal()"></button>
+
+      <create-user-modal-page [(visible)]="visible" (userCreated)="onUserCreated($event)" />
+    </div>
+  </div>
+
+  <!-- TABLA -->
+  <div class="bg-white rounded-2xl border border-[#E6EEF2] shadow-sm overflow-hidden">
+
+    <!-- HEADER -->
+    <div class="grid grid-cols-[2.2fr_2fr_1fr_1fr_1fr_1fr_auto]
+    items-center border-b border-[#E6EEF2]
+    bg-[#002E42]/[0.03]
+    px-6 py-3 text-xs font-semibold uppercase
+    tracking-wider text-[#7A96A3]">
+
+      <span class="flex items-center">
+        Nombre Completo
+      </span>
+
+      <span class="flex items-center">
+        Email
+      </span>
+
+      <span class="flex items-center justify-center">
+        Rol
+      </span>
+
+      <span class="flex items-center justify-center">
+        Estado
+      </span>
+
+      <span class="flex items-center justify-center">
+        Creado
+      </span>
+
+      <span class="flex items-center justify-center">
+        Editado
+      </span>
+
+      <span class="flex items-center justify-center">
+        Acciones
+      </span>
+
+    </div>
+
+    <!-- FILAS -->
+    @for (usuario of filteredUsers(); track usuario.id; let i = $index) {
+
+    <div class="grid grid-cols-[2.2fr_2fr_1fr_1fr_1fr_1fr_auto]
+      items-center px-6 py-4 border-b border-[#E6EEF2]
+      last:border-none hover:bg-[#F4F7F9]
+      transition-colors">
+
+      <!-- NOMBRE -->
+      <div class="flex items-center gap-3 min-w-0">
+
+        <div class="flex h-9 w-9 shrink-0 items-center justify-center
+          rounded-full text-xs font-bold text-white" style="background:#00649B">
+          {{ i + 1 }}
+        </div>
+
+        <span class="text-sm font-semibold text-[#002E42]
+          truncate">
+          {{ usuario.fullName }}
+        </span>
+
+      </div>
+
+      <!-- EMAIL -->
+      <div class="flex items-center min-w-0">
+
+        <span class="text-sm text-[#4A6A7A] truncate">
+          {{ usuario.email }}
+        </span>
+
+      </div>
+
+      <!-- ROL -->
+      <div class="flex justify-center">
+
+        @if (usuario.rol[0] === 'ADMIN') {
+        <p-tag value="ADMIN" />
+        } @else {
+        <p-tag value="USUARIO" />
+        }
+
+      </div>
+
+      <!-- ESTADO -->
+      <div class="flex justify-center">
+
+        @if (usuario.active) {
+
+        <span class="inline-flex items-center gap-1.5 rounded-full
+            bg-green-100 px-3 py-1 text-xs font-semibold
+            text-green-700">
+
+          <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>
+
+          Activo
+
+        </span>
+
+        } @else {
+
+        <span class="inline-flex items-center gap-1.5 rounded-full
+            bg-gray-100 px-3 py-1 text-xs font-semibold
+            text-gray-500">
+
+          <span class="h-1.5 w-1.5 rounded-full bg-gray-400"></span>
+
+          Inactivo
+
+        </span>
+
+        }
+
+      </div>
+
+      <!-- CREADO -->
+      <div class="flex justify-center">
+
+        <span class="text-xs text-[#7A96A3]">
+          {{ usuario.createdAt | date: 'dd/MM/yyyy' }}
+        </span>
+
+      </div>
+
+      <!-- EDITADO -->
+      <div class="flex justify-center">
+
+        <span class="text-xs text-[#7A96A3]">
+          {{ usuario.updatedAt | date: 'dd/MM/yyyy' }}
+        </span>
+
+      </div>
+
+      <!-- ACCIONES -->
+      <div class="flex items-center justify-center gap-1">
+
+        <button pButton icon="pi pi-pencil" class="p-button-text p-button-rounded p-button-sm" style="color:#00649B"
+          pTooltip="Editar usuario" tooltipPosition="top" (click)="editarUsuario(usuario)">
+        </button>
+
+        <button (click)="resetPassword(usuario)" pButton icon="pi pi-key"
+          class="p-button-text p-button-rounded p-button-sm" style="color:#CCBA86" pTooltip="Resetear contraseña"
+          tooltipPosition="top">
+        </button>
+
+      </div>
+
+    </div>
+
+    }
+
+    @if (filteredUsers().length === 0) {
+    <div class="flex flex-col items-center gap-3 py-16 text-[#7A96A3]">
+      <i class="pi pi-users text-5xl opacity-30"></i>
+      <p class="text-sm">No se encontraron usuarios</p>
+    </div>
+    }
+    <!-- Modal editar -->
+    <edit-user-modal-page [(visible)]="visibleEdit" [user]="selectedUser!" (updated)="onUserUpdated()" />
+
+    <!-- Modal eliminar -->
+    <reset-password-modal-page [(visible)]="visibleReset" [user]="selectedUser!" (updated)="onUserUpdated()" />
+
+    <!-- EMPTY -->
+    @if (users().length === 0) {
+
+    <div class="flex flex-col items-center gap-3 py-16 text-[#7A96A3]">
+
+      <i class="pi pi-users text-5xl opacity-30"></i>
+
+      <p class="text-sm">
+        No se encontraron usuarios
+      </p>
+
+    </div>
+
+    }
+
+  </div>

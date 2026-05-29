@@ -1,0 +1,299 @@
+<div class="flex min-h-screen bg-[#F8FAFB]">
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <div class="flex-1 p-6 flex flex-col gap-6 transition-all duration-300 min-w-0"
+    [class.max-w-5xl]="!showResponsesPanel" [class.mx-auto]="!showResponsesPanel">
+
+    <!-- SKELETON -->
+    @if (loading) {
+    <div class="bg-white rounded-xl border border-[#E6EEF2] p-6 shadow-sm">
+      <p-skeleton height="2rem" width="40%" class="mb-2" />
+      <p-skeleton height="1rem" width="25%" class="mb-4" />
+      <p-skeleton height="6rem" width="100%" class="mb-3" />
+      <p-skeleton height="12rem" width="100%" class="mb-3" />
+      <p-skeleton height="12rem" width="100%" />
+    </div>
+    }
+
+    <!-- ERROR -->
+    @if (!loading && !form) {
+    <div class="flex flex-col items-center justify-center gap-4 py-16 text-[#00649B]">
+      <i class="pi pi-exclamation-triangle text-5xl text-[#CCBA86] opacity-80"></i>
+      <p class="text-base">No se pudo cargar el formulario</p>
+      <button type="button" (click)="goBack()"
+        class="cursor-pointer flex items-center gap-2 text-sm font-semibold text-[#00649B] mb-4 hover:opacity-70">
+        <i class="pi pi-arrow-left"></i>
+        Volver
+      </button>
+    </div>
+    }
+
+    @if (form) {
+
+    <!-- HEADER -->
+    <div class="bg-white rounded-xl border border-[#E6EEF2] p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+
+        <button (click)="goBack()"
+          class="flex items-center gap-2 text-sm font-semibold text-[#00649B] hover:opacity-70 transition cursor-pointer">
+          <i class="pi pi-arrow-left text-xs"></i>
+          <span>Volver</span>
+        </button>
+
+        @if (mode === 'preview') {
+        <button type="button" (click)="loadResponses()"
+          class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition cursor-pointer"
+          [class.border-[#00649B]]="showResponsesPanel"
+          [class.bg-[#00649B]]="showResponsesPanel"
+          [class.text-white]="showResponsesPanel"
+          [class.border-[#00649B]/20]="!showResponsesPanel"
+          [class.bg-[#00649B]/5]="!showResponsesPanel"
+          [class.text-[#00649B]]="!showResponsesPanel">
+          <i class="pi pi-list"></i>
+          <span>Ver respuestas</span>
+          @if (responsesTotal > 0) {
+          <span class="rounded-full px-2 py-0.5 text-xs"
+            [class.bg-white/20]="showResponsesPanel"
+            [class.text-white]="showResponsesPanel"
+            [class.bg-[#00649B]/10]="!showResponsesPanel"
+            [class.text-[#00649B]]="!showResponsesPanel">
+            {{ responsesTotal }}
+          </span>
+          }
+        </button>
+        }
+
+      </div>
+
+      <div class="flex flex-wrap justify-between gap-4">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider bg-[#CCBA8620] text-[#002E42] px-2 py-1 rounded">
+            {{ form.code }}
+          </span>
+          <h1 class="text-2xl font-bold text-[#002E42] mt-2">{{ form.name }}</h1>
+          @if (form.description) {
+          <p class="text-sm text-[#4A6A7A] mt-1 max-w-xl">{{ form.description }}</p>
+          }
+        </div>
+        <div class="flex flex-wrap items-start gap-2">
+          <p-tag [value]="form.category" severity="info" />
+          <span class="text-xs font-semibold bg-[#E6EEF2] text-[#002E42] px-2 py-1 rounded">
+            v{{ form.version }}
+          </span>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-4 mt-4 pt-4 border-t border-[#E6EEF2] text-sm text-[#4A6A7A]">
+        <div class="flex items-center gap-1">
+          <i class="pi pi-user text-[#32C6C6] text-xs"></i>
+          Creado por <strong class="text-[#002E42]">{{ form.createdBy.name }}</strong>
+        </div>
+        <div class="flex items-center gap-1">
+          <i class="pi pi-at text-[#32C6C6] text-xs"></i>
+          &#64;{{ form.createdBy.username }}
+        </div>
+        <div class="flex items-center gap-1">
+          <i class="pi pi-calendar text-[#32C6C6] text-xs"></i>
+          {{ form.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+        </div>
+        <div class="flex items-center gap-1">
+          <i class="pi pi-th-large text-[#32C6C6] text-xs"></i>
+          {{ form.sections.length }} secciones
+        </div>
+        <div class="flex items-center gap-1">
+          <i class="pi pi-list text-[#32C6C6] text-xs"></i>
+          {{ form.fields.length }} campos
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    @if (mode === 'preview') {
+    <div class="bg-white rounded-xl border border-[#E6EEF2] p-6 shadow-sm">
+      <h2 class="text-base font-semibold text-[#002E42] mb-4 flex items-center gap-2">
+        <i class="pi pi-cog text-[#32C6C6]"></i>
+        Configuración
+      </h2>
+      <div class="flex flex-wrap gap-3">
+        <div class="px-3 py-2 rounded-lg border text-sm flex items-center gap-2"
+          [ngClass]="form.settings.requiresApproval ? 'bg-[#32C6C620] border-[#32C6C6] text-[#002E42]' : 'bg-[#F4F7F9] text-[#7A96A3]'">
+          <i class="pi"
+            [ngClass]="form.settings.requiresApproval ? 'pi-check-circle text-[#32C6C6]' : 'pi-times-circle'"></i>
+          Requiere aprobación
+        </div>
+        <div class="px-3 py-2 rounded-lg border text-sm flex items-center gap-2"
+          [ngClass]="form.settings.preventDuplicates ? 'bg-[#32C6C620] border-[#32C6C6]' : 'bg-[#F4F7F9] text-[#7A96A3]'">
+          <i class="pi"
+            [ngClass]="form.settings.preventDuplicates ? 'pi-check-circle text-[#32C6C6]' : 'pi-times-circle'"></i>
+          Evitar duplicados
+        </div>
+        <div class="px-3 py-2 rounded-lg border text-sm flex items-center gap-2"
+          [ngClass]="form.settings.allowDraft ? 'bg-[#32C6C620] border-[#32C6C6]' : 'bg-[#F4F7F9] text-[#7A96A3]'">
+          <i class="pi"
+            [ngClass]="form.settings.allowDraft ? 'pi-check-circle text-[#32C6C6]' : 'pi-times-circle'"></i>
+          Permite borradores
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- PREVIEW -->
+    <div class="bg-white rounded-xl border border-[#E6EEF2] p-6 shadow-sm">
+      <h2 class="text-base font-semibold text-[#002E42] mb-4 flex items-center gap-2">
+        <i class="pi pi-eye text-[#32C6C6]"></i>
+        Vista previa
+      </h2>
+      @if (sectionsWithFields.length > 0) {
+      <form-preview [sectionsWithFields]="sectionsWithFields" [formName]="form.name" [mode]="mode" />
+      } @else {
+      <div class="flex flex-col gap-3">
+        <p-skeleton height="3rem" width="100%" />
+        <p-skeleton height="3rem" width="100%" />
+        <p-skeleton height="3rem" width="80%" />
+      </div>
+      }
+    </div>
+
+    <!-- PERMISOS -->
+    @if (mode === 'preview') {
+    <div class="bg-white rounded-xl border border-[#E6EEF2] p-6 shadow-sm">
+
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h2 class="text-base font-semibold text-[#002E42] flex items-center gap-2">
+            <i class="pi pi-users text-[#32C6C6]"></i>
+            Usuarios con acceso
+          </h2>
+          <p class="text-sm text-[#7A96A3] mt-1">
+            Usuarios autorizados para acceder al formulario
+          </p>
+        </div>
+
+        <button (click)="openAssignModal()" type="button"
+          class="inline-flex items-center gap-2 rounded-xl bg-[#00649B]
+          px-4 py-2 text-sm font-semibold text-white
+          hover:bg-[#00517D] transition cursor-pointer">
+          <i class="pi pi-plus text-xs"></i>
+          Agregar acceso
+        </button>
+      </div>
+
+      @if (!form.permissions.users.length) {
+      <div class="flex flex-col items-center justify-center py-10 text-center
+              border border-dashed border-[#DCE7EC] rounded-2xl bg-[#FAFCFD]">
+        <div class="w-14 h-14 rounded-full bg-[#00649B]/10 flex items-center justify-center mb-4">
+          <i class="pi pi-users text-[#00649B] text-xl"></i>
+        </div>
+        <p class="text-sm font-medium text-[#002E42]">No hay usuarios con acceso</p>
+        <p class="text-xs text-[#7A96A3] mt-1 max-w-sm">
+          Agrega usuarios para permitirles visualizar y responder este formulario.
+        </p>
+      </div>
+      } @else {
+      <div class="flex flex-col gap-3">
+        @for (user of form.permissions.users; track user.username) {
+        <div class="flex items-center justify-between gap-4
+                rounded-2xl border border-[#E6EEF2]
+                px-4 py-3 hover:bg-[#F8FAFB]
+                hover:border-[#00649B]/20 transition">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-full bg-[#00649B]/10
+                    text-[#00649B] flex items-center
+                    justify-center text-sm font-bold flex-shrink-0">
+              {{ getInitials(user.name) }}
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm font-semibold text-[#002E42] truncate">{{ user.name }}</p>
+              <p class="text-xs text-[#7A96A3] truncate">&#64;{{ user.username }}</p>
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+      }
+
+    </div>
+    }
+
+    <!-- DIALOG -->
+    <assign-user-permission-page
+      [(visible)]="visible"
+      [usuarios]="userList()"
+      (assign)="assigPermision(selectedUsers())">
+    </assign-user-permission-page>
+
+    } <!-- fin @if (form) -->
+
+  </div> <!-- fin contenido principal -->
+
+  <!-- PANEL LATERAL DE RESPUESTAS — hermano del contenido principal -->
+  @if (showResponsesPanel && form) {
+  <aside class="w-80 flex-shrink-0 border-l border-[#E6EEF2] bg-white flex flex-col overflow-hidden sticky top-0 h-screen">
+
+    <div class="p-5 border-b border-[#E6EEF2]">
+      <div class="flex items-center justify-between mb-1">
+        <span class="text-sm font-semibold text-[#002E42]">{{ form.name }}</span>
+        <button (click)="toggleResponsesPanel()"
+          class="text-[#7A96A3] hover:text-[#002E42] transition cursor-pointer p-1 rounded-lg hover:bg-[#F4F7F9]">
+          <i class="pi pi-times text-sm"></i>
+        </button>
+      </div>
+      <p-tag [value]="form.category" severity="info" styleClass="text-xs" />
+
+      <div class="mt-4 flex items-center gap-3 bg-[#F4F7F9] rounded-xl p-3">
+        <p class="text-2xl font-bold text-[#00649B]">{{ responsesTotal }}</p>
+        <p class="text-xs text-[#7A96A3] mt-0.5">respuestas totales</p>
+      </div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
+      <p class="text-xs font-semibold text-[#7A96A3] uppercase tracking-wider mb-1">
+        Respondentes recientes
+      </p>
+
+      @if (responses.length === 0) {
+      <div class="text-center py-10 text-[#7A96A3]">
+        <i class="pi pi-inbox text-3xl mb-2 block opacity-40"></i>
+        <p class="text-sm">Aún no hay respuestas</p>
+      </div>
+      } @else {
+      @for (r of responses; track r._id) {
+      <div
+        class="flex items-center gap-3 p-3 rounded-xl border border-[#E6EEF2]
+               hover:border-[#00649B]/30 hover:bg-[#F8FAFB]
+               transition cursor-pointer group"
+        [routerLink]="['/respuestas', r._id]">
+        <div
+          class="w-8 h-8 rounded-full bg-[#00649B]/10 text-[#00649B]
+                 flex items-center justify-center text-xs font-bold flex-shrink-0">
+          {{ getInitials(r.filledBy.fullName) }}
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-[#002E42] truncate">{{ r.filledBy.fullName }}</p>
+          <p class="text-xs text-[#7A96A3] mt-0.5">
+            <i class="pi pi-clock text-[10px] mr-1"></i>
+            {{ r.submittedAt | date: 'dd/MM/yyyy · HH:mm' }}
+          </p>
+        </div>
+        <i class="pi pi-chevron-right text-xs text-[#D1DCE2] group-hover:text-[#00649B] transition"></i>
+      </div>
+      }
+      }
+    </div>
+
+    <div class="p-4 border-t border-[#E6EEF2]">
+      <button (click)="toggleResponsesPanel()" [disabled]="responsesTotal === 0"
+        class="w-full flex items-center justify-center gap-2 rounded-xl
+               border border-[#00649B]/20 bg-[#00649B]/5
+               px-4 py-2.5 text-sm font-semibold text-[#00649B]
+               hover:bg-[#00649B] hover:text-white
+               transition cursor-pointer">
+        <i class="pi pi-list"></i>
+        Ver todas las respuestas
+      </button>
+    </div>
+
+  </aside>
+  }
+
+</div>
