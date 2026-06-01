@@ -1,61 +1,89 @@
-@if (!loading()) {
+<div class="mb-8">
 
-  @if (isAdmin()) {
-    <!-- CATEGORÍAS — solo admin -->
-    @if (categoriasVisibles().length === 0) {
-      <div class="flex flex-col items-center gap-3 py-16 text-[#7A96A3]">
-        <i class="pi pi-inbox text-5xl opacity-30"></i>
-        <p class="text-sm">No hay formularios disponibles</p>
-      </div>
-    } @else {
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        @for (cat of categoriasVisibles(); track cat.code) {
-          <!-- igual que antes -->
-        }
-      </div>
-    }
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+
+    <div>
+
+      <h2 class="text-2xl font-bold text-[#002E42]">
+        Seleccione el área
+      </h2>
+
+      <p class="text-sm text-[#7A96A3] mt-1">
+        Elija el proceso para gestionar sus documentos.
+      </p>
+
+    </div>
+
+    <a
+      routerLink="/formularios/crear/nuevo"
+      class="inline-flex items-center justify-center gap-2
+             bg-[#00649B]
+             hover:bg-[#00517D]
+             text-white text-sm font-semibold
+             px-5 py-3 rounded-xl
+             shadow-sm hover:shadow-md
+             transition-all duration-200">
+
+      <i class="pi pi-plus text-xs"></i>
+
+      Crear formulario
+
+    </a>
+
+  </div>
+
+  @if (categoriasVisibles().length === 0) {
+
+    <div class="flex flex-col items-center gap-3 py-16 text-[#7A96A3]">
+      <i class="pi pi-inbox text-5xl opacity-30"></i>
+      <p class="text-sm">No hay formularios disponibles</p>
+    </div>
 
   } @else {
-    <!-- LISTA DIRECTA — usuarios normales -->
-    @if (forms().length === 0) {
-      <div class="flex flex-col items-center gap-3 py-16 text-[#7A96A3]">
-        <i class="pi pi-inbox text-5xl opacity-30"></i>
-        <p class="text-sm">No tienes formularios asignados</p>
-      </div>
-    } @else {
-      <div class="flex flex-col gap-3">
-        @for (form of forms(); track form.code) {
-        <a [routerLink]="['/formularios', form.code]"
-           [queryParams]="{ mode: 'respond' }"
-           class="bg-white border border-[#E6EEF2] rounded-2xl px-5 py-4
-                  flex items-center gap-4 hover:border-[#00649B]
-                  hover:shadow-sm transition cursor-pointer">
 
-          <div class="w-10 h-10 rounded-xl bg-[#00649B]/10 flex items-center
-                      justify-center shrink-0">
-            <i class="pi pi-file-edit text-sm text-[#00649B]"></i>
+    <div class="max-w-5xl mx-auto">
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+        @for (cat of categoriasVisibles(); track cat.code) {
+
+        <button
+          routerLink="/formularios/categoria/{{cat.label}}"
+          (click)="selectCategoria(cat.code)"
+          class="group bg-white border border-[#E6EEF2]
+                 rounded-2xl p-6 text-left
+                 transition-all duration-200
+                 hover:border-[#00649B]
+                 hover:shadow-md">
+
+          <div class="flex items-start justify-between">
+
+            <div>
+              <h3
+                class="mt-3 text-lg font-bold text-[#002E42]
+                       group-hover:text-[#00649B]">
+
+                {{ cat.label }}
+
+              </h3>
+
+            </div>
+
+            <i
+              class="pi pi-arrow-right text-[#D1DCE2]
+                     group-hover:text-[#00649B]">
+            </i>
+
           </div>
 
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-semibold text-[#002E42] truncate">
-              {{ form.name }}
-            </p>
-            <p class="text-xs text-[#7A96A3] mt-0.5 font-mono">
-              {{ form.code }}
-            </p>
-          </div>
+        </button>
 
-          <span class="text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0"
-                style="background:#E6F1FB; color:#0C447C">
-            {{ form.category }}
-          </span>
-
-          <i class="pi pi-chevron-right text-xs text-[#D1DCE2]"></i>
-
-        </a>
         }
+
       </div>
-    }
+
+    </div>
+
   }
 
-}
+</div>

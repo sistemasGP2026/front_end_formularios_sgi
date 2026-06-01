@@ -15,10 +15,10 @@ export class FormCategoryListPage implements OnInit {
   private readonly formService = inject(FormService);
   private readonly authService = inject(AuthService);
 
-  loading  = signal(true);
-  forms    = signal<Form[]>([]);
+  loading = signal(true);
+  forms = signal<Form[]>([]);
 
-  isAdmin  = computed(() =>
+  isAdmin = computed(() =>
     this.authService.currentUser()?.roles?.includes('ADMIN') ?? false
   );
 
@@ -26,39 +26,82 @@ export class FormCategoryListPage implements OnInit {
 
   categorias = [
     {
-      code: 'CALIDAD',
-      label: 'calidad',
-      descripcion: 'Auditorías e inspecciones',
-      imagen: 'categories/calidad.png',
-      bgColor: '#E6F1FB', textColor: '#0C447C',
+      code: 'DIRECCION',
+      label: 'Gestion de Direccion',
+      imagen: 'categories/direcion.png',
+      bgColor: '#EEEDFE',
+      textColor: '#3C3489'
     },
+    {
+      code: 'GESTION_INTEGRAL',
+      label: 'Gestión Integral',
+      imagen: 'categories/calidad.png',
+      bgColor: '#E6F1FB',
+      textColor: '#0C447C',
+    },
+
+    {
+      code: 'OPERACION_LOGISTICA',
+      label: 'Operación Logística del Servicio Farmacéutico',
+      imagen: 'categories/comercial.png',
+      bgColor: '#E1F5EE',
+      textColor: '#085041',
+    },
+
+    {
+      code: 'PREPARADOS_ESTERILES',
+      label: 'Elaboración y Adecuación de Preparados Estériles y no Estériles',
+      imagen: 'categories/comercial.png',
+      bgColor: '#E1F5EE',
+      textColor: '#085041',
+    },
+
+    {
+      code: 'DISTRIBUCION_MEDICAMENTOS',
+      label: 'Distribución de Medicamentos, Dispositivos Médicos e Insumos',
+      imagen: 'categories/comercial.png',
+      bgColor: '#E1F5EE',
+      textColor: '#085041',
+    },
+
+    {
+      code: 'GESTION_COMPRAS',
+      label: 'Gestión de Compras',
+      imagen: 'categories/financiera.png',
+      bgColor: '#FAEEDA',
+      textColor: '#633806',
+    },
+
     {
       code: 'GESTION_HUMANA',
-      label: 'gestión humana',
-      descripcion: 'Personal y talento',
+      label: 'Gestión Humana',
       imagen: 'categories/gh.png',
-      bgColor: '#E1F5EE', textColor: '#085041',
+      bgColor: '#E1F5EE',
+      textColor: '#085041',
     },
+
     {
-      code: 'COMERCIAL',
-      label: 'comercial',
-      descripcion: 'Ventas y clientes',
+      code: 'GESTION_COMERCIAL',
+      label: 'Gestión Comercial',
       imagen: 'categories/comercial.png',
-      bgColor: '#FAEEDA', textColor: '#633806',
+      bgColor: '#FAEEDA',
+      textColor: '#633806',
     },
+
     {
-      code: 'FINANCIERA',
-      label: 'financiera',
-      descripcion: 'Presupuesto y costos',
+      code: 'GESTION_FINANCIERA',
+      label: 'Gestión Financiera',
       imagen: 'categories/financiera.png',
-      bgColor: '#E6F1FB', textColor: '#0C447C',
+      bgColor: '#E6F1FB',
+      textColor: '#0C447C',
     },
+
     {
       code: 'MANTENIMIENTO',
-      label: 'mantenimiento',
-      descripcion: 'Equipos e instalaciones',
+      label: 'Mantenimiento',
       imagen: 'categories/mantenimiento.png',
-      bgColor: '#EEEDFE', textColor: '#3C3489',
+      bgColor: '#EEEDFE',
+      textColor: '#3C3489',
     },
   ];
 
