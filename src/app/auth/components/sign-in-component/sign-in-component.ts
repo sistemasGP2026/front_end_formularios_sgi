@@ -40,8 +40,8 @@ export class SignInComponent {
   private messageService = inject(MessageService);
 
   public myForm: FormGroup = this.fb.group({
-    username: ['gcastro1', [Validators.required, Validators.minLength(4)]],
-    password: ['1223456789', [Validators.required, Validators.minLength(4)]]
+    username: ['', [Validators.required, Validators.minLength(4)]],
+    password: ['', [Validators.required, Validators.minLength(4)]]
   })
 
   public signIn() {
