@@ -1,3 +1,5 @@
+<p-toast />
+
 <div class="flex min-h-screen bg-[#F8FAFB]">
 
   <!-- CONTENIDO PRINCIPAL -->
@@ -32,6 +34,8 @@
 
     <!-- HEADER -->
     <div class="bg-white rounded-xl border border-[#E6EEF2] p-6 shadow-sm">
+
+      <!-- TOP BAR -->
       <div class="flex items-center justify-between mb-4">
 
         <button (click)="goBack()"
@@ -41,30 +45,46 @@
         </button>
 
         @if (mode === 'preview') {
-        <button type="button" (click)="loadResponses()"
-          class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition cursor-pointer"
-          [class.border-[#00649B]]="showResponsesPanel"
-          [class.bg-[#00649B]]="showResponsesPanel"
-          [class.text-white]="showResponsesPanel"
-          [class.border-[#00649B]/20]="!showResponsesPanel"
-          [class.bg-[#00649B]/5]="!showResponsesPanel"
-          [class.text-[#00649B]]="!showResponsesPanel">
-          <i class="pi pi-list"></i>
-          <span>Ver respuestas</span>
-          @if (responsesTotal > 0) {
-          <span class="rounded-full px-2 py-0.5 text-xs"
-            [class.bg-white/20]="showResponsesPanel"
+        <div class="flex items-center gap-2">
+
+          <!-- EDITAR -->
+          <button type="button" (click)="openEditModal()"
+            class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm
+                   font-semibold transition cursor-pointer
+                   border-[#CCBA86]/40 bg-[#CCBA86]/10 text-[#8A6B1F]
+                   hover:bg-[#CCBA86]/20">
+            <i class="pi pi-pencil text-xs"></i>
+            <span>Editar</span>
+          </button>
+
+          <!-- VER RESPUESTAS -->
+          <button type="button" (click)="loadResponses()"
+            class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition cursor-pointer"
+            [class.border-[#00649B]]="showResponsesPanel"
+            [class.bg-[#00649B]]="showResponsesPanel"
             [class.text-white]="showResponsesPanel"
-            [class.bg-[#00649B]/10]="!showResponsesPanel"
+            [class.border-[#00649B]/20]="!showResponsesPanel"
+            [class.bg-[#00649B]/5]="!showResponsesPanel"
             [class.text-[#00649B]]="!showResponsesPanel">
-            {{ responsesTotal }}
-          </span>
-          }
-        </button>
+            <i class="pi pi-list"></i>
+            <span>Ver respuestas</span>
+            @if (responsesTotal > 0) {
+            <span class="rounded-full px-2 py-0.5 text-xs"
+              [class.bg-white/20]="showResponsesPanel"
+              [class.text-white]="showResponsesPanel"
+              [class.bg-[#00649B]/10]="!showResponsesPanel"
+              [class.text-[#00649B]]="!showResponsesPanel">
+              {{ responsesTotal }}
+            </span>
+            }
+          </button>
+
+        </div>
         }
 
       </div>
 
+      <!-- TÍTULO Y CATEGORÍA -->
       <div class="flex flex-wrap justify-between gap-4">
         <div>
           <span class="text-xs font-bold uppercase tracking-wider bg-[#CCBA8620] text-[#002E42] px-2 py-1 rounded">
@@ -72,7 +92,7 @@
           </span>
           <h1 class="text-2xl font-bold text-[#002E42] mt-2">{{ form.name }}</h1>
           @if (form.description) {
-          <p class="text-sm text-[#4A6A7A] mt-1 max-w-xl">{{ form.description }}</p>
+          <p class="text-sm text-[#4A6A7A] mt-1 max-w-xl leading-relaxed">{{ form.description }}</p>
           }
         </div>
         <div class="flex flex-wrap items-start gap-2">
@@ -83,10 +103,11 @@
         </div>
       </div>
 
+      <!-- META -->
       <div class="flex flex-wrap gap-4 mt-4 pt-4 border-t border-[#E6EEF2] text-sm text-[#4A6A7A]">
         <div class="flex items-center gap-1">
           <i class="pi pi-user text-[#32C6C6] text-xs"></i>
-          Creado por <strong class="text-[#002E42]">{{ form.createdBy.name }}</strong>
+          Creado por <strong class="text-[#002E42] ml-1">{{ form.createdBy.name }}</strong>
         </div>
         <div class="flex items-center gap-1">
           <i class="pi pi-at text-[#32C6C6] text-xs"></i>
@@ -94,8 +115,14 @@
         </div>
         <div class="flex items-center gap-1">
           <i class="pi pi-calendar text-[#32C6C6] text-xs"></i>
-          {{ form.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+          Registro: {{ form.createdAt | date: 'dd/MM/yyyy HH:mm' }}
         </div>
+        @if (form.documentDate) {
+        <div class="flex items-center gap-1">
+          <i class="pi pi-file text-[#32C6C6] text-xs"></i>
+          Fecha doc: <strong class="text-[#002E42] ml-1">{{ form.documentDate | date: 'dd/MM/yyyy' }}</strong>
+        </div>
+        }
         <div class="flex items-center gap-1">
           <i class="pi pi-th-large text-[#32C6C6] text-xs"></i>
           {{ form.sections.length }} secciones
@@ -105,6 +132,7 @@
           {{ form.fields.length }} campos
         </div>
       </div>
+
     </div>
 
     <!-- SETTINGS -->
@@ -115,24 +143,67 @@
         Configuración
       </h2>
       <div class="flex flex-wrap gap-3">
-        <div class="px-3 py-2 rounded-lg border text-sm flex items-center gap-2"
-          [ngClass]="form.settings.requiresApproval ? 'bg-[#32C6C620] border-[#32C6C6] text-[#002E42]' : 'bg-[#F4F7F9] text-[#7A96A3]'">
-          <i class="pi"
-            [ngClass]="form.settings.requiresApproval ? 'pi-check-circle text-[#32C6C6]' : 'pi-times-circle'"></i>
+
+        <div class="px-3 py-2 rounded-lg border text-sm font-medium flex items-center gap-2"
+          [ngClass]="form.settings.requiresApproval
+            ? 'bg-[#32C6C6]/10 border-[#32C6C6] text-[#002E42]'
+            : 'bg-[#F4F7F9] border-[#E6EEF2] text-[#7A96A3]'">
+          <i class="pi text-sm"
+            [ngClass]="form.settings.requiresApproval
+              ? 'pi-check-circle text-[#32C6C6]'
+              : 'pi-times-circle text-[#B0C4CE]'">
+          </i>
           Requiere aprobación
         </div>
-        <div class="px-3 py-2 rounded-lg border text-sm flex items-center gap-2"
-          [ngClass]="form.settings.preventDuplicates ? 'bg-[#32C6C620] border-[#32C6C6]' : 'bg-[#F4F7F9] text-[#7A96A3]'">
-          <i class="pi"
-            [ngClass]="form.settings.preventDuplicates ? 'pi-check-circle text-[#32C6C6]' : 'pi-times-circle'"></i>
+
+        <div class="px-3 py-2 rounded-lg border text-sm font-medium flex items-center gap-2"
+          [ngClass]="form.settings.preventDuplicates
+            ? 'bg-[#32C6C6]/10 border-[#32C6C6] text-[#002E42]'
+            : 'bg-[#F4F7F9] border-[#E6EEF2] text-[#7A96A3]'">
+          <i class="pi text-sm"
+            [ngClass]="form.settings.preventDuplicates
+              ? 'pi-check-circle text-[#32C6C6]'
+              : 'pi-times-circle text-[#B0C4CE]'">
+          </i>
           Evitar duplicados
         </div>
-        <div class="px-3 py-2 rounded-lg border text-sm flex items-center gap-2"
-          [ngClass]="form.settings.allowDraft ? 'bg-[#32C6C620] border-[#32C6C6]' : 'bg-[#F4F7F9] text-[#7A96A3]'">
-          <i class="pi"
-            [ngClass]="form.settings.allowDraft ? 'pi-check-circle text-[#32C6C6]' : 'pi-times-circle'"></i>
+
+        <div class="px-3 py-2 rounded-lg border text-sm font-medium flex items-center gap-2"
+          [ngClass]="form.settings.allowDraft
+            ? 'bg-[#32C6C6]/10 border-[#32C6C6] text-[#002E42]'
+            : 'bg-[#F4F7F9] border-[#E6EEF2] text-[#7A96A3]'">
+          <i class="pi text-sm"
+            [ngClass]="form.settings.allowDraft
+              ? 'pi-check-circle text-[#32C6C6]'
+              : 'pi-times-circle text-[#B0C4CE]'">
+          </i>
           Permite borradores
         </div>
+
+        <div class="px-3 py-2 rounded-lg border text-sm font-medium flex items-center gap-2"
+          [ngClass]="form.settings.requiresSede
+            ? 'bg-[#32C6C6]/10 border-[#32C6C6] text-[#002E42]'
+            : 'bg-[#F4F7F9] border-[#E6EEF2] text-[#7A96A3]'">
+          <i class="pi text-sm"
+            [ngClass]="form.settings.requiresSede
+              ? 'pi-check-circle text-[#32C6C6]'
+              : 'pi-times-circle text-[#B0C4CE]'">
+          </i>
+          Requiere sede
+        </div>
+
+        <div class="px-3 py-2 rounded-lg border text-sm font-medium flex items-center gap-2"
+          [ngClass]="form.settings.showCompliance
+            ? 'bg-[#32C6C6]/10 border-[#32C6C6] text-[#002E42]'
+            : 'bg-[#F4F7F9] border-[#E6EEF2] text-[#7A96A3]'">
+          <i class="pi text-sm"
+            [ngClass]="form.settings.showCompliance
+              ? 'pi-check-circle text-[#32C6C6]'
+              : 'pi-times-circle text-[#B0C4CE]'">
+          </i>
+          Mostrar cumplimiento
+        </div>
+
       </div>
     </div>
     }
@@ -144,7 +215,10 @@
         Vista previa
       </h2>
       @if (sectionsWithFields.length > 0) {
-      <form-preview [sectionsWithFields]="sectionsWithFields" [formName]="form.name" [mode]="mode" />
+      <form-preview
+        [sectionsWithFields]="sectionsWithFields"
+        [formName]="form.name"
+        [mode]="mode" />
       } @else {
       <div class="flex flex-col gap-3">
         <p-skeleton height="3rem" width="100%" />
@@ -168,11 +242,10 @@
             Usuarios autorizados para acceder al formulario
           </p>
         </div>
-
         <button (click)="openAssignModal()" type="button"
           class="inline-flex items-center gap-2 rounded-xl bg-[#00649B]
-          px-4 py-2 text-sm font-semibold text-white
-          hover:bg-[#00517D] transition cursor-pointer">
+                 px-4 py-2 text-sm font-semibold text-white
+                 hover:bg-[#00517D] transition cursor-pointer">
           <i class="pi pi-plus text-xs"></i>
           Agregar acceso
         </button>
@@ -180,7 +253,7 @@
 
       @if (!form.permissions.users.length) {
       <div class="flex flex-col items-center justify-center py-10 text-center
-              border border-dashed border-[#DCE7EC] rounded-2xl bg-[#FAFCFD]">
+                  border border-dashed border-[#DCE7EC] rounded-2xl bg-[#FAFCFD]">
         <div class="w-14 h-14 rounded-full bg-[#00649B]/10 flex items-center justify-center mb-4">
           <i class="pi pi-users text-[#00649B] text-xl"></i>
         </div>
@@ -192,20 +265,15 @@
       } @else {
       <div class="flex flex-col gap-3">
         @for (user of form.permissions.users; track user.username) {
-        <div class="flex items-center justify-between gap-4
-                rounded-2xl border border-[#E6EEF2]
-                px-4 py-3 hover:bg-[#F8FAFB]
-                hover:border-[#00649B]/20 transition">
-          <div class="flex items-center gap-3 min-w-0">
-            <div class="w-10 h-10 rounded-full bg-[#00649B]/10
-                    text-[#00649B] flex items-center
-                    justify-center text-sm font-bold flex-shrink-0">
-              {{ getInitials(user.name) }}
-            </div>
-            <div class="min-w-0">
-              <p class="text-sm font-semibold text-[#002E42] truncate">{{ user.name }}</p>
-              <p class="text-xs text-[#7A96A3] truncate">&#64;{{ user.username }}</p>
-            </div>
+        <div class="flex items-center gap-4 rounded-2xl border border-[#E6EEF2]
+                    px-4 py-3 hover:bg-[#F8FAFB] hover:border-[#00649B]/20 transition">
+          <div class="w-10 h-10 rounded-full bg-[#00649B]/10 text-[#00649B]
+                      flex items-center justify-center text-sm font-bold flex-shrink-0">
+            {{ getInitials(user.name) }}
+          </div>
+          <div class="min-w-0">
+            <p class="text-sm font-semibold text-[#002E42] truncate">{{ user.name }}</p>
+            <p class="text-xs text-[#7A96A3] truncate">&#64;{{ user.username }}</p>
           </div>
         </div>
         }
@@ -215,18 +283,95 @@
     </div>
     }
 
-    <!-- DIALOG -->
+    <!-- DIALOG ASIGNAR USUARIO -->
     <assign-user-permission-page
       [(visible)]="visible"
       [usuarios]="userList()"
       (assign)="assigPermision(selectedUsers())">
     </assign-user-permission-page>
 
+    <!-- DIALOG EDITAR FORMULARIO -->
+    <p-dialog
+      header="Editar formulario"
+      [(visible)]="visibleEdit"
+      [modal]="true"
+      [draggable]="false"
+      [resizable]="false"
+      [closable]="true"
+      [style]="{ width: '72rem' }"
+      styleClass="rounded-2xl overflow-hidden">
+
+      <div class="flex flex-col gap-4">
+
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-[#00649B]/10 flex items-center justify-center">
+            <i class="pi pi-code text-[#00649B] text-sm"></i>
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-[#002E42]">JSON del formulario</p>
+            <p class="text-xs text-[#7A96A3]">Edita los campos — la versión se incrementará automáticamente</p>
+          </div>
+        </div>
+
+        <textarea
+          rows="24"
+          [ngModel]="editJsonInput"
+          (ngModelChange)="onEditJsonChange($event)"
+          class="w-full rounded-xl border border-[#E6EEF2] bg-[#F8FAFB]
+                 px-4 py-3 text-sm font-mono text-[#002E42]
+                 outline-none focus:border-[#00649B] resize-none">
+        </textarea>
+
+        @if (editJsonError) {
+        <div class="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+          <i class="pi pi-exclamation-circle text-red-500 text-sm"></i>
+          <p class="text-sm text-red-600">{{ editJsonError }}</p>
+        </div>
+        }
+
+        @if (editParsed && !editJsonError) {
+        <div class="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3">
+          <i class="pi pi-check-circle text-green-500 text-sm"></i>
+          <p class="text-sm text-green-700">
+            JSON válido — se guardará como
+            <strong>v{{ editParsed?.version ? editParsed.version : (form.version + 1) }}</strong>
+          </p>
+        </div>
+        }
+
+        <div class="flex justify-end gap-3 pt-2 border-t border-[#E6EEF2]">
+          <button type="button" (click)="visibleEdit = false"
+            class="px-4 py-2 rounded-xl border border-[#D1DCE2]
+                   text-sm font-medium text-[#4A6A7A]
+                   hover:bg-[#F4F7F9] transition cursor-pointer">
+            Cancelar
+          </button>
+          <button type="button"
+            [disabled]="!editParsed || editSaving"
+            (click)="saveEdit()"
+            class="inline-flex items-center gap-2 px-5 py-2 rounded-xl
+                   bg-[#00649B] text-sm font-semibold text-white
+                   hover:bg-[#00517D] transition cursor-pointer
+                   disabled:opacity-60 disabled:cursor-not-allowed">
+            @if (editSaving) {
+              <i class="pi pi-spin pi-spinner text-xs"></i>
+              Guardando...
+            } @else {
+              <i class="pi pi-save text-xs"></i>
+              Guardar cambios
+            }
+          </button>
+        </div>
+
+      </div>
+
+    </p-dialog>
+
     } <!-- fin @if (form) -->
 
   </div> <!-- fin contenido principal -->
 
-  <!-- PANEL LATERAL DE RESPUESTAS — hermano del contenido principal -->
+  <!-- PANEL LATERAL DE RESPUESTAS -->
   @if (showResponsesPanel && form) {
   <aside class="w-80 flex-shrink-0 border-l border-[#E6EEF2] bg-white flex flex-col overflow-hidden sticky top-0 h-screen">
 
@@ -258,14 +403,12 @@
       </div>
       } @else {
       @for (r of responses; track r._id) {
-      <div
-        class="flex items-center gap-3 p-3 rounded-xl border border-[#E6EEF2]
-               hover:border-[#00649B]/30 hover:bg-[#F8FAFB]
-               transition cursor-pointer group"
-        [routerLink]="['/respuestas', r._id]">
-        <div
-          class="w-8 h-8 rounded-full bg-[#00649B]/10 text-[#00649B]
-                 flex items-center justify-center text-xs font-bold flex-shrink-0">
+      <div class="flex items-center gap-3 p-3 rounded-xl border border-[#E6EEF2]
+                  hover:border-[#00649B]/30 hover:bg-[#F8FAFB]
+                  transition cursor-pointer group"
+           [routerLink]="['/respuestas', r._id]">
+        <div class="w-8 h-8 rounded-full bg-[#00649B]/10 text-[#00649B]
+                    flex items-center justify-center text-xs font-bold flex-shrink-0">
           {{ getInitials(r.filledBy.fullName) }}
         </div>
         <div class="flex-1 min-w-0">

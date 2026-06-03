@@ -29,23 +29,22 @@ import { UsuarioService } from '../../../usuarios/services/usuario.service';
 })
 export class CreateFormComponent implements OnInit {
 
-  private readonly formService  = inject(FormService);
+  private readonly formService = inject(FormService);
   private readonly messageService = inject(MessageService);
-  private readonly userService  = inject(UsuarioService);
+  private readonly userService = inject(UsuarioService);
 
-  userList    = signal<UserResponse[]>([]);
-  loading     = signal(false);
-  visible     = false;
-  jsonInput   = signal('');
-  jsonError   = signal('');
-  parsedForm  = signal<any | null>(null);
+  userList = signal<UserResponse[]>([]);
+  loading = signal(false);
+  visible = false;
+  jsonInput = signal('');
+  jsonError = signal('');
+  parsedForm = signal<any | null>(null);
 
-  // Preview del formulario parseado
-  formName     = computed(() => this.parsedForm()?.name     ?? '');
-  formCode     = computed(() => this.parsedForm()?.code     ?? '');
+  formName = computed(() => this.parsedForm()?.name ?? '');
+  formCode = computed(() => this.parsedForm()?.code ?? '');
   formCategory = computed(() => this.parsedForm()?.category ?? '');
   formSections = computed(() => this.parsedForm()?.sections ?? []);
-  formFields   = computed(() => this.parsedForm()?.fields   ?? []);
+  formFields = computed(() => this.parsedForm()?.fields ?? []);
 
   ngOnInit(): void {
     this.loadUsers();
@@ -55,7 +54,6 @@ export class CreateFormComponent implements OnInit {
     this.visible = true;
   }
 
-  // Parsea y valida el JSON en tiempo real
   onJsonChange(value: string): void {
     this.jsonInput.set(value);
     this.jsonError.set('');
@@ -77,13 +75,15 @@ export class CreateFormComponent implements OnInit {
   }
 
   private validateForm(form: any): string | null {
-    if (!form.code?.trim())     return 'Falta el campo "code"';
-    if (!form.name?.trim())     return 'Falta el campo "name"';
+    if (!form.code?.trim()) return 'Falta el campo "code"';
+    if (!form.name?.trim()) return 'Falta el campo "name"';
     if (!form.category?.trim()) return 'Falta el campo "category"';
     if (!Array.isArray(form.sections) || form.sections.length === 0)
       return 'Debe tener al menos una sección en "sections"';
     if (!Array.isArray(form.fields))
       return 'El campo "fields" debe ser un array';
+    if (form.version !== undefined && (isNaN(form.version) || form.version < 1))
+      return '"version" debe ser un número mayor o igual a 1';
     return null;
   }
 

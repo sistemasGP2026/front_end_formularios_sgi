@@ -71,7 +71,7 @@ export interface FormField {
   validations: FieldValidation[];
   conditionalRules: ConditionalRule[];
   order: number;
-  dataSource?: string;
+  dataSource?: string | null;
 }
 
 export interface FormSettings {
@@ -80,11 +80,8 @@ export interface FormSettings {
   showCompliance: boolean;
   preventDuplicates: boolean;
   duplicateBy: string | null;
-}
-
-export interface FormAvailability {
-  startDate: string | null;
-  endDate: string | null;
+  requiresSede: boolean;          
+  requiresReviewSignature: boolean;
 }
 
 export interface FormUserPermission {
@@ -92,11 +89,6 @@ export interface FormUserPermission {
   name: string;
   username: string;
   email: string;
-  canView: boolean;
-  canSubmit: boolean;
-  canEdit: boolean;
-  canApprove: boolean;
-  canExport: boolean;
 }
 
 export interface FormPermissions {
@@ -111,6 +103,7 @@ export interface Form {
   category: string;
   accessType: string;
   version: number;
+  documentDate?: string | null;
   settings: FormSettings;
   permissions: FormPermissions;
   sections: FormSection[];
@@ -118,6 +111,7 @@ export interface Form {
   createdBy: FormCreatedBy;
   createdAt: string;
   updatedAt: string;
+  deleted: boolean;             
 }
 
 export interface SectionPreview {

@@ -2,8 +2,6 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Form } from '../interfaces/form.interface';
 import { Observable } from 'rxjs';
-import { AssignPermission } from '../interfaces/assign-permission.response';
-
 
 @Injectable({
   providedIn: 'root',
@@ -12,93 +10,72 @@ export class FormService {
   protected readonly baseUrl: string = "http://localhost:3000";
   private http = inject(HttpClient);
 
-  getToken(): string {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      return '';
-    }
-    return token;
+  private getToken(): string {
+    return localStorage.getItem('token') ?? '';
   }
 
-  getAllForms() {
-    const token = this.getToken();
-    const headers = {
+  private getHeaders() {
+    return {
       headers: new HttpHeaders({
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
+        'Authorization': 'Bearer ' + this.getToken()
       })
-    }
-    return this.http.get<Form[]>(`${this.baseUrl}/forms`, headers);
+    };
   }
 
-  getFormByCategory(category: string) {
-    const token = this.getToken();
-    const headers = {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      })
-    }
-    return this.http.get<Form[]>(`${this.baseUrl}/forms/category/${category.toUpperCase()}`, headers);
+  getAllForms(): Observable<Form[]> {
+    return this.http.get<Form[]>(`${this.baseUrl}/forms`, this.getHeaders());
+  }
+
+  getFormByCategory(category: string): Observable<Form[]> {
+    return this.http.get<Form[]>(
+      `${this.baseUrl}/forms/category/${category.toUpperCase()}`,
+      this.getHeaders()
+    );
   }
 
   getFormByCode(code: string): Observable<Form> {
-    const token = this.getToken();
-    const headers = {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      })
-    }
-    return this.http.get<Form>(`${this.baseUrl}/forms/${code}`, headers)
+    return this.http.get<Form>(
+      `${this.baseUrl}/forms/${code}`,
+      this.getHeaders()
+    );
+  }
+
+  createForm(form: any): Observable<any> {
+    return this.http.post(
+      `${this.baseUrl}/forms`,
+      form,
+      this.getHeaders()
+    );
+  }
+
+  updateForm(code: string, dto: any): Observable<Form> {
+    return this.http.put<Form>(
+      `${this.baseUrl}/forms/${code}`,
+      dto,
+      this.getHeaders()
+    );
   }
 
   assignPermissionToUser(formCode: string, usernames: string[]): Observable<any> {
-    const token = this.getToken();
-    const headers = {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      })
-    }
-    const body = {
-      formCode, usernames
-    }
-    return this.http.patch<any>(`${this.baseUrl}/forms`, body, headers)
+    return this.http.patch<any>(
+      `${this.baseUrl}/forms`,
+      { formCode, usernames },
+      this.getHeaders()
+    );
   }
 
   deletePermissionToUSer(formCode: string, username: string): Observable<any> {
-    const token = this.getToken();
-    const headers = {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      })
-    }
-    return this.http.delete(`${this.baseUrl}/forms/${formCode}/${username}`, headers)
+    return this.http.delete(
+      `${this.baseUrl}/forms/${formCode}/${username}`,
+      this.getHeaders()
+    );
   }
 
-  createForm(form: Form) {
-    const token = this.getToken();
-    const headers = {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      })
-    }
-    return this.http.post(`${this.baseUrl}/forms`, form, headers);
+  getMyFormsAssigned(): Observable<Form[]> {
+    return this.http.get<Form[]>(
+      `${this.baseUrl}/forms/myform/assigned`,
+      this.getHeaders()
+    );
   }
-
-  getMyFormsAssigned():Observable<Form[]> {
-    const token = this.getToken();
-    const headers = {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      })
-    }
-
-    return this.http.get<Form[]>(`${this.baseUrl}/forms/myform/assigned`, headers)
-  }
-
 }

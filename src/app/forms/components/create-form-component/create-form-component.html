@@ -25,7 +25,6 @@
 
     <!-- LEFT — JSON EDITOR -->
     <div class="overflow-y-auto p-6 flex flex-col gap-4">
-
       <div class="bg-white rounded-2xl border border-[#E6EEF2] p-5 flex flex-col gap-3">
 
         <div class="flex items-center gap-2">
@@ -42,7 +41,7 @@
           rows="28"
           [ngModel]="jsonInput()"
           (ngModelChange)="onJsonChange($event)"
-          placeholder='{ "code": "SST-001", "name": "...", "sections": [...], "fields": [...] }'
+          placeholder='{ "code": "SST-001", "name": "...", "version": 1, "documentDate": "2026-01-01", "sections": [...], "fields": [...] }'
           class="w-full rounded-xl border border-[#E6EEF2] bg-[#F8FAFB]
                  px-4 py-3 text-sm font-mono text-[#002E42]
                  outline-none focus:border-[#00649B] resize-none">
@@ -70,7 +69,6 @@
         }
 
       </div>
-
     </div>
 
     <!-- RIGHT — USUARIOS + PREVIEW -->
@@ -131,19 +129,37 @@
         <h2 class="font-bold text-[#002E42] mb-3">Preview</h2>
         <div class="bg-[#F7FAFC] border border-[#E6EEF2] rounded-2xl p-4">
 
-          <div class="flex items-center gap-2 mb-1">
+          <!-- CÓDIGO + CATEGORÍA + VERSIÓN -->
+          <div class="flex flex-wrap items-center gap-2 mb-2">
             <span class="text-xs font-bold bg-[#CCBA8620] text-[#002E42]
                          px-2 py-0.5 rounded font-mono">
               {{ formCode() }}
             </span>
-            <span class="text-xs bg-[#E6F1FB] text-[#0C447C]
-                         px-2 py-0.5 rounded">
+            <span class="text-xs bg-[#E6F1FB] text-[#0C447C] px-2 py-0.5 rounded">
               {{ formCategory() }}
+            </span>
+            <span class="text-xs bg-[#E6EEF2] text-[#002E42] font-semibold px-2 py-0.5 rounded">
+              v{{ parsedForm()?.version ?? 1 }}
             </span>
           </div>
 
-          <h3 class="font-bold text-[#002E42] mt-2">{{ formName() }}</h3>
+          <!-- NOMBRE -->
+          <h3 class="font-bold text-[#002E42] mt-1">{{ formName() }}</h3>
 
+          <!-- FECHA DOCUMENTO -->
+          @if (parsedForm()?.documentDate) {
+          <div class="flex items-center gap-1 mt-1">
+            <i class="pi pi-calendar text-[#32C6C6] text-xs"></i>
+            <span class="text-xs text-[#7A96A3]">
+              Fecha documento:
+              <strong class="text-[#002E42]">
+                {{ parsedForm().documentDate | date: 'dd/MM/yyyy' }}
+              </strong>
+            </span>
+          </div>
+          }
+
+          <!-- SECCIONES Y CAMPOS -->
           <div class="mt-4 flex flex-col gap-3">
             @for (section of formSections(); track section.id) {
             <div>
