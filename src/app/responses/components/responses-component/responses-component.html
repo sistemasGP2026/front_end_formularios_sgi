@@ -1,361 +1,342 @@
-<div class="flex h-screen overflow-hidden bg-[#F4F7FA]">
+<div class="flex flex-col h-screen overflow-hidden bg-[#F4F7FA]">
 
-    <!-- SIDEBAR -->
-    <aside class="flex w-72 shrink-0 flex-col border-r border-gray-200 bg-white overflow-hidden">
+  <!-- FILTROS DE CATEGORÍA — barra superior horizontal -->
+  <div class="bg-white border-b border-gray-200 px-6 py-3 shrink-0">
+    <div class="flex items-center gap-6 overflow-x-auto scrollbar-none">
 
-        <div class="p-4 border-b border-gray-100">
-            <p-iconfield class="w-full">
-                <p-inputicon class="pi pi-search" />
-                <input pInputText type="text" placeholder="Buscar formulario..." class="w-full text-sm"
-                    [(ngModel)]="searchSidebar" />
-            </p-iconfield>
-        </div>
+      <span class="text-xs font-semibold uppercase tracking-wider text-gray-400 shrink-0">
+        Categorías
+      </span>
 
-        <div class="px-4 py-3 border-b border-gray-100">
-            <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                Formularios disponibles
-            </span>
-        </div>
+      <div class="flex items-center gap-4 flex-wrap">
+        @for (cat of categoriesOnly; track cat.value) {
+        <label class="flex items-center gap-1.5 cursor-pointer select-none shrink-0">
+          <input
+            type="checkbox"
+            class="w-3.5 h-3.5 accent-[#00649B] cursor-pointer"
+            [checked]="selectedCategories().includes(cat.value)"
+            (change)="toggleCategory(cat.value)" />
+          <span class="text-xs font-medium text-[#002E42] whitespace-nowrap">
+            {{ cat.label }}
+          </span>
+        </label>
+        }
+      </div>
 
-        <div class="flex-1 overflow-y-auto">
+      @if (selectedCategories().length > 0) {
+      <button
+        class="text-xs text-[#00649B] hover:underline shrink-0 cursor-pointer ml-2"
+        (click)="selectedCategories.set([])">
+        Limpiar
+      </button>
+      }
 
-            @for (f of forms(); track f.code) {
+    </div>
+  </div>
 
-            <button
-                class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 border-l-2"
-                [class.border-[#00649B]]="form()?.code === f.code" [class.bg-[#00649B]/5]="form()?.code === f.code"
-                [class.border-transparent]="form()?.code !== f.code" (click)="selectedForm(f.code)">
+  <!-- CONTENIDO PRINCIPAL -->
+  <div class="flex flex-1 overflow-hidden">
 
-                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
-                    <i class="pi pi-file-edit text-sm"></i>
-                </div>
+    <!-- SIDEBAR — lista de formularios -->
+    <aside class="flex w-64 shrink-0 flex-col border-r border-gray-200 bg-white overflow-hidden">
 
-                <div class="flex-1 min-w-0">
-                    <p class="truncate text-sm font-medium text-[#002E42]">
-                        {{ f.name }}
-                    </p>
+      <!-- BÚSQUEDA -->
+      <div class="p-3 border-b border-gray-100">
+        <p-iconfield class="w-full">
+          <p-inputicon class="pi pi-search" />
+          <input pInputText type="text" placeholder="Buscar..."
+                 class="w-full text-sm"
+                 [ngModel]="searchSidebar()"
+                 (ngModelChange)="searchSidebar.set($event)" />
+        </p-iconfield>
+      </div>
 
-                    <p class="text-xs text-gray-400 font-mono">
-                        {{ f.code }}
-                    </p>
-                </div>
+      <!-- CONTADOR -->
+      <div class="px-4 py-2 border-b border-gray-100 flex items-center justify-between">
+        <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          Formularios
+        </span>
+        <span class="text-xs font-medium text-gray-400">
+          {{ filteredForms().length }}
+        </span>
+      </div>
 
-                <i class="pi pi-chevron-right text-xs text-gray-300"></i>
+      <!-- LISTA -->
+      <div class="flex-1 overflow-y-auto">
 
-            </button>
-
-            }
-
-            @if (!loading() && forms().length === 0) {
-
-            <div class="flex flex-col items-center gap-2 py-12 text-gray-400">
-                <i class="pi pi-inbox text-3xl opacity-40"></i>
-                <p class="text-xs">No hay formularios</p>
+        @if (loading()) {
+          @for (i of [1,2,3,4,5]; track i) {
+          <div class="flex items-center gap-3 px-4 py-3 animate-pulse">
+            <div class="w-8 h-8 rounded-lg bg-gray-100 shrink-0"></div>
+            <div class="flex-1 flex flex-col gap-1.5">
+              <div class="h-3 bg-gray-100 rounded w-3/4"></div>
+              <div class="h-2 bg-gray-100 rounded w-1/3"></div>
             </div>
+          </div>
+          }
+        }
 
-            }
-
+        @if (!loading() && filteredForms().length === 0) {
+        <div class="flex flex-col items-center gap-2 py-10 text-gray-400">
+          <i class="pi pi-inbox text-2xl opacity-40"></i>
+          <p class="text-xs">Sin resultados</p>
         </div>
+        }
+
+        @for (f of filteredForms(); track f.code) {
+        <button
+          class="flex w-full items-center gap-3 px-4 py-3 text-left
+                 transition-colors hover:bg-gray-50 border-l-2"
+          [class.border-[#00649B]]="form()?.code === f.code"
+          [class.bg-[#00649B]/5]="form()?.code === f.code"
+          [class.border-transparent]="form()?.code !== f.code"
+          (click)="selectedForm(f.code)">
+
+          <div class="flex h-8 w-8 shrink-0 items-center justify-center
+                      rounded-lg text-[10px] font-bold"
+               [style.background]="getCatColor(f.category).bg"
+               [style.color]="getCatColor(f.category).text">
+            {{ getCatLabel(f.category).slice(0,2).toUpperCase() }}
+          </div>
+
+          <div class="flex-1 min-w-0">
+            <p class="truncate text-sm font-medium text-[#002E42] leading-tight">
+              {{ f.name }}
+            </p>
+            <p class="text-[10px] text-gray-400 font-mono mt-0.5">{{ f.code }}</p>
+          </div>
+
+          <i class="pi pi-chevron-right text-xs text-gray-300 shrink-0"></i>
+
+        </button>
+        }
+
+      </div>
 
     </aside>
 
-    <!-- PANEL CENTRAL -->
+    <!-- PANEL CENTRAL — respuestas -->
     <div class="flex flex-1 flex-col overflow-hidden">
 
-        @if (form()) {
+      @if (form()) {
 
-        <!-- Header -->
-        <div class="border-b border-gray-200 bg-white px-6 py-4 shrink-0">
-
-            <div class="flex items-center justify-between">
-
-                <div>
-                    <h1 class="text-lg font-bold text-[#002E42]">
-                        {{ form()!.name }}
-                    </h1>
-
-                    <p class="text-xs text-gray-400 mt-0.5">
-                        {{ responses().length }} respuesta{{ responses().length !== 1 ? 's' : '' }}
-                    </p>
-                </div>
-
-                <div class="flex items-center gap-2">
-
-                    <button (click)="downloadResponse(selectedResponse())"
-                        [disabled]="selectedResponse() === null && selectedResponses().length === 0 || form() === null"
-                        pButton icon="pi pi-download" label="Exportar" class="p-button-outlined p-button-sm"
-                        style="color:#002E42; border-color:#e2e8f0">
-                    </button>
-
-                </div>
-
+      <!-- HEADER -->
+      <div class="border-b border-gray-200 bg-white px-6 py-4 shrink-0">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center
+                        rounded-xl text-xs font-bold"
+                 [style.background]="getCatColor(form()!.category).bg"
+                 [style.color]="getCatColor(form()!.category).text">
+              {{ getCatLabel(form()!.category).slice(0,2).toUpperCase() }}
             </div>
-
-            <!-- SELECT ALL -->
-            <div class="mt-4 flex items-center gap-3">
-
-                <p-checkbox [binary]="true" [ngModel]="selectAll()" (ngModelChange)="toggleAllResponses($event)">
-                </p-checkbox>
-
-                <span class="text-sm font-medium text-[#002E42]">
-                    Seleccionar todas
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-semibold px-2 py-0.5 rounded"
+                      [style.background]="getCatColor(form()!.category).bg"
+                      [style.color]="getCatColor(form()!.category).text">
+                  {{ getCatLabel(form()!.category) }}
                 </span>
-
-                @if (selectedResponses().length > 0) {
-
-                <span class="ml-auto text-xs font-medium text-[#00649B]">
-                    {{ selectedResponses().length }} seleccionada{{ selectedResponses().length !== 1 ? 's' : '' }}
-                </span>
-
-                }
-
+                <span class="text-xs text-gray-400 font-mono">{{ form()!.code }}</span>
+              </div>
+              <h1 class="text-base font-bold text-[#002E42] mt-0.5">{{ form()!.name }}</h1>
+              <p class="text-xs text-gray-400">
+                {{ responses().length }} respuesta{{ responses().length !== 1 ? 's' : '' }}
+              </p>
             </div>
+          </div>
 
+          <button (click)="downloadResponse(selectedResponse())"
+            [disabled]="selectedResponse() === null && selectedResponses().length === 0"
+            pButton icon="pi pi-download" label="Exportar"
+            class="p-button-outlined p-button-sm"
+            style="color:#002E42; border-color:#e2e8f0">
+          </button>
         </div>
 
-        <!-- RESPUESTAS -->
-        <div class="flex-1 overflow-y-auto px-6 pb-6">
+        <!-- SELECT ALL + BÚSQUEDA -->
+        <div class="mt-3 flex items-center gap-3">
+          <p-checkbox [binary]="true"
+            [ngModel]="selectAll()"
+            (ngModelChange)="toggleAllResponses($event)">
+          </p-checkbox>
+          <span class="text-sm font-medium text-[#002E42]">Seleccionar todas</span>
 
-            @if (responses().length === 0) {
-
-            <div class="flex flex-col items-center gap-3 py-24 text-gray-400">
-                <i class="pi pi-inbox text-5xl opacity-30"></i>
-                <p class="text-sm">No hay respuestas para este formulario</p>
-            </div>
-
+          <div class="ml-auto flex items-center gap-3">
+            @if (selectedResponses().length > 0) {
+            <span class="text-xs font-medium text-[#00649B]">
+              {{ selectedResponses().length }} seleccionada{{ selectedResponses().length !== 1 ? 's' : '' }}
+            </span>
             }
+            <p-iconfield>
+              <p-inputicon class="pi pi-search" />
+              <input pInputText type="text" placeholder="Buscar respondente..."
+                     class="text-sm"
+                     [ngModel]="searchList()"
+                     (ngModelChange)="searchList.set($event)" />
+            </p-iconfield>
+          </div>
+        </div>
+      </div>
 
-            <div class="flex flex-col gap-2 pt-2">
+      <!-- LISTA DE RESPUESTAS -->
+      <div class="flex-1 overflow-y-auto px-6 py-4">
 
-                @for (response of responses(); track response._id) {
+        @if (filteredResponses().length === 0 && responses().length === 0) {
+        <div class="flex flex-col items-center gap-3 py-20 text-gray-400">
+          <i class="pi pi-inbox text-5xl opacity-30"></i>
+          <p class="text-sm">No hay respuestas para este formulario</p>
+        </div>
+        }
 
-                <div class="flex w-full items-center gap-4 rounded-xl border bg-white px-4 py-3 text-left transition hover:shadow-sm"
-                    [class.border-[#00649B]]="selectedResponse()?._id === response._id"
-                    [class.bg-[#00649B]/5]="selectedResponse()?._id === response._id"
-                    [class.border-gray-100]="selectedResponse()?._id !== response._id">
+        @if (filteredResponses().length === 0 && responses().length > 0) {
+        <div class="flex flex-col items-center gap-3 py-20 text-gray-400">
+          <i class="pi pi-search text-4xl opacity-30"></i>
+          <p class="text-sm">No se encontraron resultados</p>
+        </div>
+        }
 
-                    <!-- CHECKBOX -->
-                    <p-checkbox [binary]="true" [ngModel]="isSelected(response._id)"
-                        (ngModelChange)="toggleResponse(response._id, $event)">
-                    </p-checkbox>
+        <div class="flex flex-col gap-2">
+          @for (response of filteredResponses(); track response._id) {
+          <div class="flex w-full items-center gap-4 rounded-xl border bg-white px-4 py-3
+                      transition hover:shadow-sm cursor-pointer"
+            [class.border-[#00649B]]="selectedResponse()?._id === response._id"
+            [class.bg-[#00649B]/5]="selectedResponse()?._id === response._id"
+            [class.border-gray-100]="selectedResponse()?._id !== response._id">
 
-                    <!-- CONTENIDO -->
-                    <div class="cursor-pointer flex flex-1 items-center gap-4" (click)="selectResponse(response)">
+            <p-checkbox [binary]="true"
+              [ngModel]="isSelected(response._id)"
+              (ngModelChange)="toggleResponse(response._id, $event)">
+            </p-checkbox>
 
-                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
-                            style="background:#00649B">
-
-                            {{ getInitials(response.filledBy.fullName) }}
-
-                        </div>
-
-                        <div class="flex-1 min-w-0">
-
-                            <p class="text-sm font-semibold text-[#002E42] truncate">
-                                {{ response.filledBy.fullName }}
-                            </p>
-
-                            <p class="text-xs text-gray-400 truncate">
-                                {{ response.filledBy.email }}
-                            </p>
-
-                        </div>
-
-                        <div class="shrink-0 text-right">
-
-                            <p class="text-xs text-gray-300">
-                                {{ response.submittedAt | date: 'dd/MM/yyyy HH:mm' }}
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                }
-
+            <div class="flex flex-1 items-center gap-4" (click)="selectResponse(response)">
+              <div class="flex h-9 w-9 shrink-0 items-center justify-center
+                          rounded-full text-sm font-bold text-white"
+                   style="background:#00649B">
+                {{ getInitials(response.filledBy.fullName) }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-[#002E42] truncate">
+                  {{ response.filledBy.fullName }}
+                </p>
+                <p class="text-xs text-gray-400 truncate">{{ response.filledBy.email }}</p>
+              </div>
+              <p class="text-xs text-gray-300 shrink-0">
+                {{ response.submittedAt | date: 'dd/MM/yyyy HH:mm' }}
+              </p>
             </div>
 
+          </div>
+          }
         </div>
 
-        } @else {
+      </div>
 
-        <!-- EMPTY -->
-        <div class="flex flex-1 flex-col items-center justify-center gap-4 text-gray-400">
-
-            <i class="pi pi-file-edit text-6xl opacity-20"></i>
-
-            <p class="text-sm">
-                Selecciona un formulario para ver sus respuestas
-            </p>
-
-        </div>
-
-        }
+      } @else {
+      <div class="flex flex-1 flex-col items-center justify-center gap-3 text-gray-400">
+        <i class="pi pi-file-edit text-6xl opacity-20"></i>
+        <p class="text-sm">Selecciona un formulario para ver sus respuestas</p>
+      </div>
+      }
 
     </div>
 
-    <!-- PANEL DERECHO -->
+    <!-- PANEL DERECHO — detalle respuesta -->
     @if (selectedResponse(); as response) {
+    <aside class="flex w-88 shrink-0 flex-col border-l border-gray-200 bg-white overflow-hidden"
+           style="width: 22rem;">
 
-    <aside class="flex w-96 shrink-0 flex-col border-l border-gray-200 bg-white overflow-hidden">
-
-        <!-- HEADER -->
-        <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 shrink-0">
-
-            <div class="flex items-center gap-3">
-
-                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
-                    style="background:#00649B">
-
-                    {{ getInitials(response.filledBy.fullName) }}
-
-                </div>
-
-                <div>
-
-                    <p class="text-sm font-bold text-[#002E42]">
-                        {{ response.filledBy.fullName }}
-                    </p>
-
-                    <p class="text-xs text-gray-400">
-                        {{ response.filledBy.email }}
-                    </p>
-
-                    <p class="text-xs text-gray-300 mt-0.5">
-                        {{ response.submittedAt | date: 'dd/MM/yyyy HH:mm' }}
-                    </p>
-
-                </div>
-
-            </div>
-
-            <button pButton icon="pi pi-times" class="p-button-text p-button-rounded p-button-plain p-button-sm"
-                (click)="selectedResponse.set(null)">
-            </button>
-
+      <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center
+                      rounded-full text-sm font-bold text-white"
+               style="background:#00649B">
+            {{ getInitials(response.filledBy.fullName) }}
+          </div>
+          <div>
+            <p class="text-sm font-bold text-[#002E42]">{{ response.filledBy.fullName }}</p>
+            <p class="text-xs text-gray-400">{{ response.filledBy.email }}</p>
+            <p class="text-xs text-gray-300 mt-0.5">
+              {{ response.submittedAt | date: 'dd/MM/yyyy HH:mm' }}
+            </p>
+          </div>
         </div>
+        <button pButton icon="pi pi-times"
+          class="p-button-text p-button-rounded p-button-plain p-button-sm"
+          (click)="selectedResponse.set(null)">
+        </button>
+      </div>
 
-        <!-- METADATA -->
-        <div class="shrink-0 border-b border-gray-100 px-5 py-3 flex flex-wrap gap-4">
-
-            <div class="flex flex-col gap-0.5">
-                <span class="text-xs text-gray-400">Formulario</span>
-                <span class="text-xs font-semibold text-[#002E42]">
-                    {{ form()?.name }}
-                </span>
-            </div>
-
-            <div class="flex flex-col gap-0.5">
-                <span class="text-xs text-gray-400">Código</span>
-                <span class="text-xs font-mono font-semibold text-[#00649B]">
-                    {{ response.formCode }}
-                </span>
-            </div>
-
-            <div class="flex flex-col gap-0.5">
-                <span class="text-xs text-gray-400">Enviado</span>
-                <span class="text-xs font-semibold text-[#002E42]">
-                    {{ response.submittedAt | date: 'dd/MM/yyyy HH:mm' }}
-                </span>
-            </div>
-
+      <div class="shrink-0 border-b border-gray-100 px-5 py-3 flex flex-wrap gap-4">
+        <div class="flex flex-col gap-0.5">
+          <span class="text-xs text-gray-400">Formulario</span>
+          <span class="text-xs font-semibold text-[#002E42]">{{ form()?.name }}</span>
         </div>
-
-        <!-- DATA -->
-        <div class="flex-1 overflow-y-auto px-5 py-4">
-
-            <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
-                Respuestas registradas
-            </h3>
-
-            <div class="flex flex-col gap-3">
-
-                @for (entry of getDataEntries(response.data); track entry.key) {
-
-                <div class="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
-
-                    <p class="text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">
-                        {{ getFieldLabel(entry.key) }}
-                    </p>
-
-                    @if (!isArray(entry.value)) {
-
-                    <p class="text-sm text-[#002E42]">
-                        {{ entry.value }}
-                    </p>
-
-                    }
-
-                    @if (isArray(entry.value) && isStringArray(entry.value)) {
-
-                    <div class="flex flex-wrap gap-1 mt-1">
-
-                        @for (item of asArray(entry.value); track $index) {
-
-                        <span class="rounded-full bg-[#00649B]/10 px-2 py-0.5 text-xs font-medium text-[#00649B]">
-
-                            {{ item }}
-
-                        </span>
-
-                        }
-
-                    </div>
-
-                    }
-
-                    @if (isArray(entry.value) && !isStringArray(entry.value)) {
-
-                    <div class="overflow-x-auto mt-1">
-
-                        <table class="min-w-full text-xs border-collapse">
-
-                            <tbody>
-
-                                @for (row of asObjectArray(entry.value); track $index) {
-
-                                <tr class="border-b border-gray-100 last:border-none">
-
-                                    @for (cell of getObjectEntries(row); track cell.key) {
-
-                                    <td class="py-1.5 pr-4 align-top">
-
-                                        <span class="text-gray-400">
-                                            {{ cell.key }}:
-                                        </span>
-
-                                        <span class="ml-1 font-medium text-[#002E42]">
-                                            {{ cell.value }}
-                                        </span>
-
-                                    </td>
-
-                                    }
-
-                                </tr>
-
-                                }
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-                    }
-
-                </div>
-
-                }
-
-            </div>
-
+        <div class="flex flex-col gap-0.5">
+          <span class="text-xs text-gray-400">Código</span>
+          <span class="text-xs font-mono font-semibold text-[#00649B]">{{ response.formCode }}</span>
         </div>
+        <div class="flex flex-col gap-0.5">
+          <span class="text-xs text-gray-400">Enviado</span>
+          <span class="text-xs font-semibold text-[#002E42]">
+            {{ response.submittedAt | date: 'dd/MM/yyyy HH:mm' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto px-5 py-4">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
+          Respuestas registradas
+        </h3>
+        <div class="flex flex-col gap-3">
+          @for (entry of getDataEntries(response.data); track entry.key) {
+          <div class="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+
+            <p class="text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">
+              {{ getFieldLabel(entry.key) }}
+            </p>
+
+            @if (!isArray(entry.value)) {
+            <p class="text-sm text-[#002E42]">{{ entry.value }}</p>
+            }
+
+            @if (isArray(entry.value) && isStringArray(entry.value)) {
+            <div class="flex flex-wrap gap-1 mt-1">
+              @for (item of asArray(entry.value); track $index) {
+              <span class="rounded-full bg-[#00649B]/10 px-2 py-0.5 text-xs font-medium text-[#00649B]">
+                {{ item }}
+              </span>
+              }
+            </div>
+            }
+
+            @if (isArray(entry.value) && !isStringArray(entry.value)) {
+            <div class="overflow-x-auto mt-1">
+              <table class="min-w-full text-xs border-collapse">
+                <tbody>
+                  @for (row of asObjectArray(entry.value); track $index) {
+                  <tr class="border-b border-gray-100 last:border-none">
+                    @for (cell of getObjectEntries(row); track cell.key) {
+                    <td class="py-1.5 pr-4 align-top">
+                      <span class="text-gray-400">{{ cell.key }}:</span>
+                      <span class="ml-1 font-medium text-[#002E42]">{{ cell.value }}</span>
+                    </td>
+                    }
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            }
+
+          </div>
+          }
+        </div>
+      </div>
 
     </aside>
-
     }
+
+  </div>
 
 </div>
