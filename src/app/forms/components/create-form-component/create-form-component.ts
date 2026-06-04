@@ -157,9 +157,28 @@ export class CreateFormComponent implements OnInit {
         this.parsedForm.set(null);
         this.jsonError.set('');
       },
+      // create-form-component.ts — en el error del createForm
       error: (err) => {
         this.loading.set(false);
-        const msg = err?.error?.message ?? 'No fue posible crear el formulario';
+        const error = err?.error;
+
+        // Si es array de mensajes de validación
+        if (Array.isArray(error?.message)) {
+          const detail = error.message.join(' | ');
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error de validación',
+            detail,
+            life: 8000
+          });
+          return;
+        }
+
+        // Si es string
+        const msg = typeof error?.message === 'string'
+          ? error.message
+          : 'No fue posible crear el formulario';
+
         this.messageService.add({
           severity: 'error',
           summary: 'Error',

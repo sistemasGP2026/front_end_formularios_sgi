@@ -25,85 +25,17 @@ export class FormCategoryListPage implements OnInit {
   selectedCategoria = signal<string | null>(null);
 
   categorias = [
-    {
-      code: 'DIRECCION',
-      label: 'Gestion de Direccion',
-      imagen: 'categories/direcion.png',
-      bgColor: '#EEEDFE',
-      textColor: '#3C3489'
-    },
-    {
-      code: 'GESTION_INTEGRAL',
-      label: 'Gestión Integral',
-      imagen: 'categories/calidad.png',
-      bgColor: '#E6F1FB',
-      textColor: '#0C447C',
-    },
-
-    {
-      code: 'OPERACION_LOGISTICA',
-      label: 'Operación Logística del Servicio Farmacéutico',
-      imagen: 'categories/comercial.png',
-      bgColor: '#E1F5EE',
-      textColor: '#085041',
-    },
-
-    {
-      code: 'PREPARADOS_ESTERILES',
-      label: 'Elaboración y Adecuación de Preparados Estériles y no Estériles',
-      imagen: 'categories/comercial.png',
-      bgColor: '#E1F5EE',
-      textColor: '#085041',
-    },
-
-    {
-      code: 'DISTRIBUCION_MEDICAMENTOS',
-      label: 'Distribución de Medicamentos, Dispositivos Médicos e Insumos',
-      imagen: 'categories/comercial.png',
-      bgColor: '#E1F5EE',
-      textColor: '#085041',
-    },
-
-    {
-      code: 'GESTION_COMPRAS',
-      label: 'Gestión de Compras',
-      imagen: 'categories/financiera.png',
-      bgColor: '#FAEEDA',
-      textColor: '#633806',
-    },
-
-    {
-      code: 'GESTION_HUMANA',
-      label: 'Gestión Humana',
-      imagen: 'categories/gh.png',
-      bgColor: '#E1F5EE',
-      textColor: '#085041',
-    },
-
-    {
-      code: 'GESTION_COMERCIAL',
-      label: 'Gestión Comercial',
-      imagen: 'categories/comercial.png',
-      bgColor: '#FAEEDA',
-      textColor: '#633806',
-    },
-
-    {
-      code: 'GESTION_FINANCIERA',
-      label: 'Gestión Financiera',
-      imagen: 'categories/financiera.png',
-      bgColor: '#E6F1FB',
-      textColor: '#0C447C',
-    },
-
-    {
-      code: 'MANTENIMIENTO',
-      label: 'Mantenimiento',
-      imagen: 'categories/mantenimiento.png',
-      bgColor: '#EEEDFE',
-      textColor: '#3C3489',
-    },
-  ];
+  { code: 'GESTION_DIRECCION',         label: 'Gestión de Dirección',     descripcion: 'Dirección y estrategia',           imagen: 'categories/direccion.png',    bgColor: '#E2F4FE', textColor: '#0A4C6A' },
+  { code: 'GESTION_INTEGRAL',          label: 'Gestión Integral',          descripcion: 'Gestión del sistema integrado',    imagen: 'categories/calidad.png',      bgColor: '#E6F1FB', textColor: '#0C447C' },
+  { code: 'GESTION_COMERCIAL',         label: 'Gestión Comercial',         descripcion: 'Ventas y clientes',                imagen: 'categories/comercial.png',    bgColor: '#FCF0FB', textColor: '#6B1F6A' },
+  { code: 'GESTION_COMPRAS',           label: 'Gestión de Compras',        descripcion: 'Compras y proveedores',            imagen: 'categories/compras.png',      bgColor: '#FEF3E2', textColor: '#7A4100' },
+  { code: 'OPERACION_LOGISTICA',       label: 'Operación Logística',       descripcion: 'Logística de servicio',            imagen: 'categories/comercial.png',    bgColor: '#E8F5E9', textColor: '#1B5E20' },
+  { code: 'MANTENIMIENTO',             label: 'Mantenimiento',             descripcion: 'Equipos e instalaciones',          imagen: 'categories/mantenimiento.png',bgColor: '#FAEEDA', textColor: '#633806' },
+  { code: 'GESTION_FINANCIERA',        label: 'Gestión Financiera',        descripcion: 'Presupuesto y costos',             imagen: 'categories/financiera.png',   bgColor: '#E1F5EE', textColor: '#085041' },
+  { code: 'GESTION_HUMANA',            label: 'Gestión Humana',            descripcion: 'Personal y talento',               imagen: 'categories/gh.png',           bgColor: '#EEEDFE', textColor: '#3C3489' },
+  { code: 'PREPARADOS_ESTERILES',      label: 'Preparados Estériles',      descripcion: 'Elaboración de preparados',        imagen: 'categories/calidad.png',      bgColor: '#FCE4EC', textColor: '#880E4F' },
+  { code: 'DISTRIBUCION_MEDICAMENTOS', label: 'Distribución de Medicamentos', descripcion: 'Distribución y medicamentos',  imagen: 'categories/comercial.png',    bgColor: '#E0F7FA', textColor: '#006064' },
+];
 
   // Filtra categorías según los formularios asignados al usuario
   categoriasVisibles = computed(() => {

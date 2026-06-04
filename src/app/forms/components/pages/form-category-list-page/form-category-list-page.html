@@ -48,7 +48,7 @@
         @for (cat of categoriasVisibles(); track cat.code) {
 
         <button
-          routerLink="/formularios/categoria/{{cat.label}}"
+          [routerLink]="['/formularios/categoria', cat.code]"
           (click)="selectCategoria(cat.code)"
           class="group bg-white border border-[#E6EEF2]
                  rounded-2xl p-6 text-left

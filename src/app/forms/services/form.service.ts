@@ -28,11 +28,11 @@ export class FormService {
   }
 
   getFormByCategory(category: string): Observable<Form[]> {
-    return this.http.get<Form[]>(
-      `${this.baseUrl}/forms/category/${category.toUpperCase()}`,
-      this.getHeaders()
-    );
-  }
+  return this.http.get<Form[]>(
+    `${this.baseUrl}/forms/category/${encodeURIComponent(category.toUpperCase())}`,
+    this.getHeaders()
+  );
+}
 
   getFormByCode(code: string): Observable<Form> {
     return this.http.get<Form>(
