@@ -17,6 +17,7 @@ import { UserResponse } from '../../../usuarios/interfaces/users.response.interf
 import { UsuarioService } from '../../../usuarios/services/usuario.service';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { PdfService } from '../../../shared/services/pdf.service';
 
 export interface SectionWithFields {
   section: FormSection;
@@ -43,11 +44,12 @@ export interface SectionWithFields {
   ],
   providers: [MessageService],
   templateUrl: './form-detail-component.html',
+  styleUrl: './form-detail-component.css'
 })
 export class FormDetailComponent implements OnInit {
 
-  visible          = false;
-  visibleEdit      = false; // ← modal de edición
+  visible = false;
+  visibleEdit = false; 
   mode: 'preview' | 'respond' = 'preview';
   form: Form | null = null;
   sectionsWithFields: SectionWithFields[] = [];
@@ -58,34 +60,33 @@ export class FormDetailComponent implements OnInit {
   responsesTotal = 0;
 
   selectedUsers = signal<string[]>([]);
-  userList      = signal<UserResponse[]>([]);
+  userList = signal<UserResponse[]>([]);
 
-  // ─── edición via JSON ───────────────────────────────
-  editJsonInput  = '';
-  editJsonError  = '';
+  //edición via JSON
+  editJsonInput = '';
+  editJsonError = '';
   editParsed: any = null;
-  editSaving     = false;
-  // ────────────────────────────────────────────────────
+  editSaving = false;
 
-  private message        = inject(MessageService);
+  private message = inject(MessageService);
   private usuarioService = inject(UsuarioService);
-  private route          = inject(ActivatedRoute);
-  private formService    = inject(FormService);
-  private cdr            = inject(ChangeDetectorRef);
-  private router         = inject(Router);
+  private route = inject(ActivatedRoute);
+  private formService = inject(FormService);
+  private cdr = inject(ChangeDetectorRef);
+  private router = inject(Router);
   private responseService = inject(ResponseService);
+  private pdfService = inject(PdfService);
 
   ngOnInit(): void {
     const code = this.route.snapshot.paramMap.get('code');
     const mode = this.route.snapshot.queryParamMap.get('mode');
-    this.mode  = mode === 'respond' ? 'respond' : 'preview';
+    this.mode = mode === 'respond' ? 'respond' : 'preview';
 
     if (!code) { this.router.navigate(['/formularios']); return; }
     this.loadForm(code.toUpperCase());
   }
 
-  // ─── EDICIÓN ─────────────────────────────────────────
-
+  //EDICIÓN
   openEditModal(): void {
     if (!this.form) return;
 
@@ -93,20 +94,20 @@ export class FormDetailComponent implements OnInit {
     const { _id, __v, createdAt, updatedAt, createdBy, deleted, ...editableForm } = this.form as any;
     this.editJsonInput = JSON.stringify(editableForm, null, 2);
     this.editJsonError = '';
-    this.editParsed    = editableForm;
-    this.visibleEdit   = true;
+    this.editParsed = editableForm;
+    this.visibleEdit = true;
   }
 
   onEditJsonChange(value: string): void {
     this.editJsonInput = value;
     this.editJsonError = '';
-    this.editParsed    = null;
+    this.editParsed = null;
 
     if (!value.trim()) return;
 
     try {
       const parsed = JSON.parse(value);
-      const error  = this.validateEditForm(parsed);
+      const error = this.validateEditForm(parsed);
       if (error) { this.editJsonError = error; return; }
       this.editParsed = parsed;
     } catch {
@@ -115,7 +116,7 @@ export class FormDetailComponent implements OnInit {
   }
 
   private validateEditForm(form: any): string | null {
-    if (!form.name?.trim())     return 'Falta el campo "name"';
+    if (!form.name?.trim()) return 'Falta el campo "name"';
     if (!form.category?.trim()) return 'Falta el campo "category"';
     if (!Array.isArray(form.sections) || form.sections.length === 0)
       return 'Debe tener al menos una sección en "sections"';
@@ -133,27 +134,26 @@ export class FormDetailComponent implements OnInit {
     const code = this.form.code;
     this.formService.updateForm(code, this.editParsed).subscribe({
       next: (updated) => {
-        this.form             = updated;
+        this.form = updated;
         this.sectionsWithFields = this.buildSectionsWithFields(updated);
-        this.editSaving       = false;
-        this.visibleEdit      = false;
+        this.editSaving = false;
+        this.visibleEdit = false;
         this.message.add({
           severity: 'success',
-          summary:  'Formulario actualizado',
-          detail:   `v${updated.version} guardada correctamente`,
-          life:     4000
+          summary: 'Formulario actualizado',
+          detail: `v${updated.version} guardada correctamente`,
+          life: 4000
         });
         this.cdr.detectChanges();
       },
       error: (err) => {
-        this.editSaving   = false;
+        this.editSaving = false;
         this.editJsonError = err?.error?.message ?? 'Error al actualizar el formulario';
       }
     });
   }
 
-  // ─── RESPUESTAS ──────────────────────────────────────
-
+  //RESPUESTAS
   toggleResponsesPanel(): void {
     this.showResponsesPanel = !this.showResponsesPanel;
     if (this.showResponsesPanel && this.responses.length === 0) {
@@ -166,7 +166,7 @@ export class FormDetailComponent implements OnInit {
     if (this.userList().length > 0) return;
     this.usuarioService.getAllUsers().subscribe({
       next: (users) => this.userList.set(users),
-      error: (err)  => console.log(err)
+      error: (err) => console.log(err)
     });
   }
 
@@ -174,13 +174,13 @@ export class FormDetailComponent implements OnInit {
     if (!this.form) return;
     this.responseService.getResponsesByForm(this.form.code).subscribe({
       next: (resp) => {
-        this.responses      = resp;
+        this.responses = resp;
         this.responsesTotal = resp.length;
         if (this.responsesTotal > 0) this.showResponsesPanel = true;
         this.cdr.detectChanges();
       },
       error: () => {
-        this.responses      = [];
+        this.responses = [];
         this.responsesTotal = 0;
       }
     });
@@ -205,9 +205,9 @@ export class FormDetailComponent implements OnInit {
     this.formService.getFormByCode(code).subscribe({
       next: (form) => {
         if (!form) { this.router.navigate(['/formularios']); return; }
-        this.form               = form;
+        this.form = form;
         this.sectionsWithFields = this.buildSectionsWithFields(form);
-        this.loading            = false;
+        this.loading = false;
         this.loadResponses();
         this.cdr.detectChanges();
       },
@@ -236,6 +236,17 @@ export class FormDetailComponent implements OnInit {
     };
     return map[status] ?? 'info';
   }
+
+
+  printForm(): void {
+  if (!this.form) return;
+  this.pdfService.printForm(this.form);
+}
+
+  downloadPdf(): void {
+  if (!this.form) return;
+  this.pdfService.generateFormPdf(this.form);
+}
 
   goBack(): void { this.router.navigate(['/formularios']); }
 }

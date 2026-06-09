@@ -78,4 +78,11 @@ export class FormService {
       this.getHeaders()
     );
   }
+
+  getPublicForms(){
+     return this.http.get<Form[]>(
+      `${this.baseUrl}/forms/public`,
+      this.getHeaders()
+    );
+  }
 }

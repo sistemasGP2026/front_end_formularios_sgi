@@ -204,12 +204,6 @@
 
     }
 
-    @if (filteredUsers().length === 0) {
-    <div class="flex flex-col items-center gap-3 py-16 text-[#7A96A3]">
-      <i class="pi pi-users text-5xl opacity-30"></i>
-      <p class="text-sm">No se encontraron usuarios</p>
-    </div>
-    }
     <!-- Modal editar -->
     <edit-user-modal-page [(visible)]="visibleEdit" [user]="selectedUser!" (updated)="onUserUpdated()" />
 

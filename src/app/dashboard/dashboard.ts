@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { TagModule } from 'primeng/tag';
@@ -23,21 +23,27 @@ export interface ModuleCardData {
   imports: [CommonModule, RouterModule, TagModule, FirstNamePipe],
   templateUrl: './dashboard.html',
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
 
   private readonly authService = inject(AuthService);
   private readonly formService = inject(FormService);
 
-  currentUser   = this.authService.currentUser();
+  currentUser = this.authService.currentUser();
   mascotaVisible = true;
 
+  publicForms = signal<Form[]>([]);
+  loadingPublicForms = signal(false);
+
+  ngOnInit(): void {
+    this.getPublicForms();
+  }
   isAdmin = computed(() =>
     this.authService.currentUser()?.roles?.includes('ADMIN') ?? false
   );
 
   // Formularios asignados — solo para usuarios regulares
-  myForms       = signal<Form[]>([]);
-  loadingForms  = signal(false);
+  myForms = signal<Form[]>([]);
+  loadingForms = signal(false);
 
   adminModules: ModuleCardData[] = [
     {
@@ -104,6 +110,20 @@ export class DashboardComponent {
     }
   }
 
+  getPublicForms(): void {
+    this.loadingPublicForms.set(true);
+
+    this.formService.getPublicForms().subscribe({
+      next: (data) => {
+        this.publicForms.set(data);
+        this.loadingPublicForms.set(false);
+      },
+      error: (error) => {
+        console.error(error);
+        this.loadingPublicForms.set(false);
+      }
+    });
+  }
   toggleMascota(): void {
     this.mascotaVisible = !this.mascotaVisible;
   }

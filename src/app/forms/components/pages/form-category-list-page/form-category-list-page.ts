@@ -55,7 +55,6 @@ export class FormCategoryListPage implements OnInit {
 
     load$.subscribe({
       next: (data) => {
-        console.log(data);
         this.forms.set(data);
         this.loading.set(false);
       },

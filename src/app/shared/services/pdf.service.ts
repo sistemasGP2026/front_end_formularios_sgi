@@ -3,525 +3,358 @@ import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 import { Form } from '../../forms/interfaces/form.interface';
 import { ResponseInterface } from '../../responses/interfaces/response.interface';
-import {BASE64LOGO} from '../../assets/base64-logo'
+import { BASE64LOGO } from '../../assets/base64-logo';
 
 (pdfMake as any).addVirtualFileSystem(pdfFonts);
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class PdfService {
+
   private readonly base64Img = BASE64LOGO;
-
-  private primary = '#002E42';
+  private primary   = '#002E42';
   private secondary = '#00649B';
-  private accent = '#CCBA86'
+  private accent    = '#CCBA86';
 
-  generateFormPdf(form: Form) {
+  //FORMULARIO VACÍO
 
-    const docDefinition: any = {
-
+  generateFormPdf(form: Form): void {
+    const doc: any = {
       pageSize: 'A4',
-
       pageMargins: [40, 110, 40, 60],
-
-      header: () => ({
-        margin: [40, 25, 40, 0],
-
-        stack: [
-
-          {
-            columns: [
-              {
-                width: 70,
-                image: this.base64Img,
-                fit: [60, 60]
-              },
-
-              // INFO
-              {
-                width: '*',
-                stack: [
-                  {
-                    text: 'SISTEMA DE GESTIÓN INTEGRAL',
-                    fontSize: 16,
-                    bold: true,
-                    color: this.primary
-                  },
-
-                  {
-                    text: form.name,
-                    fontSize: 13,
-                    margin: [0, 4, 0, 0],
-                    color: this.secondary
-                  },
-
-                  {
-                    text: `Código: ${form.code}   |   Versión: ${form.version}`,
-                    fontSize: 9,
-                    color: '#666',
-                    margin: [0, 4, 0, 0]
-                  }
-                ]
-              }
-
-            ]
-          },
-
-          {
-            canvas: [
-              {
-                type: 'line',
-                x1: 0,
-                y1: 10,
-                x2: 515,
-                y2: 10,
-                lineWidth: 1,
-                lineColor: '#DCE7EC'
-              }
-            ]
-          }
-
-        ]
-      }),
-
-      footer: (currentPage: number, pageCount: number) => ({
-        margin: [40, 10],
-
-        columns: [
-
-          {
-            text: 'Documento generado automáticamente por SGI',
-            fontSize: 8,
-            color: '#777'
-          },
-
-          {
-            text: `Página ${currentPage} de ${pageCount}`,
-            alignment: 'right',
-            fontSize: 8,
-            color: '#777'
-          }
-
-        ]
-      }),
-
+      header: () => this.buildHeader(form),
+      footer: (cur: number, total: number) => this.buildFooter(cur, total),
       content: [
-
-        {
-          text: 'FORMULARIO',
-          style: 'title'
-        },
-
-        {
-          text: form.description,
-          style: 'description'
-        },
-
-        ...this.buildFormSections(form)
-
+        { text: form.description ?? '', style: 'description' },
+        ...this.buildFormSections(form),
       ],
-
-      styles: {
-
-        title: {
-          fontSize: 20,
-          bold: true,
-          color: this.primary,
-          margin: [0, 10, 0, 15]
-        },
-
-        description: {
-          fontSize: 10,
-          color: '#555',
-          margin: [0, 0, 0, 20]
-        },
-
-        sectionTitle: {
-          fontSize: 13,
-          bold: true,
-          color: '#fff',
-          fillColor: this.secondary,
-          margin: [0, 15, 0, 8]
-        },
-
-        fieldLabel: {
-          bold: true,
-          color: this.primary,
-          margin: [0, 8, 0, 3]
-        },
-
-        fieldBox: {
-          margin: [0, 0, 0, 10],
-          color: '#444'
-        }
-
-      }
+      styles: this.baseStyles(),
     };
-
-    pdfMake.createPdf(docDefinition).download(
-      `${form.code}.pdf`
-    );
+    pdfMake.createPdf(doc).download(`${form.code}.pdf`);
   }
 
-  //generar pdf para respuesta  
-  generateResponsePdf(response: ResponseInterface, form: Form) {
-
-    const docDefinition: any = {
-
+  printForm(form: Form): void {
+    const doc: any = {
       pageSize: 'A4',
-
       pageMargins: [40, 110, 40, 60],
-
-      header: () => ({
-        margin: [40, 25, 40, 0],
-
-        stack: [
-
-          {
-            columns: [
-
-              {
-                width: 70,
-                image: this.base64Img || '',
-                fit: [60, 60]
-              },
-
-              {
-                width: '*',
-
-                stack: [
-
-                  {
-                    text: 'RESPUESTA DE FORMULARIO',
-                    fontSize: 16,
-                    bold: true,
-                    color: this.primary
-                  },
-
-                  {
-                    text: form.name,
-                    fontSize: 12,
-                    color: this.secondary,
-                    margin: [0, 4, 0, 0]
-                  },
-
-                  {
-                    text: `Código: ${form.code}`,
-                    fontSize: 9,
-                    color: '#666'
-                  }
-
-                ]
-              }
-
-            ]
-          }
-
-        ]
-      }),
-
+      header: () => this.buildHeader(form),
+      footer: (cur: number, total: number) => this.buildFooter(cur, total),
       content: [
-
-        // RESPONDENTE
-        {
-          columns: [
-
-            {
-              width: '*',
-
-              stack: [
-
-                {
-                  text: 'Respondido por',
-                  style: 'metaLabel'
-                },
-
-                {
-                  text: response.filledBy.fullName || '',
-                  style: 'metaValue'
-                }
-
-              ]
-            },
-
-            {
-              width: '*',
-
-              stack: [
-
-                {
-                  text: 'Correo',
-                  style: 'metaLabel'
-                },
-
-                {
-                  text: response.filledBy.email,
-                  style: 'metaValue'
-                }
-
-              ]
-            },
-
-            {
-              width: '*',
-
-              stack: [
-
-                {
-                  text: 'Fecha',
-                  style: 'metaLabel'
-                },
-
-                {
-                  text: new Date(response.submittedAt).toLocaleString(),
-                  style: 'metaValue'
-                }
-
-              ]
-            }
-
-          ],
-
-          margin: [0, 0, 0, 20]
-        },
-
-        // RESPUESTAS
-        ...this.buildResponseContent(response, form)
-
+        { text: form.description ?? '', style: 'description' },
+        ...this.buildFormSections(form),
       ],
-
-      styles: {
-
-        metaLabel: {
-          fontSize: 9,
-          bold: true,
-          color: '#777'
-        },
-
-        metaValue: {
-          fontSize: 11,
-          color: this.primary
-        },
-
-        question: {
-          bold: true,
-          color: this.primary,
-          margin: [0, 10, 0, 4]
-        },
-
-        answerBox: {
-          margin: [0, 0, 0, 10],
-          fillColor: '#F8FAFB'
-        }
-
-      }
-
+      styles: this.baseStyles(),
     };
+    pdfMake.createPdf(doc).print();
+  }
 
-    pdfMake.createPdf(docDefinition).download(
+  //RESPUESTA
+  generateResponsePdf(response: ResponseInterface, form: Form): void {
+    const doc: any = {
+      pageSize: 'A4',
+      pageMargins: [40, 110, 40, 60],
+      header: () => this.buildHeader(form, 'RESPUESTA DE FORMULARIO'),
+      footer: (cur: number, total: number) => this.buildFooter(cur, total),
+      content: [
+        this.buildResponseMeta(response),
+        ...this.buildResponseContent(response, form),
+      ],
+      styles: {
+        ...this.baseStyles(),
+        metaLabel: { fontSize: 9,  bold: true, color: '#777' },
+        metaValue: { fontSize: 11, color: this.primary },
+      },
+    };
+    pdfMake.createPdf(doc).download(
       `RESPUESTA_${form.code}_${response.filledBy.fullName}.pdf`
     );
   }
 
-  private buildFormSections(form: Form): Form[] {
+  //HEADER
+  private buildHeader(form: Form, title = 'SISTEMA DE GESTIÓN INTEGRAL'): any {
+    return {
+      margin: [40, 25, 40, 0],
+      stack: [
+        {
+          columns: [
+            { width: 70, image: this.base64Img, fit: [60, 60] },
+            {
+              width: '*',
+              stack: [
+                { text: title,     fontSize: 15, bold: true,  color: this.primary },
+                { text: form.name, fontSize: 11, color: this.secondary, margin: [0, 3, 0, 0] },
+                {
+                  text: `Código: ${form.code}   |   Versión: v${form.version}` +
+                        (form.documentDate ? `   |   Fecha doc: ${new Date(form.documentDate).toLocaleDateString('es-CO')}` : ''),
+                  fontSize: 8, color: '#666', margin: [0, 3, 0, 0]
+                },
+              ],
+            },
+          ],
+        },
+        {
+          canvas: [{
+            type: 'line', x1: 0, y1: 10, x2: 515, y2: 10,
+            lineWidth: 1, lineColor: '#DCE7EC',
+          }],
+        },
+      ],
+    };
+  }
 
+  private buildFooter(currentPage: number, pageCount: number): any {
+    return {
+      margin: [40, 10],
+      columns: [
+        { text: 'Documento generado automáticamente por SGI', fontSize: 8, color: '#777' },
+        { text: `Página ${currentPage} de ${pageCount}`, alignment: 'right', fontSize: 8, color: '#777' },
+      ],
+    };
+  }
+
+  //FORMULARIO VACÍO — SECCIONES
+  private buildFormSections(form: Form): any[] {
     const content: any[] = [];
 
-    form.sections.forEach((section: any) => {
+    const sections = (form.sections ?? []).sort((a, b) => a.order - b.order);
 
+    for (const section of sections) {
+      // Título sección
       content.push({
-        text: section.name,
-        style: 'sectionTitle'
+        table: {
+          widths: ['*'],
+          body: [[{
+            text: section.title,
+            bold: true, fontSize: 11,
+            color: '#fff', fillColor: this.secondary,
+            margin: [8, 6, 8, 6],
+            border: [false, false, false, false],
+          }]],
+        },
+        margin: [0, 15, 0, 8],
       });
 
-      const fields = form.fields.filter(
-        (f: any) => f.sectionId === section.id
-      );
+      // Campos de la sección — usa section.id no section.name
+      const fields = (form.fields ?? [])
+        .filter(f => f.sectionId === section.id) // ← corregido
+        .sort((a, b) => a.order - b.order);
 
-      fields.forEach((field: any) => {
+      for (const field of fields) {
+        content.push({ text: field.label, style: 'fieldLabel' });
 
-        content.push({
-          text: field.label,
-          style: 'fieldLabel'
-        });
-
-        content.push({
-          table: {
-            widths: ['*'],
-            body: [
-              [
-                {
-                  text: ' ',
-                  height: 25,
-                  border: [true, true, true, true],
-                  borderColor: ['#DCE7EC', '#DCE7EC', '#DCE7EC', '#DCE7EC']
-                }
-              ]
-            ]
-          },
-          layout: 'noHorizontalLines',
-          margin: [0, 0, 0, 8]
-        });
-
-      });
-
-    });
+        if (field.type === 'checklist-table' || field.type === 'inventory-table') {
+          content.push(this.buildEmptyTable(field));
+        } else if (field.type === 'textarea') {
+          content.push(this.buildEmptyBox(40));
+        } else {
+          content.push(this.buildEmptyBox(20));
+        }
+      }
+    }
 
     return content;
   }
 
+  private buildEmptyBox(height: number): any {
+    return {
+      table: {
+        widths: ['*'],
+        body: [[{ text: ' ', margin: [4, height / 2, 4, height / 2] }]],
+      },
+      layout: {
+        hLineColor: () => '#DCE7EC',
+        vLineColor: () => '#DCE7EC',
+      },
+      margin: [0, 0, 0, 8],
+    };
+  }
+
+  private buildEmptyTable(field: any): any {
+    const cols   = field.columns ?? [];
+    const rows   = field.rows   ?? [];
+
+    const headerRow = [
+      { text: 'Ítem', bold: true, fontSize: 8, color: '#fff', fillColor: this.primary, margin: [4, 4, 4, 4] },
+      ...cols.map((c: any) => ({
+        text: c.label, bold: true, fontSize: 8,
+        color: '#fff', fillColor: this.primary, margin: [4, 4, 4, 4],
+      })),
+    ];
+
+    const dataRows = rows.map((row: any) => [
+      { text: row.label, fontSize: 8, margin: [4, 3, 4, 3] },
+      ...cols.map(() => ({ text: ' ', margin: [4, 3, 4, 3] })),
+    ]);
+
+    return {
+      table: {
+        widths: ['*', ...cols.map(() => 60)],
+        body: [headerRow, ...dataRows],
+      },
+      layout: {
+        hLineColor: () => '#DCE7EC',
+        vLineColor: () => '#DCE7EC',
+      },
+      margin: [0, 0, 0, 10],
+    };
+  }
+
+  //RESPUESTA CONTENIDO
+
+  private buildResponseMeta(response: ResponseInterface): any {
+    return {
+      columns: [
+        {
+          width: '*',
+          stack: [
+            { text: 'Respondido por', style: 'metaLabel' },
+            { text: response.filledBy.fullName ?? '', style: 'metaValue' },
+          ],
+        },
+        {
+          width: '*',
+          stack: [
+            { text: 'Correo', style: 'metaLabel' },
+            { text: response.filledBy.email, style: 'metaValue' },
+          ],
+        },
+        {
+          width: '*',
+          stack: [
+            { text: 'Fecha de envío', style: 'metaLabel' },
+            { text: new Date(response.submittedAt).toLocaleString('es-CO'), style: 'metaValue' },
+          ],
+        },
+      ],
+      margin: [0, 0, 0, 20],
+    };
+  }
+
   private buildResponseContent(response: ResponseInterface, form: Form): any[] {
-  const content: any[] = [];
+    const content: any[] = [];
+    const sections = (form.sections ?? []).sort((a, b) => a.order - b.order);
 
-  // Crear mapa de field.name → field para lookup rápido
-  const fieldMap = new Map<string, any>();
-  (form.fields ?? []).forEach(f => fieldMap.set(f.name, f));
+    for (const section of sections) {
+      const fields = (form.fields ?? [])
+        .filter(f => f.sectionId === section.id)
+        .sort((a, b) => a.order - b.order)
+        .filter(f => response.data[f.name] !== undefined);
 
-  // Ordenar secciones
-  const sections = (form.sections ?? []).sort((a, b) => a.order - b.order);
+      if (fields.length === 0) continue;
 
-  for (const section of sections) {
-    // Campos de esta sección ordenados
-    const fields = (form.fields ?? [])
-      .filter(f => f.sectionId === section.id)
-      .sort((a, b) => a.order - b.order);
+      // Título sección
+      content.push({
+        table: {
+          widths: ['*'],
+          body: [[{
+            text: section.title,
+            bold: true, fontSize: 11,
+            color: '#fff', fillColor: this.secondary,
+            margin: [8, 6, 8, 6],
+            border: [false, false, false, false],
+          }]],
+        },
+        margin: [0, 15, 0, 8],
+      });
 
-    // Solo agregar sección si tiene al menos un campo con respuesta
-    const fieldsWithData = fields.filter(f => response.data[f.name] !== undefined);
-    if (fieldsWithData.length === 0) continue;
+      for (const field of fields) {
+        const value = response.data[field.name];
 
-    // Título de sección
-    content.push({
+        content.push({
+          text: field.label,
+          fontSize: 9, bold: true,
+          color: '#555', margin: [0, 4, 0, 2],
+        });
+
+        content.push(this.buildFieldValue(value, field));
+      }
+    }
+
+    return content;
+  }
+
+  private buildFieldValue(value: unknown, field: any): any {
+
+    //Tabla (checklist-table / inventory-table)
+    if (Array.isArray(value) && value.length > 0 &&
+        typeof value[0] === 'object' && !Array.isArray(value[0])) {
+
+      const rows   = value as Record<string, unknown>[];
+      const cols   = (field.columns ?? []) as any[];
+      const rowDefs = (field.rows ?? []) as any[];
+
+      // Mapa rowId → label
+      const rowLabelMap = new Map<string, string>(
+        rowDefs.map((r: any) => [r.id, r.label])
+      );
+
+      const headerRow = [
+        {
+          text: 'Ítem', bold: true, fontSize: 8,
+          color: '#fff', fillColor: this.primary, margin: [4, 4, 4, 4],
+        },
+        ...cols.map((c: any) => ({
+          text: c.label, bold: true, fontSize: 8,
+          color: '#fff', fillColor: this.primary, margin: [4, 4, 4, 4],
+        })),
+      ];
+
+      const dataRows = rows.map((row) => {
+        const rowId    = row['rowId'] as string;
+        const rowLabel = rowLabelMap.get(rowId) ?? rowId; // ← label real de la fila
+
+        return [
+          { text: rowLabel, fontSize: 8, margin: [4, 3, 4, 3] },
+          ...cols.map((c: any) => ({
+            text: String(row[c.key] ?? '—'),
+            fontSize: 8, margin: [4, 3, 4, 3],
+          })),
+        ];
+      });
+
+      return {
+        table: {
+          widths: ['*', ...cols.map(() => 70)],
+          body: [headerRow, ...dataRows],
+        },
+        layout: {
+          hLineColor: () => '#DCE7EC',
+          vLineColor: () => '#DCE7EC',
+        },
+        margin: [0, 0, 0, 10],
+      };
+    }
+
+    //Array de strings (checkbox
+    if (Array.isArray(value)) {
+      return {
+        text: (value as string[]).join(', ') || '—',
+        fontSize: 10, color: this.primary, margin: [0, 0, 0, 8],
+      };
+    }
+
+    //Valor simple
+    return {
       table: {
         widths: ['*'],
         body: [[{
-          text: section.title,
-          bold: true,
-          color: '#fff',
-          fillColor: '#00649B',
-          margin: [8, 6, 8, 6],
-          border: [false, false, false, false]
-        }]]
+          text: String(value ?? '—'),
+          fontSize: 10, color: this.primary, margin: [6, 5, 6, 5],
+        }]],
       },
-      margin: [0, 15, 0, 8]
-    });
-
-    for (const field of fieldsWithData) {
-      const value = response.data[field.name];
-
-      content.push({
-        stack: [
-          {
-            text: field.label,
-            fontSize: 9,
-            bold: true,
-            color: '#666',
-            margin: [0, 4, 0, 2]
-          },
-          this.buildFieldValue(value, field)
-        ]
-      });
-    }
-  }
-
-  return content;
-}
-
-private buildFieldValue(value: unknown, field: any): any {
-  // Tabla (array de objetos)
-  if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object' && !Array.isArray(value[0])) {
-    const rows = value as Record<string, unknown>[];
-    const keys = Object.keys(rows[0]).filter(k => k !== 'rowId');
-
-    // Usar labels de columnas del field si existen
-    const headerRow = keys.map(k => {
-      const col = field.columns?.find((c: any) => c.key === k);
-      return {
-        text: col?.label ?? k.toUpperCase(),
-        bold: true,
-        fontSize: 8,
-        color: '#fff',
-        fillColor: '#002E42',
-        margin: [4, 4, 4, 4]
-      };
-    });
-
-    const dataRows = rows.map((row, i) => {
-      // Primera columna: label de la fila si existe
-      const rowDef = field.rows?.[i];
-      return keys.map((k, ki) => ({
-        text: ki === 0 && rowDef?.label ? rowDef.label : String(row[k] ?? ''),
-        fontSize: 8,
-        margin: [4, 3, 4, 3]
-      }));
-    });
-
-    return {
-      table: {
-        widths: keys.map(() => '*'),
-        body: [headerRow, ...dataRows]
+      layout: {
+        hLineColor: () => '#E6EEF2',
+        vLineColor: () => '#E6EEF2',
       },
-      margin: [0, 0, 0, 10]
+      margin: [0, 0, 0, 8],
     };
   }
 
-  // Array de strings (checkbox)
-  if (Array.isArray(value)) {
+  //ESTILOS BASE
+
+  private baseStyles(): any {
     return {
-      text: (value as string[]).join(', ') || 'Sin respuesta',
-      fontSize: 10,
-      color: '#002E42',
-      margin: [0, 0, 0, 8]
+      description: { fontSize: 10, color: '#555', margin: [0, 0, 0, 16] },
+      fieldLabel:  { bold: true, fontSize: 10, color: this.primary, margin: [0, 8, 0, 3] },
     };
   }
-
-  // Valor simple
-  return {
-    table: {
-      widths: ['*'],
-      body: [[{
-        text: String(value ?? ''),
-        fontSize: 10,
-        color: '#002E42',
-        margin: [6, 5, 6, 5]
-      }]]
-    },
-    layout: {
-      hLineColor: () => '#E6EEF2',
-      vLineColor: () => '#E6EEF2',
-    },
-    margin: [0, 0, 0, 8]
-  };
-}
-
-  private formatValue(value: any): string {
-
-    if (Array.isArray(value)) {
-      return value.join(', ');
-    }
-
-    if (typeof value === 'object') {
-      return JSON.stringify(value, null, 2);
-    }
-
-    return value ?? 'Sin respuesta';
-  }
-
-
-  printForm(form: any) {
-    const pdf = this.generateFormDefinition(form);
-    pdfMake.createPdf(pdf).print();
-  }
-
-  private generateFormDefinition(form: any) {
-    return {
-      content: [
-        {
-          text: form.name
-        }
-      ]
-    };
-  }
-
 }
