@@ -8,7 +8,7 @@ import { CreateResponse } from '../../forms/interfaces/create-response.dto';
   providedIn: 'root',
 })
 export class ResponseService {
-  private readonly baseUrl = 'http://192.168.1.103:2000'
+  private readonly baseUrl = 'http://localhost:3000'
   private readonly http = inject(HttpClient);
 
   private getToken() {
@@ -30,7 +30,7 @@ export class ResponseService {
     return this.http.post(`${this.baseUrl}/responses/${code}`, data, headers)
   }
 
-  getResponsesByForm(codeForm:string):Observable<ResponseInterface[]>{
+  getResponsesByForm(codeForm: string): Observable<ResponseInterface[]> {
     const token = this.getToken()
     const headers = {
       headers: new HttpHeaders({
@@ -42,7 +42,7 @@ export class ResponseService {
     return this.http.get<ResponseInterface[]>(`${this.baseUrl}/responses/${codeForm}`, headers);
   }
 
-  getResponseDetail(id:string):Observable<ResponseInterface>{
+  getResponseDetail(id: string): Observable<ResponseInterface> {
     const token = this.getToken()
     const headers = {
       headers: new HttpHeaders({
@@ -63,6 +63,34 @@ export class ResponseService {
       })
     }
 
-  return this.http.get<ResponseInterface[]>(`${this.baseUrl}/responses/my/history`, headers);
-}
+    return this.http.get<ResponseInterface[]>(`${this.baseUrl}/responses/my/history`, headers);
+  }
+
+  deleteResponse(id: string): Observable<any> {
+     const token = this.getToken()
+    const headers = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      })
+    }
+    return this.http.delete(
+      `${this.baseUrl}/responses/${id}`,
+      headers
+    );
+  }
+
+  deleteResponsesByForm(formCode: string): Observable<any> {
+     const token = this.getToken()
+    const headers = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      })
+    }
+    return this.http.delete(
+      `${this.baseUrl}/responses/form/${formCode}`,
+      headers
+    );
+  }
 }

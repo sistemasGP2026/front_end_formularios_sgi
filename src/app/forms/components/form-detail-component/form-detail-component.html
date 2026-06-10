@@ -1,12 +1,10 @@
 <p-toast />
-
+<p-confirmDialog />
 <div class="flex min-h-screen bg-[#F8FAFB]">
 
-  <!-- CONTENIDO PRINCIPAL -->
   <div class="flex-1 p-6 flex flex-col gap-6 transition-all duration-300 min-w-0"
     [class.max-w-5xl]="!showResponsesPanel" [class.mx-auto]="!showResponsesPanel">
 
-    <!-- SKELETON -->
     @if (loading) {
     <div class="bg-white rounded-xl border border-[#E6EEF2] p-6 shadow-sm">
       <p-skeleton height="2rem" width="40%" class="mb-2" />
@@ -17,15 +15,13 @@
     </div>
     }
 
-    <!-- ERROR -->
     @if (!loading && !form) {
     <div class="flex flex-col items-center justify-center gap-4 py-16 text-[#00649B]">
       <i class="pi pi-exclamation-triangle text-5xl text-[#CCBA86] opacity-80"></i>
       <p class="text-base">No se pudo cargar el formulario</p>
       <button type="button" (click)="goBack()"
         class="cursor-pointer flex items-center gap-2 text-sm font-semibold text-[#00649B] mb-4 hover:opacity-70">
-        <i class="pi pi-arrow-left"></i>
-        Volver
+        <i class="pi pi-arrow-left"></i>Volver
       </button>
     </div>
     }
@@ -34,10 +30,9 @@
 
     <!-- HEADER -->
     <div class="bg-white rounded-xl border border-[#E6EEF2] p-6 shadow-sm">
-
       <!-- TOP BAR -->
       <div class="flex items-center justify-between mb-4">
-
+        
         <button (click)="goBack()"
           class="flex items-center gap-2 text-sm font-semibold text-[#00649B] hover:opacity-70 transition cursor-pointer">
           <i class="pi pi-arrow-left text-xs"></i>
@@ -46,36 +41,30 @@
 
         <div class="flex items-center gap-2">
 
-          <!-- IMPRIMIR — visible en ambos modos -->
           <button type="button" (click)="printForm()" class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm
-             font-semibold transition cursor-pointer
-             border-[#E6EEF2] bg-white text-[#4A6A7A]
-             hover:bg-[#F4F7F9]">
+                   font-semibold transition cursor-pointer
+                   border-[#E6EEF2] bg-white text-[#4A6A7A] hover:bg-[#F4F7F9]">
             <i class="pi pi-print text-xs"></i>
             <span>Imprimir</span>
           </button>
 
-          <!-- DESCARGAR PDF — visible en ambos modos -->
           <button type="button" (click)="downloadPdf()" class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm
-             font-semibold transition cursor-pointer
-             border-[#E6EEF2] bg-white text-[#4A6A7A]
-             hover:bg-[#F4F7F9]">
+                   font-semibold transition cursor-pointer
+                   border-[#E6EEF2] bg-white text-[#4A6A7A] hover:bg-[#F4F7F9]">
             <i class="pi pi-download text-xs"></i>
             <span>PDF</span>
           </button>
 
           @if (mode === 'preview') {
 
-          <!-- EDITAR -->
           <button type="button" (click)="openEditModal()" class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm
-               font-semibold transition cursor-pointer
-               border-[#CCBA86]/40 bg-[#CCBA86]/10 text-[#8A6B1F]
-               hover:bg-[#CCBA86]/20">
+                   font-semibold transition cursor-pointer
+                   border-[#CCBA86]/40 bg-[#CCBA86]/10 text-[#8A6B1F]
+                   hover:bg-[#CCBA86]/20">
             <i class="pi pi-pencil text-xs"></i>
             <span>Editar</span>
           </button>
 
-          <!-- VER RESPUESTAS -->
           <button type="button" (click)="loadResponses()"
             class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition cursor-pointer"
             [class.border-[#00649B]]="showResponsesPanel" [class.bg-[#00649B]]="showResponsesPanel"
@@ -95,7 +84,6 @@
           }
 
         </div>
-
       </div>
 
       <!-- TÍTULO Y CATEGORÍA -->
@@ -114,6 +102,16 @@
           <span class="text-xs font-semibold bg-[#E6EEF2] text-[#002E42] px-2 py-1 rounded">
             v{{ form.version }}
           </span>
+          <!-- documentDate como chip -->
+          @if (form.documentDate) {
+          <span class="inline-flex items-center gap-1 text-xs font-semibold
+                       bg-[#CCBA86]/15 text-[#8A6B1F]
+                       border border-[#CCBA86]/40
+                       px-2 py-1 rounded">
+            <i class="pi pi-file text-[10px]"></i>
+            {{ form.documentDate | date: 'dd/MM/yyyy' }}
+          </span>
+          }
         </div>
       </div>
 
@@ -129,14 +127,8 @@
         </div>
         <div class="flex items-center gap-1">
           <i class="pi pi-calendar text-[#32C6C6] text-xs"></i>
-          Registro: {{ form.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+          Registro BD: {{ form.createdAt | date: 'dd/MM/yyyy HH:mm' }}
         </div>
-        @if (form.documentDate) {
-        <div class="flex items-center gap-1">
-          <i class="pi pi-file text-[#32C6C6] text-xs"></i>
-          Fecha doc: <strong class="text-[#002E42] ml-1">{{ form.documentDate | date: 'dd/MM/yyyy' }}</strong>
-        </div>
-        }
         <div class="flex items-center gap-1">
           <i class="pi pi-th-large text-[#32C6C6] text-xs"></i>
           {{ form.sections.length }} secciones
@@ -151,24 +143,6 @@
 
     <!-- SETTINGS -->
     @if (mode === 'preview') {
-
-    <button type="button" (click)="printForm()" class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm
-           font-semibold transition cursor-pointer
-           border-[#E6EEF2] bg-white text-[#4A6A7A]
-           hover:bg-[#F4F7F9]">
-      <i class="pi pi-print text-xs"></i>
-      <span>Imprimir</span>
-    </button>
-
-    <!-- DESCARGAR PDF -->
-    <button type="button" (click)="downloadPdf()" class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm
-           font-semibold transition cursor-pointer
-           border-[#E6EEF2] bg-white text-[#4A6A7A]
-           hover:bg-[#F4F7F9]">
-      <i class="pi pi-download text-xs"></i>
-      <span>PDF</span>
-    </button>
-
     <div class="bg-white rounded-xl border border-[#E6EEF2] p-6 shadow-sm">
       <h2 class="text-base font-semibold text-[#002E42] mb-4 flex items-center gap-2">
         <i class="pi pi-cog text-[#32C6C6]"></i>
@@ -180,9 +154,7 @@
             ? 'bg-[#32C6C6]/10 border-[#32C6C6] text-[#002E42]'
             : 'bg-[#F4F7F9] border-[#E6EEF2] text-[#7A96A3]'">
           <i class="pi text-sm" [ngClass]="form.settings.requiresApproval
-              ? 'pi-check-circle text-[#32C6C6]'
-              : 'pi-times-circle text-[#B0C4CE]'">
-          </i>
+            ? 'pi-check-circle text-[#32C6C6]' : 'pi-times-circle text-[#B0C4CE]'"></i>
           Requiere aprobación
         </div>
 
@@ -190,9 +162,7 @@
             ? 'bg-[#32C6C6]/10 border-[#32C6C6] text-[#002E42]'
             : 'bg-[#F4F7F9] border-[#E6EEF2] text-[#7A96A3]'">
           <i class="pi text-sm" [ngClass]="form.settings.preventDuplicates
-              ? 'pi-check-circle text-[#32C6C6]'
-              : 'pi-times-circle text-[#B0C4CE]'">
-          </i>
+            ? 'pi-check-circle text-[#32C6C6]' : 'pi-times-circle text-[#B0C4CE]'"></i>
           Evitar duplicados
         </div>
 
@@ -200,9 +170,7 @@
             ? 'bg-[#32C6C6]/10 border-[#32C6C6] text-[#002E42]'
             : 'bg-[#F4F7F9] border-[#E6EEF2] text-[#7A96A3]'">
           <i class="pi text-sm" [ngClass]="form.settings.allowDraft
-              ? 'pi-check-circle text-[#32C6C6]'
-              : 'pi-times-circle text-[#B0C4CE]'">
-          </i>
+            ? 'pi-check-circle text-[#32C6C6]' : 'pi-times-circle text-[#B0C4CE]'"></i>
           Permite borradores
         </div>
 
@@ -210,10 +178,16 @@
             ? 'bg-[#32C6C6]/10 border-[#32C6C6] text-[#002E42]'
             : 'bg-[#F4F7F9] border-[#E6EEF2] text-[#7A96A3]'">
           <i class="pi text-sm" [ngClass]="form.settings.showCompliance
-              ? 'pi-check-circle text-[#32C6C6]'
-              : 'pi-times-circle text-[#B0C4CE]'">
-          </i>
+            ? 'pi-check-circle text-[#32C6C6]' : 'pi-times-circle text-[#B0C4CE]'"></i>
           Mostrar cumplimiento
+        </div>
+
+        <div class="px-3 py-2 rounded-lg border text-sm font-medium flex items-center gap-2" [ngClass]="form.settings.requiresSede
+            ? 'bg-[#32C6C6]/10 border-[#32C6C6] text-[#002E42]'
+            : 'bg-[#F4F7F9] border-[#E6EEF2] text-[#7A96A3]'">
+          <i class="pi text-sm" [ngClass]="form.settings.requiresSede
+            ? 'pi-check-circle text-[#32C6C6]' : 'pi-times-circle text-[#B0C4CE]'"></i>
+          Requiere sede
         </div>
 
       </div>
@@ -301,7 +275,6 @@
       [resizable]="false" [closable]="true" [style]="{ width: '72rem' }" styleClass="rounded-2xl overflow-hidden">
 
       <div class="flex flex-col gap-4">
-
         <div class="flex items-center gap-2">
           <div class="w-8 h-8 rounded-xl bg-[#00649B]/10 flex items-center justify-center">
             <i class="pi pi-code text-[#00649B] text-sm"></i>
@@ -353,14 +326,13 @@
             }
           </button>
         </div>
-
       </div>
 
     </p-dialog>
 
     } <!-- fin @if (form) -->
 
-  </div> <!-- fin contenido principal -->
+  </div>
 
   <!-- PANEL LATERAL DE RESPUESTAS -->
   @if (showResponsesPanel && form) {

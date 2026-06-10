@@ -4,10 +4,12 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
-import { SharedModule } from 'primeng/api';
+import { ConfirmationService, MessageService, SharedModule } from 'primeng/api';
 import { FormService } from '../../services/form.service';
 import { Form, SectionPreview } from '../../interfaces/form.interface';
 import { FormsModule } from '@angular/forms';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ToastModule } from 'primeng/toast';
 
 @Component({
   selector: 'form-list-component',
@@ -16,7 +18,9 @@ import { FormsModule } from '@angular/forms';
     CommonModule, DatePipe, FormsModule,
     TagModule, TooltipModule, SkeletonModule,
     RouterModule, SharedModule,
+    ConfirmDialogModule, ToastModule,
   ],
+  providers: [ConfirmationService, MessageService],
   templateUrl: './form-list-component.html',
 })
 export class FormListComponent implements OnInit {
@@ -27,10 +31,12 @@ export class FormListComponent implements OnInit {
   skeletons = Array(6);
   categoryTitle = '';
 
-  private formService = inject(FormService);
-  private cdr         = inject(ChangeDetectorRef);
-  router      = inject(Router);
-  private route       = inject(ActivatedRoute);
+  private formService    = inject(FormService);
+  private cdr            = inject(ChangeDetectorRef);
+  private confirmService = inject(ConfirmationService);
+  private message        = inject(MessageService);
+  router                 = inject(Router);
+  private route          = inject(ActivatedRoute);
 
   readonly categoryMap: Record<string, string> = {
     GESTION_DIRECCION:         'Gestión de Dirección',
@@ -75,6 +81,69 @@ export class FormListComponent implements OnInit {
         this.loading = false;
         this.cdr.detectChanges();
       },
+    });
+  }
+
+  deleteForm(form: Form): void {
+    this.confirmService.confirm({
+      message: `¿Eliminar el formulario "${form.name}"? Quedará inactivo pero podrá reactivarse.`,
+      header: 'Eliminar formulario',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.formService.deleteForm(form.code).subscribe({
+          next: () => {
+            this.formList.update(list =>
+              list.map(f => f.code === form.code ? { ...f, deleted: true } : f)
+            );
+            this.message.add({
+              severity: 'warn',
+              summary: 'Formulario eliminado',
+              detail: `${form.code} fue desactivado`,
+              life: 3000
+            });
+          },
+          error: (err) => this.message.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: err?.error?.message ?? 'No se pudo eliminar',
+            life: 3000
+          })
+        });
+      }
+    });
+  }
+
+  activateForm(form: Form): void {
+    this.confirmService.confirm({
+      message: `¿Activar el formulario "${form.name}"?`,
+      header: 'Activar formulario',
+      icon: 'pi pi-check-circle',
+      acceptLabel: 'Sí, activar',
+      rejectLabel: 'Cancelar',
+      accept: () => {
+        this.formService.activateForm(form.code).subscribe({
+          next: () => {
+            this.formList.update(list =>
+              list.map(f => f.code === form.code ? { ...f, deleted: false } : f)
+            );
+            this.message.add({
+              severity: 'success',
+              summary: 'Formulario activado',
+              detail: `${form.code} fue activado correctamente`,
+              life: 3000
+            });
+          },
+          error: (err) => this.message.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: err?.error?.message ?? 'No se pudo activar',
+            life: 3000
+          })
+        });
+      }
     });
   }
 

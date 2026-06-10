@@ -13,7 +13,7 @@ export interface Sede {
 })
 export class SedesService {
   private http = inject(HttpClient)
-  private readonly baseUrl = 'http://192.168.1.103:2000/sedes';
+  private readonly baseUrl = 'http://localhost:3000/sedes';
 
   findAll(): Observable<Sede[]> {
     return this.http.get<Sede[]>(this.baseUrl);

@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root',
 })
 export class FormService {
-  protected readonly baseUrl: string = "http://192.168.1.103:2000";
+  protected readonly baseUrl: string = "http://localhost:3000";
   private http = inject(HttpClient);
 
   private getToken(): string {
@@ -28,11 +28,11 @@ export class FormService {
   }
 
   getFormByCategory(category: string): Observable<Form[]> {
-  return this.http.get<Form[]>(
-    `${this.baseUrl}/forms/category/${encodeURIComponent(category.toUpperCase())}`,
-    this.getHeaders()
-  );
-}
+    return this.http.get<Form[]>(
+      `${this.baseUrl}/forms/category/${encodeURIComponent(category.toUpperCase())}`,
+      this.getHeaders()
+    );
+  }
 
   getFormByCode(code: string): Observable<Form> {
     return this.http.get<Form>(
@@ -79,10 +79,25 @@ export class FormService {
     );
   }
 
-  getPublicForms(){
-     return this.http.get<Form[]>(
+  getPublicForms() {
+    return this.http.get<Form[]>(
       `${this.baseUrl}/forms/public`,
       this.getHeaders()
     );
   }
+
+  deleteForm(code: string): Observable<any> {
+    return this.http.delete(
+      `${this.baseUrl}/forms/delete/${code}`,
+      this.getHeaders()
+    );
+  }
+
+  activateForm(code: string): Observable<any> {
+  return this.http.patch(
+    `${this.baseUrl}/forms/activate/${code}`,
+    {},
+    this.getHeaders()
+  );
+}
 }

@@ -15,9 +15,10 @@ import { FormPreviewComponent } from '../pages/form-preview/form-preview';
 import { AssignUserPermissionPage } from '../assign-user-permission-page/assign-user-permission-page';
 import { UserResponse } from '../../../usuarios/interfaces/users.response.interface';
 import { UsuarioService } from '../../../usuarios/services/usuario.service';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { PdfService } from '../../../shared/services/pdf.service';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 export interface SectionWithFields {
   section: FormSection;
@@ -41,15 +42,16 @@ export interface SectionWithFields {
     RouterLink,
     RouterModule,
     ToastModule,
+    ConfirmDialogModule
   ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './form-detail-component.html',
   styleUrl: './form-detail-component.css'
 })
 export class FormDetailComponent implements OnInit {
 
   visible = false;
-  visibleEdit = false; 
+  visibleEdit = false;
   mode: 'preview' | 'respond' = 'preview';
   form: Form | null = null;
   sectionsWithFields: SectionWithFields[] = [];
@@ -76,6 +78,7 @@ export class FormDetailComponent implements OnInit {
   private router = inject(Router);
   private responseService = inject(ResponseService);
   private pdfService = inject(PdfService);
+  private confirmService = inject(ConfirmationService);
 
   ngOnInit(): void {
     const code = this.route.snapshot.paramMap.get('code');
@@ -239,14 +242,14 @@ export class FormDetailComponent implements OnInit {
 
 
   printForm(): void {
-  if (!this.form) return;
-  this.pdfService.printForm(this.form);
-}
+    if (!this.form) return;
+    this.pdfService.printForm(this.form);
+  }
 
   downloadPdf(): void {
-  if (!this.form) return;
-  this.pdfService.generateFormPdf(this.form);
-}
+    if (!this.form) return;
+    this.pdfService.generateFormPdf(this.form);
+  }
 
   goBack(): void { this.router.navigate(['/formularios']); }
 }

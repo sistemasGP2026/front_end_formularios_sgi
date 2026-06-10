@@ -10,7 +10,6 @@ export const ResponsesRoutes:Routes = [
     children:[
       {path: '', component: ResponsesComponent},
       {path: ':id', component: ResponsesDetailComponent},
-      {path:'**', redirectTo: 'list', pathMatch: 'full'}
     ]
   }
 ];

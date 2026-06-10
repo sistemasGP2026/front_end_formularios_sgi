@@ -19,6 +19,8 @@ import { Form } from '../../../forms/interfaces/form.interface';
 import { ResponseService } from '../../services/response.service';
 import { CheckboxModule } from 'primeng/checkbox';
 import { PdfService } from '../../../shared/services/pdf.service';
+import { ConfirmationService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 export interface FormGroup {
   formCode: string;
@@ -30,6 +32,7 @@ export interface FormGroup {
   selector: 'responses-component',
   imports: [
     CommonModule,
+    ConfirmDialogModule,
     CheckboxModule,
     FormsModule,
     RouterModule,
@@ -45,6 +48,7 @@ export interface FormGroup {
     InputIconModule,
     SelectModule,
   ],
+  providers:[ConfirmationService],
   templateUrl: './responses-component.html',
 })
 export class ResponsesComponent implements OnInit {
@@ -52,6 +56,7 @@ export class ResponsesComponent implements OnInit {
   private readonly formService = inject(FormService);
   private readonly responseService = inject(ResponseService);
   private readonly pdfService = inject(PdfService);
+  private confirmService = inject(ConfirmationService);
 
   loading = signal(true);
   responses = signal<ResponseInterface[]>([]);
@@ -123,6 +128,30 @@ export class ResponsesComponent implements OnInit {
       next: (resp) => {
         this.forms.set(resp);
         this.loading.set(false);
+      }
+    });
+  }
+
+  deletingResponse = signal(false);
+
+  deleteResponse(responseId: string): void {
+    this.confirmService.confirm({
+      message: '¿Estás seguro de eliminar esta respuesta?',
+      header: 'Eliminar respuesta',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.deletingResponse.set(true);
+        this.responseService.deleteResponse(responseId).subscribe({
+          next: () => {
+            this.responses.update(rs => rs.filter(r => r._id !== responseId));
+            this.selectedResponse.set(null);
+            this.deletingResponse.set(false);
+          },
+          error: () => this.deletingResponse.set(false)
+        });
       }
     });
   }
@@ -237,5 +266,27 @@ export class ResponsesComponent implements OnInit {
       DISTRIBUCION_MEDICAMENTOS: { bg: '#E0F7FA', text: '#006064' },
     };
     return map[cat?.toUpperCase()] ?? { bg: '#F1EFE8', text: '#444441' };
+  }
+
+  getRowLabel(fieldName: string, rowId: string): string {
+    const field = this.form()?.fields?.find(f => f.name === fieldName);
+    const row = field?.rows?.find(r => r.id === rowId);
+    return row?.label ?? rowId;
+  }
+
+  getColumnLabel(fieldName: string, colKey: string): string {
+    const field = this.form()?.fields?.find(f => f.name === fieldName);
+    const col = field?.columns?.find((c: any) => c.key === colKey);
+    return col?.label ?? colKey;
+  }
+
+  isTableField(fieldName: string): boolean {
+    const field = this.form()?.fields?.find(f => f.name === fieldName);
+    return field?.type === 'checklist-table' || field?.type === 'inventory-table';
+  }
+
+  getTableColumns(fieldName: string): any[] {
+    const field = this.form()?.fields?.find(f => f.name === fieldName);
+    return field?.columns ?? [];
   }
 }
