@@ -26,16 +26,16 @@ export interface SectionWithFields {
   templateUrl: './form-preview.html',
 })
 export class FormPreviewComponent implements OnInit, OnChanges {
-  private fb             = inject(FormBuilder);
-  private route          = inject(ActivatedRoute);
+  private fb = inject(FormBuilder);
+  private route = inject(ActivatedRoute);
   private responseService = inject(ResponseService);
-  private sedeService    = inject(SedesService);
-  private router         = inject(Router);
+  private sedeService = inject(SedesService);
+  private router = inject(Router);
   private messageService = inject(MessageService);
-  private cdr            = inject(ChangeDetectorRef);
+  private cdr = inject(ChangeDetectorRef);
 
   @Input() sectionsWithFields: SectionWithFields[] = [];
-  @Input() formName  = '';
+  @Input() formName = '';
   @Input() form!: Form;
   @Input() mode: 'preview' | 'respond' | 'view' = 'preview';
   @Input() responseData: Record<string, unknown> | null = null;
@@ -45,15 +45,15 @@ export class FormPreviewComponent implements OnInit, OnChanges {
   sedesOptions: { label: string; value: string }[] = [];
 
   private formCode!: string;
-  submitting    = false;
-  submitError   = '';
+  submitting = false;
+  submitError = '';
   submitSuccess = false;
 
   get isPreview(): boolean {
     return this.mode === 'preview' || this.mode === 'view';
   }
 
-  // ─── LIFECYCLE ──────────────────────────────────────────────────────────────
+  //LIFECYCLE
 
   ngOnInit(): void {
     this.formCode = this.route.snapshot.paramMap.get('code') ?? '';
@@ -77,11 +77,11 @@ export class FormPreviewComponent implements OnInit, OnChanges {
       if (this.isPreview) {
         this.formGroup.disable({ emitEvent: false });
       }
+      this.evaluateCalculatedFields();
     }
   }
 
-  // ─── PRIVADOS ────────────────────────────────────────────────────────────────
-
+  //PRIVADOS
   private applyResponseData(): void {
     if (!this.responseData || !Object.keys(this.responseData).length) return;
 
@@ -117,6 +117,9 @@ export class FormPreviewComponent implements OnInit, OnChanges {
         case 'rating':
           controls[field.id] = this.fb.control(null, validators);
           break;
+        case 'calculated':
+          controls[field.id] = this.fb.control({ value: '', disabled: true });
+          break;
         default:
           controls[field.id] = this.fb.control('', validators);
       }
@@ -136,17 +139,17 @@ export class FormPreviewComponent implements OnInit, OnChanges {
 
     for (const rule of field.validations ?? []) {
       switch (rule.type) {
-        case 'MIN_LENGTH':    validators.push(Validators.minLength(Number(rule.value))); break;
-        case 'MAX_LENGTH':    validators.push(Validators.maxLength(Number(rule.value))); break;
-        case 'PATTERN':       if (rule.value) validators.push(Validators.pattern(rule.value)); break;
-        case 'MIN_VALUE':     validators.push(Validators.min(Number(rule.value))); break;
-        case 'MAX_VALUE':     validators.push(Validators.max(Number(rule.value))); break;
-        case 'EMAIL_FORMAT':  validators.push(Validators.email); break;
+        case 'MIN_LENGTH': validators.push(Validators.minLength(Number(rule.value))); break;
+        case 'MAX_LENGTH': validators.push(Validators.maxLength(Number(rule.value))); break;
+        case 'PATTERN': if (rule.value) validators.push(Validators.pattern(rule.value)); break;
+        case 'MIN_VALUE': validators.push(Validators.min(Number(rule.value))); break;
+        case 'MAX_VALUE': validators.push(Validators.max(Number(rule.value))); break;
+        case 'EMAIL_FORMAT': validators.push(Validators.email); break;
         case 'MIN_SELECTIONS': validators.push(this.minSelectionsValidator(Number(rule.value), rule.errorMessage)); break;
         case 'MAX_SELECTIONS': validators.push(this.maxSelectionsValidator(Number(rule.value), rule.errorMessage)); break;
         case 'FUTURE_DATE_ONLY': validators.push(this.futureDateValidator(rule.errorMessage)); break;
-        case 'PAST_DATE_ONLY':   validators.push(this.pastDateValidator(rule.errorMessage)); break;
-        case 'IS_INTEGER':    validators.push(this.integerValidator(rule.errorMessage)); break;
+        case 'PAST_DATE_ONLY': validators.push(this.pastDateValidator(rule.errorMessage)); break;
+        case 'IS_INTEGER': validators.push(this.integerValidator(rule.errorMessage)); break;
       }
     }
 
@@ -196,7 +199,7 @@ export class FormPreviewComponent implements OnInit, OnChanges {
   }
 
   private loadSedesIfNeeded(): void {
-    const allFields    = this.sectionsWithFields.flatMap(sw => sw.fields);
+    const allFields = this.sectionsWithFields.flatMap(sw => sw.fields);
     const hasSedeField = allFields.some(f => f.dataSource === 'sedes');
     if (!hasSedeField) return;
 
@@ -207,8 +210,7 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     });
   }
 
-  // ─── CONDICIONALES ───────────────────────────────────────────────────────────
-
+  //CONDICIONALES
   evaluateConditionals(): void {
     this.activeFieldIds.clear();
     const allFields = this.sectionsWithFields.flatMap(sw => sw.fields);
@@ -246,7 +248,7 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     }
 
     if (hideTriggered) return false;
-    if (hasShowRule)   return showTriggered;
+    if (hasShowRule) return showTriggered;
     return !field.hidden;
   }
 
@@ -255,21 +257,110 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     const e = String(expected ?? '').trim().toLowerCase();
 
     switch (operator) {
-      case 'EQUALS':                return a === e;
-      case 'NOT_EQUALS':            return a !== e;
-      case 'CONTAINS':              return a.includes(e);
-      case 'NOT_CONTAINS':          return !a.includes(e);
-      case 'GREATER_THAN':          return Number(actual) > Number(expected);
-      case 'LESS_THAN':             return Number(actual) < Number(expected);
+      case 'EQUALS': return a === e;
+      case 'NOT_EQUALS': return a !== e;
+      case 'CONTAINS': return a.includes(e);
+      case 'NOT_CONTAINS': return !a.includes(e);
+      case 'GREATER_THAN': return Number(actual) > Number(expected);
+      case 'LESS_THAN': return Number(actual) < Number(expected);
       case 'GREATER_THAN_OR_EQUAL': return Number(actual) >= Number(expected);
-      case 'LESS_THAN_OR_EQUAL':    return Number(actual) <= Number(expected);
-      case 'IS_EMPTY':              return !a;
-      case 'IS_NOT_EMPTY':          return !!a;
-      default:                      return false;
+      case 'LESS_THAN_OR_EQUAL': return Number(actual) <= Number(expected);
+      case 'IS_EMPTY': return !a;
+      case 'IS_NOT_EMPTY': return !!a;
+      default: return false;
     }
   }
 
-  // ─── HELPERS TEMPLATE ────────────────────────────────────────────────────────
+  evaluateCalculatedFields(): void {
+    const allFields = this.sectionsWithFields.flatMap(sw => sw.fields);
+
+    // Primero WEIGHTED_SCORE, luego THRESHOLD, luego EXPRESSION
+    const order = ['WEIGHTED_SCORE', 'EXPRESSION', 'THRESHOLD'];
+    const calcFields = allFields
+      .filter(f => f.type === 'calculated')
+      .sort((a, b) => {
+        const ai = order.indexOf(a.formula ?? '');
+        const bi = order.indexOf(b.formula ?? '');
+        return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+      });
+
+    for (const field of calcFields) {
+      const result = this.evaluateCalculatedField(field, allFields);
+      if (result !== null && result !== undefined) {
+        this.formGroup.get(field.id)?.setValue(result, { emitEvent: false });
+      }
+    }
+
+    this.cdr.detectChanges();
+  }
+
+  private evaluateCalculatedField(field: FormField, allFields: FormField[]): any {
+    switch (field.formula) {
+
+      case 'WEIGHTED_SCORE':
+        return this.calcWeightedScore(allFields);
+
+      case 'THRESHOLD':
+        return this.calcThreshold(field);
+
+      case 'EXPRESSION':
+        return this.evalExpression(field.dataSource ?? '', allFields);
+
+      default:
+        return null;
+    }
+  }
+
+  private calcWeightedScore(allFields: FormField[]): number {
+    const weightedFields = allFields.filter(
+      f => f.weight != null && f.maxScore != null && f.type !== 'calculated'
+    );
+
+    let total = 0;
+    for (const f of weightedFields) {
+      const raw = parseFloat(this.formGroup.get(f.id)?.value ?? '0');
+      if (!isNaN(raw) && raw > 0) {
+        total += (raw / f.maxScore!) * f.weight!;
+      }
+    }
+    return Math.round(total * 100) / 100;
+  }
+
+  private calcThreshold(field: FormField): string {
+    if (!field.sourceField || !field.thresholds?.length) return '';
+
+    const allFields = this.sectionsWithFields.flatMap(sw => sw.fields);
+    const sourceField = allFields.find(
+      f => f.name === field.sourceField || f.id === field.sourceField
+    );
+
+    if (!sourceField) return '';
+
+    const value = parseFloat(
+      this.formGroup.get(sourceField.id)?.value ?? '0'
+    );
+
+    if (isNaN(value) || value === 0) return '';
+    const match = field.thresholds.find(t => value >= t.min && value <= t.max);
+    return match?.label ?? '';
+  }
+
+  private evalExpression(expression: string, allFields: FormField[]): any {
+    try {
+      const vars: Record<string, number> = {};
+      for (const f of allFields) {
+        const val = parseFloat(this.formGroup.get(f.id)?.value ?? '0');
+        vars[f.name] = isNaN(val) ? 0 : val;
+      }
+      const fn = new Function(...Object.keys(vars), `return ${expression}`);
+      const result = fn(...Object.values(vars));
+      return Math.round(result * 100) / 100;
+    } catch {
+      return null;
+    }
+  }
+
+  //HELPERS TEMPLATE
 
   isFieldActive(fieldId: string): boolean {
     return this.isPreview || this.activeFieldIds.has(fieldId);
@@ -289,20 +380,20 @@ export class FormPreviewComponent implements OnInit, OnChanges {
 
     if (errors['minSelections']) return errors['minSelections'].message;
     if (errors['maxSelections']) return errors['maxSelections'].message;
-    if (errors['futureDate'])    return errors['futureDate'].message;
-    if (errors['pastDate'])      return errors['pastDate'].message;
-    if (errors['isInteger'])     return errors['isInteger'].message;
+    if (errors['futureDate']) return errors['futureDate'].message;
+    if (errors['pastDate']) return errors['pastDate'].message;
+    if (errors['isInteger']) return errors['isInteger'].message;
 
     const getMsg = (type: string) =>
       field.validations?.find(v => v.type === type)?.errorMessage;
 
-    if (errors['required'])  return getMsg('REQUIRED')  ?? `El campo "${field.label}" es obligatorio`;
+    if (errors['required']) return getMsg('REQUIRED') ?? `El campo "${field.label}" es obligatorio`;
     if (errors['minlength']) return getMsg('MIN_LENGTH') ?? `Mínimo ${errors['minlength'].requiredLength} caracteres`;
     if (errors['maxlength']) return getMsg('MAX_LENGTH') ?? `Máximo ${errors['maxlength'].requiredLength} caracteres`;
-    if (errors['min'])       return getMsg('MIN_VALUE')  ?? `Valor mínimo: ${errors['min'].min}`;
-    if (errors['max'])       return getMsg('MAX_VALUE')  ?? `Valor máximo: ${errors['max'].max}`;
-    if (errors['pattern'])   return getMsg('PATTERN')    ?? `Formato inválido`;
-    if (errors['email'])     return getMsg('EMAIL_FORMAT') ?? `Correo inválido`;
+    if (errors['min']) return getMsg('MIN_VALUE') ?? `Valor mínimo: ${errors['min'].min}`;
+    if (errors['max']) return getMsg('MAX_VALUE') ?? `Valor máximo: ${errors['max'].max}`;
+    if (errors['pattern']) return getMsg('PATTERN') ?? `Formato inválido`;
+    if (errors['email']) return getMsg('EMAIL_FORMAT') ?? `Correo inválido`;
 
     return 'Valor inválido';
   }
@@ -338,8 +429,7 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     return rows.find(r => r['rowId'] === rowId)?.[colKey] ?? '';
   }
 
-  // ─── EVENTOS ─────────────────────────────────────────────────────────────────
-
+  //EVENTOS
   onFieldChange(fieldId: string, value: unknown, fieldtype?: string): void {
     let parsed = value;
     if (fieldtype === 'number' && value !== '' && value !== null) {
@@ -348,6 +438,13 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     this.formGroup.get(fieldId)?.setValue(parsed);
     this.formGroup.get(fieldId)?.markAsTouched();
     this.evaluateConditionals();
+    this.evaluateCalculatedFields();
+  }
+
+  onSelectChange(fieldId: string): void {
+    this.formGroup.get(fieldId)?.markAsTouched();
+    this.evaluateConditionals();
+    this.evaluateCalculatedFields();
   }
 
   onCheckboxChange(fieldId: string, optionValue: string, checked: boolean): void {
@@ -358,11 +455,12 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     this.formGroup.get(fieldId)?.setValue(updated);
     this.formGroup.get(fieldId)?.markAsTouched();
     this.evaluateConditionals();
+    this.evaluateCalculatedFields()
   }
 
   onTableCellChange(fieldId: string, rowId: string, colKey: string, value: unknown): void {
     const rows = (this.formGroup.get(fieldId)?.value as Record<string, unknown>[]) ?? [];
-    const row  = rows.find(r => r['rowId'] === rowId);
+    const row = rows.find(r => r['rowId'] === rowId);
 
     if (row) {
       row[colKey] = value;
@@ -372,10 +470,10 @@ export class FormPreviewComponent implements OnInit, OnChanges {
 
     this.formGroup.get(fieldId)?.setValue([...rows]);
     this.formGroup.get(fieldId)?.markAsTouched();
+    this.evaluateCalculatedFields();
   }
 
-  // ─── SUBMIT ──────────────────────────────────────────────────────────────────
-
+  //SUBMIT
   onSubmit(): void {
     if (this.isPreview) return;
 
@@ -389,22 +487,30 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     }
 
     this.submitError = '';
-    this.submitting  = true;
+    this.submitting = true;
 
     const allFields = this.sectionsWithFields.flatMap(sw => sw.fields);
-    const fieldMap  = new Map(allFields.map(f => [f.id, f]));
+    const fieldMap = new Map(allFields.map(f => [f.id, f]));
+
 
     const filteredData: Record<string, unknown> = {};
     for (const fieldId of this.activeFieldIds) {
-      const value = this.formGroup.get(fieldId)?.value;
       const field = fieldMap.get(fieldId);
       if (!field) continue;
+
+      const control = this.formGroup.get(fieldId);
+      const value = control?.value;
 
       filteredData[field.name] = field.type === 'number' && value !== null && value !== ''
         ? Number(value)
         : value;
     }
-
+    for (const field of allFields.filter(f => f.type === 'calculated')) {
+      const value = this.formGroup.get(field.id)?.value;
+      if (value !== null && value !== undefined && value !== '') {
+        filteredData[field.name] = value;
+      }
+    }
     const payload: CreateResponse = { data: filteredData };
 
     this.responseService.submitdData(this.formCode, payload).subscribe({
@@ -412,9 +518,9 @@ export class FormPreviewComponent implements OnInit, OnChanges {
         this.submitting = false;
         this.messageService.add({
           severity: 'success',
-          summary:  '¡Formulario enviado!',
-          detail:   'Tu respuesta fue registrada correctamente',
-          life:     3000,
+          summary: '¡Formulario enviado!',
+          detail: 'Tu respuesta fue registrada correctamente',
+          life: 3000,
         });
         setTimeout(() => {
           this.formGroup.reset();
@@ -423,9 +529,31 @@ export class FormPreviewComponent implements OnInit, OnChanges {
         }, 3000);
       },
       error: (err) => {
-        this.submitting  = false;
+        this.submitting = false;
         this.submitError = err?.error?.message ?? 'Error al enviar el formulario';
       },
     });
+  }
+
+  isPositiveResult(field: FormField, value: any): boolean {
+    if (field.formula === 'THRESHOLD' && field.thresholds?.length) {
+      const match = field.thresholds.find(t => t.label === value);
+      return match?.color === 'green';
+    }
+    if (field.formula === 'WEIGHTED_SCORE') {
+      return parseFloat(value) >= 80;
+    }
+    return false;
+  }
+
+  isNegativeResult(field: FormField, value: any): boolean {
+    if (field.formula === 'THRESHOLD' && field.thresholds?.length) {
+      const match = field.thresholds.find(t => t.label === value);
+      return match?.color === 'red';
+    }
+    if (field.formula === 'WEIGHTED_SCORE') {
+      return parseFloat(value) < 60;
+    }
+    return false;
   }
 }

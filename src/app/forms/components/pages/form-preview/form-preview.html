@@ -1,23 +1,25 @@
-<p-toast/>
+<p-toast />
 <div class="flex flex-col gap-5">
   <!-- BANNER -->
   @if (mode === 'preview' || mode === 'view') {
-  <div class="flex items-center gap-3 rounded-xl border border-[#CCBA86]/40 bg-[#CCBA86]/10 px-4 py-3 text-sm text-[#8A6B1F]">
+  <div
+    class="flex items-center gap-3 rounded-xl border border-[#CCBA86]/40 bg-[#CCBA86]/10 px-4 py-3 text-sm text-[#8A6B1F]">
     <i class="pi pi-eye"></i>
     <span>
       @if (mode === 'view') {
-        Respuesta registrada — solo lectura
+      Respuesta registrada — solo lectura
       } @else {
-        Vista previa — los campos están deshabilitados
+      Vista previa — los campos están deshabilitados
       }
     </span>
   </div>
-} @else {
-  <div class="flex items-center gap-3 rounded-xl border border-[#32C6C6]/30 bg-[#32C6C6]/10 px-4 py-3 text-sm text-[#00649B]">
+  } @else {
+  <div
+    class="flex items-center gap-3 rounded-xl border border-[#32C6C6]/30 bg-[#32C6C6]/10 px-4 py-3 text-sm text-[#00649B]">
     <i class="pi pi-pencil"></i>
     <span>Completa los campos del formulario</span>
   </div>
-}
+  }
 
   <!-- SECCIONES -->
   <form [formGroup]="formGroup" (ngSubmit)="onSubmit()">
@@ -55,13 +57,11 @@
 
           <!-- TEXT / EMAIL / NUMBER / DATE / TIME / DATETIME -->
           @if (isSimpleInput(field.type)) {
-          <input [formControlName]="field.id"
-          [type]="getInputType(field.type)"
-          [placeholder]="field.placeholder ?? ''"
-          class="w-full rounded-xl border px-4 py-3 text-sm text-gray-700 outline-none transition"
-          [class.border-gray-200]="!isFieldInvalid(field.id)" [class.bg-gray-50]="!isFieldInvalid(field.id)"
-          [class.border-red-400]="isFieldInvalid(field.id)" [class.bg-red-50]="isFieldInvalid(field.id)"
-          (input)="onFieldChange(field.id, $any($event.target).value, field.type)" (blur)="evaluateConditionals()" />
+          <input [formControlName]="field.id" [type]="getInputType(field.type)" [placeholder]="field.placeholder ?? ''"
+            class="w-full rounded-xl border px-4 py-3 text-sm text-gray-700 outline-none transition"
+            [class.border-gray-200]="!isFieldInvalid(field.id)" [class.bg-gray-50]="!isFieldInvalid(field.id)"
+            [class.border-red-400]="isFieldInvalid(field.id)" [class.bg-red-50]="isFieldInvalid(field.id)"
+            (input)="onFieldChange(field.id, $any($event.target).value, field.type)" (blur)="evaluateConditionals()" />
           }
 
           <!-- TEXTAREA -->
@@ -78,12 +78,35 @@
             class="w-full rounded-xl border px-4 py-3 text-sm text-gray-700 outline-none transition"
             [class.border-gray-200]="!isFieldInvalid(field.id)" [class.bg-gray-50]="!isFieldInvalid(field.id)"
             [class.border-red-400]="isFieldInvalid(field.id)" [class.bg-red-50]="isFieldInvalid(field.id)"
-            (change)="evaluateConditionals()">
+            (change)="onSelectChange(field.id)">
             <option value="" disabled>{{ field.placeholder ?? 'Seleccione una opción' }}</option>
             @for (opt of getOptionsForField(field); track opt.value) {
             <option [value]="opt.value">{{ opt.label }}</option>
             }
           </select>
+          }
+
+          <!-- CALCULATED -->
+          @if (field.type === 'calculated') {
+          <div class="flex items-center gap-3 rounded-xl border px-4 py-3"
+            [class.border-green-200]="isPositiveResult(field, formGroup.get(field.id)?.value)"
+            [class.bg-green-50]="isPositiveResult(field, formGroup.get(field.id)?.value)"
+            [class.border-red-200]="isNegativeResult(field, formGroup.get(field.id)?.value)"
+            [class.bg-red-50]="isNegativeResult(field, formGroup.get(field.id)?.value)"
+            [class.border-[#E6EEF2]]="!isPositiveResult(field, formGroup.get(field.id)?.value) && !isNegativeResult(field, formGroup.get(field.id)?.value)"
+            [class.bg-[#F8FAFB]]="!isPositiveResult(field, formGroup.get(field.id)?.value) && !isNegativeResult(field, formGroup.get(field.id)?.value)">
+            <div class="flex-1">
+              <p class="text-xs text-[#7A96A3] mb-0.5">{{ field.label }}</p>
+              <p class="text-lg font-bold"
+                [class.text-green-700]="isPositiveResult(field, formGroup.get(field.id)?.value)"
+                [class.text-red-600]="isNegativeResult(field, formGroup.get(field.id)?.value)"
+                [class.text-[#002E42]]="!isPositiveResult(field, formGroup.get(field.id)?.value) && !isNegativeResult(field, formGroup.get(field.id)?.value)">
+                {{ formGroup.get(field.id)?.value || '—' }}
+                @if (field.formula === 'WEIGHTED_SCORE') { % }
+              </p>
+            </div>
+            <i class="pi pi-calculator text-[#7A96A3] text-sm"></i>
+          </div>
           }
 
           <!-- RADIO -->

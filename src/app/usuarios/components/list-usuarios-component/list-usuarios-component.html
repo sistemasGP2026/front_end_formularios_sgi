@@ -95,7 +95,7 @@
     </div>
 
     <!-- FILAS -->
-    @for (usuario of filteredUsers(); track usuario.id; let i = $index) {
+    @for (usuario of users(); track usuario.id; let i = $index) {
 
     <div class="grid grid-cols-[2.2fr_2fr_1fr_1fr_1fr_1fr_auto]
       items-center px-6 py-4 border-b border-[#E6EEF2]
@@ -128,13 +128,12 @@
 
       <!-- ROL -->
       <div class="flex justify-center">
-
-        @if (usuario.rol[0] === 'ADMIN') {
-        <p-tag value="ADMIN" />
-        } @else {
-        <p-tag value="USUARIO" />
-        }
-
+        <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
+          [style.background]="getRolColor(usuario.rol).bg" [style.color]="getRolColor(usuario.rol).text">
+          <span class="h-1.5 w-1.5 rounded-full" [style.background]="getRolColor(usuario.rol).dot">
+          </span>
+          {{ getRolLabel(usuario.rol) }}
+        </span>
       </div>
 
       <!-- ESTADO -->

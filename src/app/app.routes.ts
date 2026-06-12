@@ -1,8 +1,9 @@
 import { Routes } from '@angular/router';
-import { isNotAuthenticatedGuard } from './auth/guards/is-not-authenticated-guard';
-import { isAuthenticatedGuard } from './auth/guards/is-authenticated-guard';
+import { isNotAuthenticatedGuard } from './auth/guards/is-not-authenticated.guard';
+import { isAuthenticatedGuard } from './auth/guards/is-authenticated.guard';
 import { SharedComponent } from './shared/shared';
-import { isAdminGuard } from './auth/guards/is-admin-guard';
+import { isAdminGuard } from './auth/guards/is-admin.guard';
+import { isAdminOrApproverGuard } from './auth/guards/is-admin-or-approver.guard';
 
 export const routes: Routes = [
   {
@@ -13,7 +14,7 @@ export const routes: Routes = [
   {
     path: '',
     canActivate: [isAuthenticatedGuard],
-    component: SharedComponent, 
+    component: SharedComponent,
     children: [
       {
         path: 'inicio',
@@ -25,22 +26,29 @@ export const routes: Routes = [
       },
       {
         path: 'respuestas',
-        canActivateChild:[isAdminGuard],
+        canActivateChild: [isAdminGuard],
         loadChildren: () => import('./responses/routes/responses.routes').then(m => m.ResponsesRoutes),
       },
       {
         path: 'usuarios',
-        canActivateChild:[isAdminGuard],
+        canActivateChild: [isAdminGuard],
         loadChildren: () => import('./usuarios/routes/usuarios.routes').then(m => m.usuarioRoutes),
       },
       {
         path: 'reportes',
-        canActivateChild:[isAdminGuard],
+        canActivateChild: [isAdminGuard],
         loadChildren: () => import('./reportes/routes/reportes.routes').then(m => m.reportesRoutes),
       },
       {
         path: 'historial',
         loadComponent: () => import('./historial-component/historial-component').then(m => m.HistorialComponent)
+      },
+      {
+        path: 'aprobaciones',
+        canActivate: [isAdminOrApproverGuard],
+        loadComponent: () =>
+          import('./pending-approvals/pending-approvals')
+            .then(m => m.PendingApprovalsComponent),
       }
     ],
   },

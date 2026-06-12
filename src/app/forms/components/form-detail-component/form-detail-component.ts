@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TagModule } from 'primeng/tag';
@@ -19,15 +19,17 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { PdfService } from '../../../shared/services/pdf.service';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { AuthService } from '../../../auth/services/auth.service';
+import { User } from '../../../auth/interfaces/signIn.response';
 
 export interface SectionWithFields {
   section: FormSection;
-  fields: FormField[];
+  fields:  FormField[];
 }
 
 @Component({
-  selector: 'form-detail-component',
-  standalone: true,
+  selector:    'form-detail-component',
+  standalone:  true,
   imports: [
     AssignUserPermissionPage,
     CommonModule,
@@ -39,182 +41,79 @@ export interface SectionWithFields {
     DividerModule,
     DialogModule,
     FormPreviewComponent,
-    RouterLink,
     RouterModule,
     ToastModule,
-    ConfirmDialogModule
+    ConfirmDialogModule,
   ],
-  providers: [MessageService, ConfirmationService],
+  providers:   [MessageService, ConfirmationService],
   templateUrl: './form-detail-component.html',
-  styleUrl: './form-detail-component.css'
+  styleUrl:    './form-detail-component.css',
 })
 export class FormDetailComponent implements OnInit {
 
-  visible = false;
-  visibleEdit = false;
+  // ─── Estado UI ───────────────────────────────────────────────────────────
+  visible              = false;
+  visibleEdit          = false;
+  visibleApproverModal = false;
   mode: 'preview' | 'respond' = 'preview';
-  form: Form | null = null;
-  sectionsWithFields: SectionWithFields[] = [];
-  loading = true;
+  loading              = true;
+  deleting             = false;
 
-  showResponsesPanel = false;
-  responses: ResponseInterface[] = [];
-  responsesTotal = 0;
+  // ─── Datos ───────────────────────────────────────────────────────────────
+  form:               Form | null           = null;
+  sectionsWithFields: SectionWithFields[]   = [];
+  responses:          ResponseInterface[]   = [];
+  responsesTotal      = 0;
+  showResponsesPanel  = false;
 
   selectedUsers = signal<string[]>([]);
-  userList = signal<UserResponse[]>([]);
+  userList      = signal<UserResponse[]>([]);
+  currentUser   = signal<User | null>(null);
 
-  //edición via JSON
+  // ─── Edición JSON ────────────────────────────────────────────────────────
   editJsonInput = '';
   editJsonError = '';
-  editParsed: any = null;
-  editSaving = false;
+  editParsed:  any = null;
+  editSaving       = false;
 
-  private message = inject(MessageService);
-  private usuarioService = inject(UsuarioService);
-  private route = inject(ActivatedRoute);
-  private formService = inject(FormService);
-  private cdr = inject(ChangeDetectorRef);
-  private router = inject(Router);
+  // ─── Servicios ───────────────────────────────────────────────────────────
+  private message         = inject(MessageService);
+  private confirmService  = inject(ConfirmationService);
+  private usuarioService  = inject(UsuarioService);
+  private route           = inject(ActivatedRoute);
+  private formService     = inject(FormService);
+  private cdr             = inject(ChangeDetectorRef);
+  private router          = inject(Router);
   private responseService = inject(ResponseService);
-  private pdfService = inject(PdfService);
-  private confirmService = inject(ConfirmationService);
+  private pdfService      = inject(PdfService);
+  private authService     = inject(AuthService);
+
+  // ─── Lifecycle ───────────────────────────────────────────────────────────
 
   ngOnInit(): void {
     const code = this.route.snapshot.paramMap.get('code');
     const mode = this.route.snapshot.queryParamMap.get('mode');
-    this.mode = mode === 'respond' ? 'respond' : 'preview';
+    this.mode  = mode === 'respond' ? 'respond' : 'preview';
 
     if (!code) { this.router.navigate(['/formularios']); return; }
     this.loadForm(code.toUpperCase());
+    this.currentUser.set(this.authService.currentUser());
   }
 
-  //EDICIÓN
-  openEditModal(): void {
-    if (!this.form) return;
-
-    // Pre-cargar el JSON actual del formulario en el editor
-    const { _id, __v, createdAt, updatedAt, createdBy, deleted, ...editableForm } = this.form as any;
-    this.editJsonInput = JSON.stringify(editableForm, null, 2);
-    this.editJsonError = '';
-    this.editParsed = editableForm;
-    this.visibleEdit = true;
-  }
-
-  onEditJsonChange(value: string): void {
-    this.editJsonInput = value;
-    this.editJsonError = '';
-    this.editParsed = null;
-
-    if (!value.trim()) return;
-
-    try {
-      const parsed = JSON.parse(value);
-      const error = this.validateEditForm(parsed);
-      if (error) { this.editJsonError = error; return; }
-      this.editParsed = parsed;
-    } catch {
-      this.editJsonError = 'JSON inválido — verifica la sintaxis';
-    }
-  }
-
-  private validateEditForm(form: any): string | null {
-    if (!form.name?.trim()) return 'Falta el campo "name"';
-    if (!form.category?.trim()) return 'Falta el campo "category"';
-    if (!Array.isArray(form.sections) || form.sections.length === 0)
-      return 'Debe tener al menos una sección en "sections"';
-    if (!Array.isArray(form.fields))
-      return 'El campo "fields" debe ser un array';
-    if (form.version !== undefined && (isNaN(form.version) || form.version < 1))
-      return '"version" debe ser un número mayor o igual a 1';
-    return null;
-  }
-
-  saveEdit(): void {
-    if (!this.editParsed || !this.form) return;
-    this.editSaving = true;
-
-    const code = this.form.code;
-    this.formService.updateForm(code, this.editParsed).subscribe({
-      next: (updated) => {
-        this.form = updated;
-        this.sectionsWithFields = this.buildSectionsWithFields(updated);
-        this.editSaving = false;
-        this.visibleEdit = false;
-        this.message.add({
-          severity: 'success',
-          summary: 'Formulario actualizado',
-          detail: `v${updated.version} guardada correctamente`,
-          life: 4000
-        });
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        this.editSaving = false;
-        this.editJsonError = err?.error?.message ?? 'Error al actualizar el formulario';
-      }
-    });
-  }
-
-  //RESPUESTAS
-  toggleResponsesPanel(): void {
-    this.showResponsesPanel = !this.showResponsesPanel;
-    if (this.showResponsesPanel && this.responses.length === 0) {
-      this.loadResponses();
-    }
-  }
-
-  openAssignModal(): void {
-    this.visible = true;
-    if (this.userList().length > 0) return;
-    this.usuarioService.getAllUsers().subscribe({
-      next: (users) => this.userList.set(users),
-      error: (err) => console.log(err)
-    });
-  }
-
-  loadResponses(): void {
-    if (!this.form) return;
-    this.responseService.getResponsesByForm(this.form.code).subscribe({
-      next: (resp) => {
-        this.responses = resp;
-        this.responsesTotal = resp.length;
-        if (this.responsesTotal > 0) this.showResponsesPanel = true;
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        this.responses = [];
-        this.responsesTotal = 0;
-      }
-    });
-  }
-
-  closeResponsesPanel(): void { this.showResponsesPanel = false; }
-
-  assigPermision(usernames: string[]): void {
-    const code = this.route.snapshot.paramMap.get('code');
-    if (!code) return;
-    this.formService.assignPermissionToUser(code, usernames).subscribe({
-      next: (data) => {
-        this.form?.permissions.users.push(...data);
-        this.message.add({ severity: 'success', summary: 'Realizado', detail: 'Permiso asignado correctamente' });
-      },
-      error: (err) => console.log(err)
-    });
-  }
+  // ─── Carga ───────────────────────────────────────────────────────────────
 
   private loadForm(code: string): void {
     this.loading = true;
     this.formService.getFormByCode(code).subscribe({
       next: (form) => {
         if (!form) { this.router.navigate(['/formularios']); return; }
-        this.form = form;
+        this.form               = form;
         this.sectionsWithFields = this.buildSectionsWithFields(form);
-        this.loading = false;
+        this.loading            = false;
         this.loadResponses();
         this.cdr.detectChanges();
       },
-      error: () => { this.loading = false; this.cdr.detectChanges(); }
+      error: () => { this.loading = false; this.cdr.detectChanges(); },
     });
   }
 
@@ -229,17 +128,254 @@ export class FormDetailComponent implements OnInit {
       }));
   }
 
-  getInitials(fullName: string): string {
-    return fullName.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase();
+  // ─── Respuestas ──────────────────────────────────────────────────────────
+
+  loadResponses(): void {
+    if (!this.form) return;
+    this.responseService.getResponsesByForm(this.form.code).subscribe({
+      next: (resp) => {
+        this.responses      = resp;
+        this.responsesTotal = resp.length;
+        if (this.responsesTotal > 0) this.showResponsesPanel = true;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.responses      = [];
+        this.responsesTotal = 0;
+      },
+    });
   }
 
-  getStatusSeverity(status: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
-    const map: Record<string, any> = {
-      PUBLISHED: 'success', DRAFT: 'warn', ARCHIVED: 'secondary', CLOSED: 'danger',
-    };
-    return map[status] ?? 'info';
+  toggleResponsesPanel(): void {
+    this.showResponsesPanel = !this.showResponsesPanel;
+    if (this.showResponsesPanel && this.responses.length === 0) {
+      this.loadResponses();
+    }
   }
 
+  closeResponsesPanel(): void { this.showResponsesPanel = false; }
+
+  // ─── Eliminar formulario ─────────────────────────────────────────────────
+
+  deleteForm(): void {
+    if (!this.form) return;
+    this.confirmService.confirm({
+      message:     `¿Eliminar el formulario "${this.form.name}"? Quedará inactivo pero podrá reactivarse.`,
+      header:      'Eliminar formulario',
+      icon:        'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.deleting = true;
+        this.formService.deleteForm(this.form!.code).subscribe({
+          next: () => {
+            this.deleting = false;
+            this.message.add({
+              severity: 'success',
+              summary:  'Formulario eliminado',
+              detail:   `${this.form!.code} fue desactivado correctamente`,
+              life:     3000,
+            });
+            setTimeout(() => this.router.navigate(['/formularios']), 2000);
+          },
+          error: (err) => {
+            this.deleting = false;
+            this.message.add({
+              severity: 'error',
+              summary:  'Error',
+              detail:   err?.error?.message ?? 'No se pudo eliminar el formulario',
+              life:     4000,
+            });
+          },
+        });
+      },
+    });
+  }
+
+  // ─── Permisos usuarios ───────────────────────────────────────────────────
+
+  openAssignModal(): void {
+    this.visible = true;
+    if (this.userList().length > 0) return;
+    this.usuarioService.getAllUsers().subscribe({
+      next: (users) => this.userList.set(users),
+    });
+  }
+
+  assigPermision(usernames: string[]): void {
+    const code = this.route.snapshot.paramMap.get('code');
+    if (!code) return;
+    this.formService.assignPermissionToUser(code, usernames).subscribe({
+      next: (data) => {
+        this.form?.permissions.users.push(...data);
+        this.message.add({
+          severity: 'success',
+          summary:  'Realizado',
+          detail:   'Permiso asignado correctamente',
+        });
+      },
+    });
+  }
+
+  removeUserPermission(username: string): void {
+    if (!this.form) return;
+    this.formService.deletePermissionToUSer(this.form.code, username).subscribe({
+      next: () => {
+        this.form!.permissions.users = this.form!.permissions.users.filter(
+          u => u.username !== username
+        );
+        this.message.add({
+          severity: 'success',
+          summary:  'Acceso removido',
+          detail:   `@${username} ya no tiene acceso a este formulario`,
+          life:     3000,
+        });
+      },
+      error: (err) => {
+        this.message.add({
+          severity: 'error',
+          summary:  'Error',
+          detail:   err?.error?.message ?? 'No se pudo remover el acceso',
+          life:     3000,
+        });
+      },
+    });
+  }
+
+  // ─── Permisos aprobadores ─────────────────────────────────────────────────
+
+  openAssignApproverModal(): void {
+    this.visibleApproverModal = true;
+    this.usuarioService.getAllUsers().subscribe({
+      next: (users) => this.userList.set(
+        users.filter(u => u.rol?.includes('APPROVER'))
+      ),
+    });
+  }
+
+  assigApprover(usernames: string[]): void {
+    const code = this.form?.code;
+    if (!code) return;
+    this.formService.assignApproverToForm(code, usernames).subscribe({
+      next: (data) => {
+        this.form!.permissions.approvers = [
+          ...(this.form!.permissions.approvers ?? []),
+          ...data,
+        ];
+        this.message.add({
+          severity: 'success',
+          summary:  'Aprobador asignado',
+          detail:   'El aprobador fue agregado correctamente',
+          life:     3000,
+        });
+      },
+      error: (err) => {
+        this.message.add({
+          severity: 'error',
+          summary:  'Error',
+          detail:   err?.error?.message ?? 'No se pudo asignar el aprobador',
+          life:     3000,
+        });
+      },
+    });
+  }
+
+  removeApprover(username: string): void {
+    if (!this.form) return;
+    this.formService.removeApproverFromForm(this.form.code, username).subscribe({
+      next: () => {
+        this.form = {
+          ...this.form!,
+          permissions: {
+            ...this.form!.permissions,
+            approvers: this.form!.permissions.approvers.filter(
+              a => a.username !== username
+            ),
+          },
+        };
+        this.message.add({
+          severity: 'success',
+          summary:  'Aprobador removido',
+          detail:   `@${username} ya no puede aprobar este formulario`,
+          life:     3000,
+        });
+      },
+      error: (err) => {
+        this.message.add({
+          severity: 'error',
+          summary:  'Error',
+          detail:   err?.error?.message ?? 'No se pudo remover el aprobador',
+          life:     3000,
+        });
+      },
+    });
+  }
+
+  // ─── Edición JSON ─────────────────────────────────────────────────────────
+
+  openEditModal(): void {
+    if (!this.form) return;
+    const { _id, __v, createdAt, updatedAt, createdBy, deleted, ...editableForm } =
+      this.form as any;
+    this.editJsonInput = JSON.stringify(editableForm, null, 2);
+    this.editJsonError = '';
+    this.editParsed    = editableForm;
+    this.visibleEdit   = true;
+  }
+
+  onEditJsonChange(value: string): void {
+    this.editJsonInput = value;
+    this.editJsonError = '';
+    this.editParsed    = null;
+    if (!value.trim()) return;
+    try {
+      const parsed = JSON.parse(value);
+      const error  = this.validateEditForm(parsed);
+      if (error) { this.editJsonError = error; return; }
+      this.editParsed = parsed;
+    } catch {
+      this.editJsonError = 'JSON inválido — verifica la sintaxis';
+    }
+  }
+
+  private validateEditForm(form: any): string | null {
+    if (!form.name?.trim())     return 'Falta el campo "name"';
+    if (!form.category?.trim()) return 'Falta el campo "category"';
+    if (!Array.isArray(form.sections) || form.sections.length === 0)
+      return 'Debe tener al menos una sección en "sections"';
+    if (!Array.isArray(form.fields))
+      return 'El campo "fields" debe ser un array';
+    if (form.version !== undefined && (isNaN(form.version) || form.version < 1))
+      return '"version" debe ser un número mayor o igual a 1';
+    return null;
+  }
+
+  saveEdit(): void {
+    if (!this.editParsed || !this.form) return;
+    this.editSaving = true;
+    this.formService.updateForm(this.form.code, this.editParsed).subscribe({
+      next: (updated) => {
+        this.form               = updated;
+        this.sectionsWithFields = this.buildSectionsWithFields(updated);
+        this.editSaving         = false;
+        this.visibleEdit        = false;
+        this.message.add({
+          severity: 'success',
+          summary:  'Formulario actualizado',
+          detail:   `v${updated.version} guardada correctamente`,
+          life:     4000,
+        });
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.editSaving   = false;
+        this.editJsonError = err?.error?.message ?? 'Error al actualizar el formulario';
+      },
+    });
+  }
+
+  // ─── PDF ─────────────────────────────────────────────────────────────────
 
   printForm(): void {
     if (!this.form) return;
@@ -249,6 +385,12 @@ export class FormDetailComponent implements OnInit {
   downloadPdf(): void {
     if (!this.form) return;
     this.pdfService.generateFormPdf(this.form);
+  }
+
+  // ─── Helpers ─────────────────────────────────────────────────────────────
+
+  getInitials(fullName: string): string {
+    return fullName.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase();
   }
 
   goBack(): void { this.router.navigate(['/formularios']); }

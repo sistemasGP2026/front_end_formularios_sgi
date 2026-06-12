@@ -199,35 +199,109 @@ export class PdfService {
   }
 
   //RESPUESTA CONTENIDO
-
   private buildResponseMeta(response: ResponseInterface): any {
-    return {
-      columns: [
-        {
-          width: '*',
-          stack: [
-            { text: 'Respondido por', style: 'metaLabel' },
-            { text: response.filledBy.fullName ?? '', style: 'metaValue' },
-          ],
+  const statusMap: Record<string, string> = {
+    APPROVED: 'Aprobada',
+    PENDING:  'Pendiente de aprobación',
+    REJECTED: 'Rechazada',
+  };
+
+  const statusColors: Record<string, string> = {
+    APPROVED: '#065F46',
+    PENDING:  '#92400E',
+    REJECTED: '#991B1B',
+  };
+
+  const statusBg: Record<string, string> = {
+    APPROVED: '#D1FAE5',
+    PENDING:  '#FEF3C7',
+    REJECTED: '#FEE2E2',
+  };
+
+  const status   = response.status ?? 'PENDING';
+  const approval = response.approval;
+
+  return {
+    stack: [
+      // META respondente
+      {
+        columns: [
+          {
+            width: '*',
+            stack: [
+              { text: 'Respondido por', style: 'metaLabel' },
+              { text: response.filledBy.fullName ?? '', style: 'metaValue' },
+            ],
+          },
+          {
+            width: '*',
+            stack: [
+              { text: 'Correo', style: 'metaLabel' },
+              { text: response.filledBy.email, style: 'metaValue' },
+            ],
+          },
+          {
+            width: '*',
+            stack: [
+              { text: 'Fecha de envío', style: 'metaLabel' },
+              { text: new Date(response.submittedAt).toLocaleString('es-CO'), style: 'metaValue' },
+            ],
+          },
+        ],
+        margin: [0, 0, 0, 10],
+      },
+
+      // ESTADO DE APROBACIÓN
+      {
+        table: {
+          widths: ['*'],
+          body: [[{
+            stack: [
+              {
+                columns: [
+                  {
+                    width: '*',
+                    stack: [
+                      { text: 'Estado', fontSize: 8, bold: true, color: '#555' },
+                      {
+                        text: statusMap[status] ?? status,
+                        fontSize: 11,
+                        bold: true,
+                        color: statusColors[status] ?? '#002E42',
+                        margin: [0, 2, 0, 0],
+                      },
+                    ],
+                  },
+                  // Solo muestra aprobador si está aprobada o rechazada
+                  ...(status !== 'PENDING' && approval?.approverName ? [{
+                    width: '*',
+                    stack: [
+                      { text: status === 'APPROVED' ? 'Aprobado por' : 'Rechazado por', fontSize: 8, bold: true, color: '#555' },
+                      { text: approval.approverName, fontSize: 11, bold: true, color: statusColors[status], margin: [0, 2, 0, 0] },
+                      { text: new Date(approval.approvedAt!).toLocaleString('es-CO'), fontSize: 8, color: '#777' },
+                    ],
+                  }] : []),
+                  // Razón de rechazo
+                  ...(status === 'REJECTED' && approval?.rejectionReason ? [{
+                    width: '*',
+                    stack: [
+                      { text: 'Razón de rechazo', fontSize: 8, bold: true, color: '#555' },
+                      { text: approval.rejectionReason, fontSize: 10, color: '#991B1B', italics: true, margin: [0, 2, 0, 0] },
+                    ],
+                  }] : []),
+                ],
+              },
+            ],
+            fillColor: statusBg[status] ?? '#F9FAFB',
+            margin: [10, 8, 10, 8],
+            border: [false, false, false, false],
+          }]],
         },
-        {
-          width: '*',
-          stack: [
-            { text: 'Correo', style: 'metaLabel' },
-            { text: response.filledBy.email, style: 'metaValue' },
-          ],
-        },
-        {
-          width: '*',
-          stack: [
-            { text: 'Fecha de envío', style: 'metaLabel' },
-            { text: new Date(response.submittedAt).toLocaleString('es-CO'), style: 'metaValue' },
-          ],
-        },
-      ],
-      margin: [0, 0, 0, 20],
-    };
-  }
+        margin: [0, 0, 0, 16],
+      },
+    ],
+  };
+}
 
   private buildResponseContent(response: ResponseInterface, form: Form): any[] {
     const content: any[] = [];

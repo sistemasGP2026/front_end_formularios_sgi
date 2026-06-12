@@ -12,8 +12,7 @@
         @for (cat of categoriesOnly; track cat.value) {
         <label class="flex items-center gap-1.5 cursor-pointer select-none shrink-0">
           <input type="checkbox" class="w-3.5 h-3.5 accent-[#00649B] cursor-pointer"
-            [checked]="selectedCategories().includes(cat.value)"
-            (change)="toggleCategory(cat.value)" />
+            [checked]="selectedCategories().includes(cat.value)" (change)="toggleCategory(cat.value)" />
           <span class="text-xs font-medium text-[#002E42] whitespace-nowrap">{{ cat.label }}</span>
         </label>
         }
@@ -36,10 +35,8 @@
       <div class="p-3 border-b border-gray-100">
         <p-iconfield class="w-full">
           <p-inputicon class="pi pi-search" />
-          <input pInputText type="text" placeholder="Buscar..."
-                 class="w-full text-sm"
-                 [ngModel]="searchSidebar()"
-                 (ngModelChange)="searchSidebar.set($event)" />
+          <input pInputText type="text" placeholder="Buscar..." class="w-full text-sm" [ngModel]="searchSidebar()"
+            (ngModelChange)="searchSidebar.set($event)" />
         </p-iconfield>
       </div>
 
@@ -51,15 +48,15 @@
       <div class="flex-1 overflow-y-auto">
 
         @if (loading()) {
-          @for (i of [1,2,3,4,5]; track i) {
-          <div class="flex items-center gap-3 px-4 py-3 animate-pulse">
-            <div class="w-8 h-8 rounded-lg bg-gray-100 shrink-0"></div>
-            <div class="flex-1 flex flex-col gap-1.5">
-              <div class="h-3 bg-gray-100 rounded w-3/4"></div>
-              <div class="h-2 bg-gray-100 rounded w-1/3"></div>
-            </div>
+        @for (i of [1,2,3,4,5]; track i) {
+        <div class="flex items-center gap-3 px-4 py-3 animate-pulse">
+          <div class="w-8 h-8 rounded-lg bg-gray-100 shrink-0"></div>
+          <div class="flex-1 flex flex-col gap-1.5">
+            <div class="h-3 bg-gray-100 rounded w-3/4"></div>
+            <div class="h-2 bg-gray-100 rounded w-1/3"></div>
           </div>
-          }
+        </div>
+        }
         }
 
         @if (!loading() && filteredForms().length === 0) {
@@ -70,16 +67,12 @@
         }
 
         @for (f of filteredForms(); track f.code) {
-        <button
-          class="flex w-full items-center gap-3 px-4 py-3 text-left
-                 transition-colors hover:bg-gray-50 border-l-2"
-          [class.border-[#00649B]]="form()?.code === f.code"
-          [class.bg-[#00649B]/5]="form()?.code === f.code"
-          [class.border-transparent]="form()?.code !== f.code"
+        <button class="flex w-full items-center gap-3 px-4 py-3 text-left
+                 transition-colors hover:bg-gray-50 border-l-2" [class.border-[#00649B]]="form()?.code === f.code"
+          [class.bg-[#00649B]/5]="form()?.code === f.code" [class.border-transparent]="form()?.code !== f.code"
           (click)="selectedForm(f.code)">
           <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold"
-               [style.background]="getCatColor(f.category).bg"
-               [style.color]="getCatColor(f.category).text">
+            [style.background]="getCatColor(f.category).bg" [style.color]="getCatColor(f.category).text">
             {{ getCatLabel(f.category).slice(0,2).toUpperCase() }}
           </div>
           <div class="flex-1 min-w-0">
@@ -102,15 +95,14 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
             <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xs font-bold"
-                 [style.background]="getCatColor(form()!.category).bg"
-                 [style.color]="getCatColor(form()!.category).text">
+              [style.background]="getCatColor(form()!.category).bg" [style.color]="getCatColor(form()!.category).text">
               {{ getCatLabel(form()!.category).slice(0,2).toUpperCase() }}
             </div>
             <div>
               <div class="flex items-center gap-2">
                 <span class="text-xs font-semibold px-2 py-0.5 rounded"
-                      [style.background]="getCatColor(form()!.category).bg"
-                      [style.color]="getCatColor(form()!.category).text">
+                  [style.background]="getCatColor(form()!.category).bg"
+                  [style.color]="getCatColor(form()!.category).text">
                   {{ getCatLabel(form()!.category) }}
                 </span>
                 <span class="text-xs text-gray-400 font-mono">{{ form()!.code }}</span>
@@ -123,10 +115,8 @@
           </div>
 
           <button (click)="downloadResponse(selectedResponse())"
-            [disabled]="selectedResponse() === null && selectedResponses().length === 0"
-            pButton icon="pi pi-download" label="Exportar"
-            class="p-button-outlined p-button-sm"
-            style="color:#002E42; border-color:#e2e8f0">
+            [disabled]="selectedResponse() === null && selectedResponses().length === 0" pButton icon="pi pi-download"
+            label="Exportar" class="p-button-outlined p-button-sm" style="color:#002E42; border-color:#e2e8f0">
           </button>
         </div>
 
@@ -142,10 +132,8 @@
             }
             <p-iconfield>
               <p-inputicon class="pi pi-search" />
-              <input pInputText type="text" placeholder="Buscar respondente..."
-                     class="text-sm"
-                     [ngModel]="searchList()"
-                     (ngModelChange)="searchList.set($event)" />
+              <input pInputText type="text" placeholder="Buscar respondente..." class="text-sm" [ngModel]="searchList()"
+                (ngModelChange)="searchList.set($event)" />
             </p-iconfield>
           </div>
         </div>
@@ -175,15 +163,13 @@
             [class.bg-[#00649B]/5]="selectedResponse()?._id === response._id"
             [class.border-gray-100]="selectedResponse()?._id !== response._id">
 
-            <p-checkbox [binary]="true"
-              [ngModel]="isSelected(response._id)"
+            <p-checkbox [binary]="true" [ngModel]="isSelected(response._id)"
               (ngModelChange)="toggleResponse(response._id, $event)">
             </p-checkbox>
 
             <div class="flex flex-1 items-center gap-4" (click)="selectResponse(response)">
               <div class="flex h-9 w-9 shrink-0 items-center justify-center
-                          rounded-full text-sm font-bold text-white"
-                   style="background:#00649B">
+                          rounded-full text-sm font-bold text-white" style="background:#00649B">
                 {{ getInitials(response.filledBy.fullName) }}
               </div>
               <div class="flex-1 min-w-0">
@@ -214,15 +200,13 @@
 
     <!-- PANEL DERECHO -->
     @if (selectedResponse(); as response) {
-    <aside class="flex shrink-0 flex-col border-l border-gray-200 bg-white overflow-hidden"
-           style="width: 22rem;">
+    <aside class="flex shrink-0 flex-col border-l border-gray-200 bg-white overflow-hidden" style="width: 22rem;">
 
       <!-- HEADER — con botón eliminar -->
       <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 shrink-0">
         <div class="flex items-center gap-3">
           <div class="flex h-10 w-10 shrink-0 items-center justify-center
-                      rounded-full text-sm font-bold text-white"
-               style="background:#00649B">
+                      rounded-full text-sm font-bold text-white" style="background:#00649B">
             {{ getInitials(response.filledBy.fullName) }}
           </div>
           <div>
@@ -236,15 +220,11 @@
 
         <!-- BOTONES — eliminar y cerrar -->
         <div class="flex items-center gap-1">
-          <button pButton icon="pi pi-trash"
-            class="p-button-text p-button-rounded p-button-danger p-button-sm"
-            pTooltip="Eliminar respuesta"
-            tooltipPosition="left"
-            [loading]="deletingResponse()"
+          <button pButton icon="pi pi-trash" class="p-button-text p-button-rounded p-button-danger p-button-sm"
+            pTooltip="Eliminar respuesta" tooltipPosition="left" [loading]="deletingResponse()"
             (click)="deleteResponse(response._id)">
           </button>
-          <button pButton icon="pi pi-times"
-            class="p-button-text p-button-rounded p-button-plain p-button-sm"
+          <button pButton icon="pi pi-times" class="p-button-text p-button-rounded p-button-plain p-button-sm"
             (click)="selectedResponse.set(null)">
           </button>
         </div>
@@ -266,6 +246,56 @@
             {{ response.submittedAt | date: 'dd/MM/yyyy HH:mm' }}
           </span>
         </div>
+      </div>
+
+      <div class="shrink-0 border-b border-gray-100 px-5 py-3">
+
+        @if (response.status === 'PENDING') {
+        <div class="flex items-center gap-2 rounded-lg bg-yellow-50
+              border border-yellow-200 px-3 py-2.5">
+          <i class="pi pi-clock text-yellow-500 text-sm"></i>
+          <div>
+            <p class="text-xs font-semibold text-yellow-700">Pendiente de aprobación</p>
+            <p class="text-[10px] text-yellow-600 mt-0.5">
+              Esta respuesta aún no ha sido revisada por un aprobador
+            </p>
+          </div>
+        </div>
+        }
+
+        @if (response.status === 'APPROVED') {
+        <div class="flex items-center gap-2 rounded-lg bg-green-50
+              border border-green-200 px-3 py-2.5">
+          <i class="pi pi-check-circle text-green-500 text-sm"></i>
+          <div>
+            <p class="text-xs font-semibold text-green-700">Aprobada</p>
+            <p class="text-[10px] text-green-600 mt-0.5">
+              Por <strong>{{ response.approval.approverName }}</strong>
+              — {{ response.approval.approvedAt | date: 'dd/MM/yyyy HH:mm' }}
+            </p>
+          </div>
+        </div>
+        }
+
+        @if (response.status === 'REJECTED') {
+        <div class="flex items-center gap-2 rounded-lg bg-red-50
+              border border-red-200 px-3 py-2.5">
+          <i class="pi pi-times-circle text-red-500 text-sm"></i>
+          <div>
+            <p class="text-xs font-semibold text-red-700">Rechazada</p>
+            <p class="text-[10px] text-red-600 mt-0.5">
+              Por <strong>{{ response.approval.approverName }}</strong>
+              — {{ response.approval.approvedAt | date: 'dd/MM/yyyy HH:mm' }}
+            </p>
+            @if (response.approval.rejectionReason) {
+            <p class="text-[10px] text-red-500 mt-1 italic">
+              "{{ response.approval.rejectionReason }}"
+            </p>
+            }
+          </div>
+        </div>
+        }
+
       </div>
 
       <!-- RESPUESTAS -->

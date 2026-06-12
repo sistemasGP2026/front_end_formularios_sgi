@@ -9,7 +9,8 @@ import { CheckTokenResponse } from '../interfaces/check-token.response';
   providedIn: 'root',
 })
 export class AuthService {
-  protected readonly baseUrl: string = "http://192.168.1.103:2000";
+  protected readonly baseUrl: string = "http://localhost:3000";
+  // protected readonly baseUrl: string = "http://192.168.1.103:2000";
   private http = inject(HttpClient);
 
   private _currentUser = signal<User | null>(null);
@@ -69,6 +70,13 @@ export class AuthService {
       );
   }
 
+  isApprover(): boolean {
+    return this.currentUser()?.roles?.includes('APPROVER') ?? false;
+  }
+
+  isAdmin(): boolean {
+    return this.currentUser()?.roles?.includes('ADMIN') ?? false;
+  }
   logout() {
     localStorage.removeItem('token');
     this._currentUser.set(null);

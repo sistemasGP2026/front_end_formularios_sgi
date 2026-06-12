@@ -1,3 +1,10 @@
+export interface ThresholdRule {
+  min:   number;
+  max:   number;
+  label: string;
+  color: string | null;
+}
+
 export interface FormCreatedBy {
   userId: string;
   name: string;
@@ -50,28 +57,33 @@ export interface ConditionalRule {
 }
 
 export interface FormField {
-  id: string;
-  name: string;
-  label: string;
-  type: string;
-  sectionId: string;
-  required: boolean;
-  readOnly: boolean;
-  hidden: boolean;
-  placeholder: string | null;
-  helpText: string | null;
-  minLength: number | null;
-  maxLength: number | null;
-  pattern: string | null;
-  min: number | null;
-  max: number | null;
-  options: FieldOption[];
-  rows: TableRow[];
-  columns: TableColumn[];
-  validations: FieldValidation[];
+  id:               string;
+  name:             string;
+  label:            string;
+  type:             string;
+  sectionId:        string;
+  required:         boolean;
+  readOnly:         boolean;
+  hidden:           boolean;
+  placeholder:      string | null;
+  helpText:         string | null;
+  minLength:        number | null;
+  maxLength:        number | null;
+  pattern:          string | null;
+  min:              number | null;
+  max:              number | null;
+  options:          FieldOption[];
+  rows:             TableRow[];
+  columns:          TableColumn[];
+  validations:      FieldValidation[];
   conditionalRules: ConditionalRule[];
-  order: number;
-  dataSource?: string | null;
+  order:            number;
+  dataSource?:      string | null;
+  weight?:          number | null;
+  maxScore?:        number | null;
+  formula?:         string | null;
+  sourceField?:     string | null;
+  thresholds?:      ThresholdRule[];
 }
 
 export interface FormSettings {
@@ -93,6 +105,7 @@ export interface FormUserPermission {
 
 export interface FormPermissions {
   users: FormUserPermission[];
+  approvers: FormUserPermission[];
 }
 
 export interface Form {

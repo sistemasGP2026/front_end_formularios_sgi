@@ -8,89 +8,56 @@ import { CreateResponse } from '../../forms/interfaces/create-response.dto';
   providedIn: 'root',
 })
 export class ResponseService {
-  private readonly baseUrl = 'http://192.168.1.103:2000'
+  protected readonly baseUrl: string = "http://localhost:3000";
+  // private readonly baseUrl = 'http://192.168.1.103:2000'
   private readonly http = inject(HttpClient);
 
-  private getToken() {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      return '';
-    }
-    return token;
+  private getToken(): string {
+    return localStorage.getItem('token') ?? '';
+  }
+
+  private getHeaders() {
+    return {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + this.getToken()
+      })
+    };
   }
 
   submitdData(code: string, data: CreateResponse): Observable<any> {
-    const token = this.getToken()
-    const headers = {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      })
-    }
-    return this.http.post(`${this.baseUrl}/responses/${code}`, data, headers)
+    return this.http.post(`${this.baseUrl}/responses/${code}`, data, this.getHeaders())
   }
 
   getResponsesByForm(codeForm: string): Observable<ResponseInterface[]> {
-    const token = this.getToken()
-    const headers = {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      })
-    }
-
-    return this.http.get<ResponseInterface[]>(`${this.baseUrl}/responses/${codeForm}`, headers);
+    return this.http.get<ResponseInterface[]>(`${this.baseUrl}/responses/${codeForm}`, this.getHeaders());
   }
 
   getResponseDetail(id: string): Observable<ResponseInterface> {
-    const token = this.getToken()
-    const headers = {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      })
-    }
-
-    return this.http.get<ResponseInterface>(`${this.baseUrl}/responses/detail/${id}`, headers)
+    return this.http.get<ResponseInterface>(`${this.baseUrl}/responses/detail/${id}`, this.getHeaders())
   }
 
   getMyHistory(): Observable<ResponseInterface[]> {
-    const token = this.getToken()
-    const headers = {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      })
-    }
-
-    return this.http.get<ResponseInterface[]>(`${this.baseUrl}/responses/my/history`, headers);
+    return this.http.get<ResponseInterface[]>(`${this.baseUrl}/responses/my/history`, this.getHeaders());
   }
 
   deleteResponse(id: string): Observable<any> {
-     const token = this.getToken()
-    const headers = {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      })
-    }
-    return this.http.delete(
-      `${this.baseUrl}/responses/${id}`,
-      headers
-    );
+    return this.http.delete(`${this.baseUrl}/responses/${id}`,this.getHeaders());
   }
 
   deleteResponsesByForm(formCode: string): Observable<any> {
-     const token = this.getToken()
-    const headers = {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      })
-    }
-    return this.http.delete(
-      `${this.baseUrl}/responses/form/${formCode}`,
-      headers
+    return this.http.delete(`${this.baseUrl}/responses/form/${formCode}`,this.getHeaders());
+  }
+
+  getPendingResponses(): Observable<ResponseInterface[]> {
+    return this.http.get<ResponseInterface[]>(`${this.baseUrl}/responses/pending`,this.getHeaders());
+  }
+
+  approveResponse(id: string,status: 'APPROVED' | 'REJECTED',rejectionReason?: string): Observable<any> {
+    return this.http.patch(
+      `${this.baseUrl}/responses/${id}/approve`,
+      { status, rejectionReason },
+      this.getHeaders()
     );
   }
 }

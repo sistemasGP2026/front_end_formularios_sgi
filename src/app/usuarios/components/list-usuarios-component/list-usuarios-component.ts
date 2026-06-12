@@ -131,9 +131,6 @@ export class ListUsuariosComponent implements OnInit {
 
         this.visible = false
         this.myForm.reset()
-
-        setTimeout(() => {
-        }, 4000);
       },
       error: (error) => {
         const backendMessage: string = error?.error?.message || '';
@@ -157,6 +154,24 @@ export class ListUsuariosComponent implements OnInit {
         }
       }
     })
+  }
+
+  getRolLabel(roles: string): string {
+    const map: Record<string, string> = {
+      ADMIN: 'Administrador',
+      USER: 'Usuario',
+      APPROVER: 'Aprobador',
+    };
+    return map[roles] ?? roles ?? '—';
+  }
+
+  getRolColor(roles: string): { bg: string; text: string; dot: string } {
+    const map: Record<string, { bg: string; text: string; dot: string }> = {
+      ADMIN: { bg: '#FEE2E2', text: '#991B1B', dot: '#EF4444' },
+      USER: { bg: '#DBEAFE', text: '#1E40AF', dot: '#3B82F6' },
+      APPROVER: { bg: '#D1FAE5', text: '#065F46', dot: '#10B981' },
+    };
+    return map[roles] ?? { bg: '#F3F4F6', text: '#6B7280', dot: '#9CA3AF' };
   }
 
   hasError(controlName: string): boolean {
@@ -189,11 +204,11 @@ export class ListUsuariosComponent implements OnInit {
     });
   }
 
-  getRolSeverity(roles: string[]): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+  getRolSeverity(roles: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
     const map: Record<string, 'success' | 'info' | 'warn' | 'danger' | 'secondary'> = {
       ADMIN: 'danger', COLABORADOR: 'info', AUDITOR: 'warn', SUPERVISOR: 'success',
     };
-    return map[roles[0]] ?? 'secondary';
+    return map[roles] ?? 'secondary';
   }
 
 }

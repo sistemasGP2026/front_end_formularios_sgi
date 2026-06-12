@@ -26,12 +26,13 @@ import { IconFieldModule } from 'primeng/iconfield';
 })
 export class CreateUserModalPage {
 
-  roles = [
-    'ADMIN',
-    'USER'
-  ]
+  readonly rolesOptions = [
+    { label: 'Administrador', value: 'ADMIN' },
+    { label: 'Usuario', value: 'USER' },
+    { label: 'Aprobador', value: 'APPROVER' },
+  ];
 
-  filteredRoles = signal<string[]>([]);
+  filteredRoles = signal<{ label: string; value: string }[]>([]);
 
   @Input() visible = false;
 
@@ -53,16 +54,20 @@ export class CreateUserModalPage {
   })
 
   guardarUsuario() {
-
     if (this.myForm.invalid) {
       FormValidation.markFormTouched(this.myForm);
       return;
     }
 
-    const user = this.myForm.value;
+    const formValue = this.myForm.value;
+
+    const roles = typeof formValue.roles === 'object'
+      ? formValue.roles.value
+      : formValue.roles;
+
+    const user = { ...formValue, roles };
     this.usuarioService.createUser(user).subscribe({
       next: (data) => {
-
         this.message.add({
           severity: 'success',
           summary: 'Completado',
@@ -98,14 +103,12 @@ export class CreateUserModalPage {
   }
 
   searchEvent(event: AutoCompleteCompleteEvent) {
-    if (event.query) {
-      const queryLower = event.query.toLowerCase();
-      this.filteredRoles.set(
-        this.roles.filter(rol => rol.toLowerCase().includes(queryLower))
-      );
-    } else {
-      this.filteredRoles.set([...this.roles]);
-    }
+    const query = event.query.toLowerCase().trim();
+    this.filteredRoles.set(
+      !query
+        ? [...this.rolesOptions]
+        : this.rolesOptions.filter(r => r.label.toLowerCase().includes(query))
+    );
   }
 
   closeModal(): void {
@@ -121,7 +124,7 @@ export class CreateUserModalPage {
     return !!(
       control &&
       control.invalid &&
-      control.touched
+      (control.touched || control.dirty)
     );
   }
 
@@ -130,4 +133,5 @@ export class CreateUserModalPage {
       this.myForm.get(controlName)
     );
   }
+
 }
