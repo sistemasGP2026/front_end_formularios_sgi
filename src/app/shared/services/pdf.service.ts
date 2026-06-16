@@ -14,6 +14,22 @@ export class PdfService {
   private primary   = '#002E42';
   private secondary = '#00649B';
 
+   printForm(form: Form): void {
+    const doc: any = {
+      pageSize: 'A4',
+      pageMargins: [40, 110, 40, 60],
+      header: () => this.buildHeader(form),
+      footer: (cur: number, total: number) => this.buildFooter(cur, total),
+
+      content: [
+        { text: form.description ?? '', style: 'description' },
+        ...this.buildFormSections(form),
+      ],
+      styles: this.baseStyles(),
+    };
+    pdfMake.createPdf(doc).print();
+  }
+  
   // GENERAR PDF DE FORMULARIO VACÍO
   generateFormPdf(form: Form): void {
     const doc: any = {
