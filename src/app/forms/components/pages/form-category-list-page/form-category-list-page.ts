@@ -17,6 +17,7 @@ export class FormCategoryListPage implements OnInit {
 
   loading = signal(true);
   forms = signal<Form[]>([]);
+  isUserAdmin = this.authService.isAdmin()
 
   isAdmin = computed(() =>
     this.authService.currentUser()?.roles?.includes('ADMIN') ?? false
