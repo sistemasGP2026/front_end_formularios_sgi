@@ -10,6 +10,7 @@ import { Form, SectionPreview } from '../../interfaces/form.interface';
 import { FormsModule } from '@angular/forms';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
+import { AuthService } from '../../../auth/services/auth.service';
 
 @Component({
   selector: 'form-list-component',
@@ -25,33 +26,40 @@ import { ToastModule } from 'primeng/toast';
 })
 export class FormListComponent implements OnInit {
 
-  formList  = signal<Form[]>([]);
-  search    = '';
-  loading   = true;
+  formList = signal<Form[]>([]);
+  search = '';
+  loading = true;
   skeletons = Array(6);
   categoryTitle = '';
+  isAdmin = false;
+  isApprover = false;
 
-  private formService    = inject(FormService);
-  private cdr            = inject(ChangeDetectorRef);
+  private formService = inject(FormService);
+  private cdr = inject(ChangeDetectorRef);
   private confirmService = inject(ConfirmationService);
-  private message        = inject(MessageService);
-  router                 = inject(Router);
-  private route          = inject(ActivatedRoute);
+  private message = inject(MessageService);
+  router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private authService = inject(AuthService);
 
   readonly categoryMap: Record<string, string> = {
-    GESTION_DIRECCION:         'Gestión de Dirección',
-    GESTION_INTEGRAL:          'Gestión Integral',
-    GESTION_COMERCIAL:         'Gestión Comercial',
-    GESTION_COMPRAS:           'Gestión de Compras',
-    OPERACION_LOGISTICA:       'Operación Logística',
-    MANTENIMIENTO:             'Mantenimiento',
-    GESTION_FINANCIERA:        'Gestión Financiera',
-    GESTION_HUMANA:            'Gestión Humana',
-    PREPARADOS_ESTERILES:      'Preparados Estériles',
+    GESTION_DIRECCION: 'Gestión de Dirección',
+    GESTION_INTEGRAL: 'Gestión Integral',
+    GESTION_COMERCIAL: 'Gestión Comercial',
+    GESTION_COMPRAS: 'Gestión de Compras',
+    OPERACION_LOGISTICA: 'Operación Logística',
+    MANTENIMIENTO: 'Mantenimiento',
+    GESTION_FINANCIERA: 'Gestión Financiera',
+    GESTION_HUMANA: 'Gestión Humana',
+    PREPARADOS_ESTERILES: 'Preparados Estériles',
     DISTRIBUCION_MEDICAMENTOS: 'Distribución de Medicamentos',
   };
 
   ngOnInit(): void {
+    const user = this.authService.currentUser();
+    this.isAdmin = user?.roles?.includes('ADMIN') ?? false;
+    this.isApprover = user?.roles?.includes('APPROVER') ?? false;
+    
     const category = this.route.snapshot.paramMap.get('category');
     if (!category) { this.router.navigateByUrl('formularios'); return; }
     this.categoryTitle = this.getCatLabel(category.toUpperCase());
@@ -153,22 +161,22 @@ export class FormListComponent implements OnInit {
 
   getCatColor(cat: string): { bg: string; text: string } {
     const map: Record<string, { bg: string; text: string }> = {
-      GESTION_DIRECCION:         { bg: '#E2F4FE', text: '#0A4C6A' },
-      GESTION_INTEGRAL:          { bg: '#E6F1FB', text: '#0C447C' },
-      GESTION_COMERCIAL:         { bg: '#FCF0FB', text: '#6B1F6A' },
-      GESTION_COMPRAS:           { bg: '#FEF3E2', text: '#7A4100' },
-      OPERACION_LOGISTICA:       { bg: '#E8F5E9', text: '#1B5E20' },
-      MANTENIMIENTO:             { bg: '#FAEEDA', text: '#633806' },
-      GESTION_FINANCIERA:        { bg: '#E1F5EE', text: '#085041' },
-      GESTION_HUMANA:            { bg: '#EEEDFE', text: '#3C3489' },
-      PREPARADOS_ESTERILES:      { bg: '#FCE4EC', text: '#880E4F' },
+      GESTION_DIRECCION: { bg: '#E2F4FE', text: '#0A4C6A' },
+      GESTION_INTEGRAL: { bg: '#E6F1FB', text: '#0C447C' },
+      GESTION_COMERCIAL: { bg: '#FCF0FB', text: '#6B1F6A' },
+      GESTION_COMPRAS: { bg: '#FEF3E2', text: '#7A4100' },
+      OPERACION_LOGISTICA: { bg: '#E8F5E9', text: '#1B5E20' },
+      MANTENIMIENTO: { bg: '#FAEEDA', text: '#633806' },
+      GESTION_FINANCIERA: { bg: '#E1F5EE', text: '#085041' },
+      GESTION_HUMANA: { bg: '#EEEDFE', text: '#3C3489' },
+      PREPARADOS_ESTERILES: { bg: '#FCE4EC', text: '#880E4F' },
       DISTRIBUCION_MEDICAMENTOS: { bg: '#E0F7FA', text: '#006064' },
     };
     return map[cat?.toUpperCase()] ?? { bg: '#F1EFE8', text: '#444441' };
   }
 
   getSectionCount(form: Form): number { return form.sections?.length ?? 0; }
-  getFieldCount(form: Form): number   { return form.fields?.length ?? 0; }
+  getFieldCount(form: Form): number { return form.fields?.length ?? 0; }
 
   getSectionPreviews(form: Form): SectionPreview[] {
     return (form.sections ?? [])
