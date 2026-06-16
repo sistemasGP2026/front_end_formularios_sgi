@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { RouterLink, RouterModule } from '@angular/router';
+import { Router, RouterLink, RouterModule } from '@angular/router';
 import { FormService } from '../../../services/form.service';
 import { Form } from '../../../interfaces/form.interface';
 import { AuthService } from '../../../../auth/services/auth.service';
@@ -14,10 +14,12 @@ export class FormCategoryListPage implements OnInit {
 
   private readonly formService = inject(FormService);
   private readonly authService = inject(AuthService);
+  private router      = inject(Router);
 
   loading = signal(true);
   forms = signal<Form[]>([]);
-  isUserAdmin = this.authService.isAdmin()
+  isUserAdmin = false;
+  isApprover  = false;
 
   isAdmin = computed(() =>
     this.authService.currentUser()?.roles?.includes('ADMIN') ?? false
@@ -50,20 +52,42 @@ export class FormCategoryListPage implements OnInit {
   });
 
   ngOnInit(): void {
-    const load$ = this.isAdmin()
-      ? this.formService.getAllForms()
-      : this.formService.getMyFormsAssigned();
+    const user       = this.authService.currentUser();
+    this.isUserAdmin = user?.roles?.includes('ADMIN') ?? false;
+    this.isApprover  = user?.roles?.includes('APPROVER') ?? false;
 
-    load$.subscribe({
-      next: (data) => {
-        this.forms.set(data);
-        this.loading.set(false);
-      },
-      error: () => this.loading.set(false)
-    });
+    this.loadForms();
+  }
+
+  private loadForms(): void {
+    if (this.isUserAdmin) {
+      // Admin ve todos los formularios
+      this.formService.getAllForms().subscribe({
+        next: (forms) => this.forms.set(forms.filter(f => !f.deleted)),
+      });
+    } else {
+      // USER y APPROVER ven formularios públicos
+      // más los formularios restringidos donde tienen permiso
+      this.formService.getPublicForms().subscribe({
+        next: (publicForms) => {
+          this.formService.getMyFormsAssigned().subscribe({
+            next: (assignedForms) => {
+              // Combina y deduplica por code
+              const all = [...publicForms, ...assignedForms];
+              const unique = Array.from(
+                new Map(all.map(f => [f.code, f])).values()
+              );
+              this.forms.set(unique.filter(f => !f.deleted));
+            },
+            error: () => this.forms.set(publicForms.filter(f => !f.deleted)),
+          });
+        },
+        error: () => this.forms.set([]),
+      });
+    }
   }
 
   selectCategoria(code: string): void {
-    this.selectedCategoria.set(code);
+    this.router.navigate(['/formularios/categoria', code]);
   }
 }
