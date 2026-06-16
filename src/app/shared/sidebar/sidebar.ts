@@ -27,31 +27,38 @@ export class SidebarComponent implements OnInit {
   navItems: NavItem[] = []
 
   ngOnInit(): void {
+    const user = this.authService.currentUser();
+    const role = user?.roles?.[0];
 
-    if (this.authService.isAdmin() || this.authService.isApprover()) {
+    // Carga pendientes solo si tiene acceso
+    if (role === 'ADMIN' || role === 'APPROVER') {
       this.responseService.getPendingResponses().subscribe({
         next: (r) => this.pendingCount.set(r.length),
         error: () => { },
       });
-
-      if (this.authService.currentUser()?.roles[0] === 'ADMIN') {
-        this.navItems = [
-          { label: 'Inicio', icon: 'pi pi-home', route: '/inicio' },
-          { label: 'Gestión de Formularios', icon: 'pi pi-file', route: '/formularios' },
-          { label: 'Gestión de Usuarios', icon: 'pi pi-users', route: '/usuarios' },
-          { label: 'Reportes y Analítica', icon: 'pi pi-chart-line', route: '/reportes' },
-          { label: 'Respuestas', icon: 'pi pi-comments', route: '/respuestas' },
-          { label: 'Historial', icon: 'pi pi-history', route: '/historial' },
-        ];
-      } else {
-        this.navItems = [
-          { label: 'Inicio', icon: 'pi pi-home', route: '/inicio' },
-          { label: 'Gestión de Formularios', icon: 'pi pi-file', route: '/formularios' },
-          { label: 'Historial', icon: 'pi pi-history', route: '/historial' },
-        ]
-      }
-
     }
 
+    // NavItems por rol
+    if (role === 'ADMIN') {
+      this.navItems = [
+        { label: 'Inicio', icon: 'pi pi-home', route: '/inicio' },
+        { label: 'Gestión de Formularios', icon: 'pi pi-file', route: '/formularios' },
+        { label: 'Gestión de Usuarios', icon: 'pi pi-users', route: '/usuarios' },
+        { label: 'Reportes y Analítica', icon: 'pi pi-chart-line', route: '/reportes' },
+        { label: 'Respuestas', icon: 'pi pi-comments', route: '/respuestas' },
+        { label: 'Historial', icon: 'pi pi-history', route: '/historial' },
+      ];
+    } else if (role === 'APPROVER') {
+      this.navItems = [
+        { label: 'Inicio', icon: 'pi pi-home', route: '/inicio' },
+        { label: 'Gestión de Formularios', icon: 'pi pi-file', route: '/formularios' },
+        { label: 'Historial', icon: 'pi pi-history', route: '/historial' },
+      ];
+    } else {
+      this.navItems = [
+        { label: 'Inicio', icon: 'pi pi-home', route: '/inicio' },
+        { label: 'Historial', icon: 'pi pi-history', route: '/historial' },
+      ];
+    }
   }
 }
