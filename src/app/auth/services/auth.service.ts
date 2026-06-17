@@ -9,7 +9,7 @@ import { CheckTokenResponse } from '../interfaces/check-token.response';
   providedIn: 'root',
 })
 export class AuthService {
-  protected readonly baseUrl: string = "http://192.168.1.103:2000";
+  protected readonly baseUrl: string = "http://181.207.4.226:2000";
   private http = inject(HttpClient);
 
   private _currentUser = signal<User | null>(null);
