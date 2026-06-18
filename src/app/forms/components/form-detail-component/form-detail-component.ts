@@ -24,12 +24,12 @@ import { User } from '../../../auth/interfaces/signIn.response';
 
 export interface SectionWithFields {
   section: FormSection;
-  fields:  FormField[];
+  fields: FormField[];
 }
 
 @Component({
-  selector:    'form-detail-component',
-  standalone:  true,
+  selector: 'form-detail-component',
+  standalone: true,
   imports: [
     AssignUserPermissionPage,
     CommonModule,
@@ -45,55 +45,55 @@ export interface SectionWithFields {
     ToastModule,
     ConfirmDialogModule,
   ],
-  providers:   [MessageService, ConfirmationService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './form-detail-component.html',
-  styleUrl:    './form-detail-component.css',
+  styleUrl: './form-detail-component.css',
 })
 export class FormDetailComponent implements OnInit {
 
   // ─── Estado UI ───────────────────────────────────────────────────────────
-  visible              = false;
-  visibleEdit          = false;
+  visible = false;
+  visibleEdit = false;
   visibleApproverModal = false;
   mode: 'preview' | 'respond' = 'preview';
-  loading              = true;
-  deleting             = false;
+  loading = true;
+  deleting = false;
 
   // ─── Datos ───────────────────────────────────────────────────────────────
-  form:               Form | null           = null;
-  sectionsWithFields: SectionWithFields[]   = [];
-  responses:          ResponseInterface[]   = [];
-  responsesTotal      = 0;
-  showResponsesPanel  = false;
+  form: Form | null = null;
+  sectionsWithFields: SectionWithFields[] = [];
+  responses: ResponseInterface[] = [];
+  responsesTotal = 0;
+  showResponsesPanel = false;
 
   selectedUsers = signal<string[]>([]);
-  userList      = signal<UserResponse[]>([]);
-  currentUser   = signal<User | null>(null);
+  userList = signal<UserResponse[]>([]);
+  currentUser = signal<User | null>(null);
 
   // ─── Edición JSON ────────────────────────────────────────────────────────
   editJsonInput = '';
   editJsonError = '';
-  editParsed:  any = null;
-  editSaving       = false;
+  editParsed: any = null;
+  editSaving = false;
 
   // ─── Servicios ───────────────────────────────────────────────────────────
-  private message         = inject(MessageService);
-  private confirmService  = inject(ConfirmationService);
-  private usuarioService  = inject(UsuarioService);
-  private route           = inject(ActivatedRoute);
-  private formService     = inject(FormService);
-  private cdr             = inject(ChangeDetectorRef);
-  private router          = inject(Router);
+  private message = inject(MessageService);
+  private confirmService = inject(ConfirmationService);
+  private usuarioService = inject(UsuarioService);
+  private route = inject(ActivatedRoute);
+  private formService = inject(FormService);
+  private cdr = inject(ChangeDetectorRef);
+  private router = inject(Router);
   private responseService = inject(ResponseService);
-  private pdfService      = inject(PdfService);
-  private authService     = inject(AuthService);
+  private pdfService = inject(PdfService);
+  private authService = inject(AuthService);
 
   // ─── Lifecycle ───────────────────────────────────────────────────────────
 
   ngOnInit(): void {
     const code = this.route.snapshot.paramMap.get('code');
     const mode = this.route.snapshot.queryParamMap.get('mode');
-    this.mode  = mode === 'respond' ? 'respond' : 'preview';
+    this.mode = mode === 'respond' ? 'respond' : 'preview';
 
     if (!code) { this.router.navigate(['/formularios']); return; }
     this.loadForm(code.toUpperCase());
@@ -107,9 +107,9 @@ export class FormDetailComponent implements OnInit {
     this.formService.getFormByCode(code).subscribe({
       next: (form) => {
         if (!form) { this.router.navigate(['/formularios']); return; }
-        this.form               = form;
+        this.form = form;
         this.sectionsWithFields = this.buildSectionsWithFields(form);
-        this.loading            = false;
+        this.loading = false;
         this.loadResponses();
         this.cdr.detectChanges();
       },
@@ -134,13 +134,13 @@ export class FormDetailComponent implements OnInit {
     if (!this.form) return;
     this.responseService.getResponsesByForm(this.form.code).subscribe({
       next: (resp) => {
-        this.responses      = resp;
+        this.responses = resp;
         this.responsesTotal = resp.length;
         if (this.responsesTotal > 0) this.showResponsesPanel = true;
         this.cdr.detectChanges();
       },
       error: () => {
-        this.responses      = [];
+        this.responses = [];
         this.responsesTotal = 0;
       },
     });
@@ -160,9 +160,9 @@ export class FormDetailComponent implements OnInit {
   deleteForm(): void {
     if (!this.form) return;
     this.confirmService.confirm({
-      message:     `¿Eliminar el formulario "${this.form.name}"? Quedará inactivo pero podrá reactivarse.`,
-      header:      'Eliminar formulario',
-      icon:        'pi pi-exclamation-triangle',
+      message: `¿Eliminar el formulario "${this.form.name}"? Quedará inactivo pero podrá reactivarse.`,
+      header: 'Eliminar formulario',
+      icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Sí, eliminar',
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-danger',
@@ -173,9 +173,9 @@ export class FormDetailComponent implements OnInit {
             this.deleting = false;
             this.message.add({
               severity: 'success',
-              summary:  'Formulario eliminado',
-              detail:   `${this.form!.code} fue desactivado correctamente`,
-              life:     3000,
+              summary: 'Formulario eliminado',
+              detail: `${this.form!.code} fue desactivado correctamente`,
+              life: 3000,
             });
             setTimeout(() => this.router.navigate(['/formularios']), 2000);
           },
@@ -183,9 +183,9 @@ export class FormDetailComponent implements OnInit {
             this.deleting = false;
             this.message.add({
               severity: 'error',
-              summary:  'Error',
-              detail:   err?.error?.message ?? 'No se pudo eliminar el formulario',
-              life:     4000,
+              summary: 'Error',
+              detail: err?.error?.message ?? 'No se pudo eliminar el formulario',
+              life: 4000,
             });
           },
         });
@@ -211,8 +211,8 @@ export class FormDetailComponent implements OnInit {
         this.form?.permissions.users.push(...data);
         this.message.add({
           severity: 'success',
-          summary:  'Realizado',
-          detail:   'Permiso asignado correctamente',
+          summary: 'Realizado',
+          detail: 'Permiso asignado correctamente',
         });
       },
     });
@@ -227,17 +227,17 @@ export class FormDetailComponent implements OnInit {
         );
         this.message.add({
           severity: 'success',
-          summary:  'Acceso removido',
-          detail:   `@${username} ya no tiene acceso a este formulario`,
-          life:     3000,
+          summary: 'Acceso removido',
+          detail: `@${username} ya no tiene acceso a este formulario`,
+          life: 3000,
         });
       },
       error: (err) => {
         this.message.add({
           severity: 'error',
-          summary:  'Error',
-          detail:   err?.error?.message ?? 'No se pudo remover el acceso',
-          life:     3000,
+          summary: 'Error',
+          detail: err?.error?.message ?? 'No se pudo remover el acceso',
+          life: 3000,
         });
       },
     });
@@ -264,17 +264,17 @@ export class FormDetailComponent implements OnInit {
         ];
         this.message.add({
           severity: 'success',
-          summary:  'Aprobador asignado',
-          detail:   'El aprobador fue agregado correctamente',
-          life:     3000,
+          summary: 'Aprobador asignado',
+          detail: 'El aprobador fue agregado correctamente',
+          life: 3000,
         });
       },
       error: (err) => {
         this.message.add({
           severity: 'error',
-          summary:  'Error',
-          detail:   err?.error?.message ?? 'No se pudo asignar el aprobador',
-          life:     3000,
+          summary: 'Error',
+          detail: err?.error?.message ?? 'No se pudo asignar el aprobador',
+          life: 3000,
         });
       },
     });
@@ -295,42 +295,49 @@ export class FormDetailComponent implements OnInit {
         };
         this.message.add({
           severity: 'success',
-          summary:  'Aprobador removido',
-          detail:   `@${username} ya no puede aprobar este formulario`,
-          life:     3000,
+          summary: 'Aprobador removido',
+          detail: `@${username} ya no puede aprobar este formulario`,
+          life: 3000,
         });
       },
       error: (err) => {
         this.message.add({
           severity: 'error',
-          summary:  'Error',
-          detail:   err?.error?.message ?? 'No se pudo remover el aprobador',
-          life:     3000,
+          summary: 'Error',
+          detail: err?.error?.message ?? 'No se pudo remover el aprobador',
+          life: 3000,
         });
       },
     });
   }
 
-  // ─── Edición JSON ─────────────────────────────────────────────────────────
-
+  //Edición JSON
   openEditModal(): void {
     if (!this.form) return;
-    const { _id, __v, createdAt, updatedAt, createdBy, deleted, ...editableForm } =
-      this.form as any;
+    const { _id, __v, createdAt, updatedAt, createdBy, deleted, ...editableForm } = this.form as any;
+    // Normaliza documentDate a YYYY-MM-DD para el editor
+    if (editableForm.documentDate) {
+      const d = new Date(editableForm.documentDate);
+      if (!isNaN(d.getTime())) {
+        editableForm.documentDate = d.toISOString().split('T')[0];
+      }
+    }
+
     this.editJsonInput = JSON.stringify(editableForm, null, 2);
     this.editJsonError = '';
-    this.editParsed    = editableForm;
-    this.visibleEdit   = true;
+    this.editParsed = editableForm;
+    this.visibleEdit = true;
   }
+
 
   onEditJsonChange(value: string): void {
     this.editJsonInput = value;
     this.editJsonError = '';
-    this.editParsed    = null;
+    this.editParsed = null;
     if (!value.trim()) return;
     try {
       const parsed = JSON.parse(value);
-      const error  = this.validateEditForm(parsed);
+      const error = this.validateEditForm(parsed);
       if (error) { this.editJsonError = error; return; }
       this.editParsed = parsed;
     } catch {
@@ -339,7 +346,7 @@ export class FormDetailComponent implements OnInit {
   }
 
   private validateEditForm(form: any): string | null {
-    if (!form.name?.trim())     return 'Falta el campo "name"';
+    if (!form.name?.trim()) return 'Falta el campo "name"';
     if (!form.category?.trim()) return 'Falta el campo "category"';
     if (!Array.isArray(form.sections) || form.sections.length === 0)
       return 'Debe tener al menos una sección en "sections"';
@@ -353,22 +360,26 @@ export class FormDetailComponent implements OnInit {
   saveEdit(): void {
     if (!this.editParsed || !this.form) return;
     this.editSaving = true;
-    this.formService.updateForm(this.form.code, this.editParsed).subscribe({
+
+    const { _id, __v, code, createdAt, updatedAt, createdBy, deleted, ...payload } = this.editParsed;
+
+    this.formService.updateForm(this.form.code, payload).subscribe({
       next: (updated) => {
-        this.form               = updated;
+        console.log(updated);
         this.sectionsWithFields = this.buildSectionsWithFields(updated);
-        this.editSaving         = false;
-        this.visibleEdit        = false;
+        this.editSaving = false;
+        this.visibleEdit = false;
         this.message.add({
           severity: 'success',
-          summary:  'Formulario actualizado',
-          detail:   `v${updated.version} guardada correctamente`,
-          life:     4000,
+          summary: 'Formulario actualizado',
+          detail: `v${updated.version} guardada correctamente`,
+          life: 4000,
         });
         this.cdr.detectChanges();
       },
       error: (err) => {
-        this.editSaving   = false;
+        console.log(err);
+        this.editSaving = false;
         this.editJsonError = err?.error?.message ?? 'Error al actualizar el formulario';
       },
     });

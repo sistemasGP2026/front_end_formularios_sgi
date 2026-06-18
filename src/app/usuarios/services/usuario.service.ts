@@ -10,7 +10,6 @@ import { User } from '../../auth/interfaces/signIn.response';
 })
 export class UsuarioService {
   private readonly baseUrl = 'http://181.207.4.226:2000'
-  
   private readonly http = inject(HttpClient);
 
   private getToken(): string {
