@@ -48,7 +48,7 @@ export interface FormGroup {
     InputIconModule,
     SelectModule,
   ],
-  providers:[ConfirmationService],
+  providers: [ConfirmationService],
   templateUrl: './responses-component.html',
 })
 export class ResponsesComponent implements OnInit {
@@ -70,6 +70,7 @@ export class ResponsesComponent implements OnInit {
   searchSidebar = signal('');
   searchList = signal('');
   selectedCategory = signal<string | null>(null);
+  deletingMany = signal(false);
 
   // Categorías únicas extraídas de los formularios
   selectedCategories = signal<string[]>([]);
@@ -133,28 +134,6 @@ export class ResponsesComponent implements OnInit {
   }
 
   deletingResponse = signal(false);
-
-  deleteResponse(responseId: string): void {
-    this.confirmService.confirm({
-      message: '¿Estás seguro de eliminar esta respuesta?',
-      header: 'Eliminar respuesta',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí, eliminar',
-      rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-danger',
-      accept: () => {
-        this.deletingResponse.set(true);
-        this.responseService.deleteResponse(responseId).subscribe({
-          next: () => {
-            this.responses.update(rs => rs.filter(r => r._id !== responseId));
-            this.selectedResponse.set(null);
-            this.deletingResponse.set(false);
-          },
-          error: () => this.deletingResponse.set(false)
-        });
-      }
-    });
-  }
 
   selectedForm(code: string) {
     this.form.set(null);
@@ -288,5 +267,74 @@ export class ResponsesComponent implements OnInit {
   getTableColumns(fieldName: string): any[] {
     const field = this.form()?.fields?.find(f => f.name === fieldName);
     return field?.columns ?? [];
+  }
+
+  deleteResponse(responseId: string): void {
+    this.confirmService.confirm({
+      message: '¿Estás seguro de eliminar esta respuesta?',
+      header: 'Eliminar respuesta',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.deletingResponse.set(true);
+        this.responseService.deleteResponse(responseId).subscribe({
+          next: () => {
+            this.selectedResponse.set(null);
+            this.deletingResponse.set(false);
+            // Recargar desde el backend
+            const code = this.form()?.code;
+            if (code) {
+              this.responseService.getResponsesByForm(code).subscribe({
+                next: (resp) => this.responses.set(resp)
+              });
+            }
+          },
+          error: () => this.deletingResponse.set(false)
+        });
+      }
+    });
+  }
+
+  deleteManySelected(): void {
+    const ids = this.selectedResponses();
+    if (ids.length === 0) return;
+
+    this.confirmService.confirm({
+      message: `¿Eliminar ${ids.length} respuesta${ids.length !== 1 ? 's' : ''} seleccionada${ids.length !== 1 ? 's' : ''}?`,
+      header: 'Eliminar respuestas',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.deletingMany.set(true);
+
+        // Llamada corregida al servicio
+        this.responseService.deleteManyResponses(ids).subscribe({
+          next: () => {
+            // 1. Filtramos localmente para que la UI cambie INSTANTÁNEAMENTE
+            const idsEliminados = ids; // Los IDs que enviaste
+            this.responses.update(current =>
+              current.filter(r => !idsEliminados.includes(r._id))
+            );
+
+            // 2. Limpieza de estado
+            this.selectedResponses.set([]);
+            this.selectAll.set(false);
+            this.selectedResponse.set(null);
+            this.deletingMany.set(false);
+
+            // (Opcional) Si quieres asegurar que los datos estén sincronizados con BD:
+            this.getResponses();
+          },
+          error: (error) => {
+            console.error('Error al eliminar:', error);
+            this.deletingMany.set(false);
+          }
+        });
+      }
+    });
   }
 }

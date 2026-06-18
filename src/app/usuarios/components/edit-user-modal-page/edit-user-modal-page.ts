@@ -38,6 +38,10 @@ export class EditUserModalPage {
     return this._user;
   }
 
+  get isActive(): boolean {
+    return this._user?.active ?? true;
+  }
+
   private _user!: UserResponse;
 
   @Output() visibleChange = new EventEmitter<boolean>();
@@ -46,7 +50,11 @@ export class EditUserModalPage {
 
   saving = false;
 
-  roles: string[] = ['ADMIN', 'USER'];
+  roles = [
+  { label: 'Administrador', value: 'ADMIN' },
+  { label: 'Usuario', value: 'USER' },
+  { label: 'Aprobador', value: 'APPROVER' },
+];
   selectedRole = '';
 
   private readonly userService = inject(UsuarioService);
@@ -60,7 +68,7 @@ export class EditUserModalPage {
       fullName: this._user.fullName,
       email: this._user.email,
       username: this._user.username,
-      roles: this.selectedRole ? [this.selectedRole] : [],
+      roles: this.selectedRole ? this.selectedRole : '',
     };
 
     this.userService.updateUser(this._user.id, payload).subscribe({
@@ -96,4 +104,24 @@ export class EditUserModalPage {
     this.visible = false;
     this.visibleChange.emit(false);
   }
+
+  toggleUserStatus(): void {
+  if (!this._user) return;
+  if (this.isActive) {
+    this.deleteUser();
+  } else {
+    this.activateUser();
+  }
+}
+
+activateUser(): void {
+  if (!this._user) return;
+  this.userService.activateUser(this._user.id).subscribe({
+    next: () => {
+      this.updated.emit();
+      this.closeModal();
+    },
+    error: (err) => console.error(err)
+  });
+}
 }

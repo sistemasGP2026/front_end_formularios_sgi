@@ -28,7 +28,7 @@ export class SidebarComponent implements OnInit {
 
   ngOnInit(): void {
     const user = this.authService.currentUser();
-    const role = user?.roles?.[0];
+    const role = user?.roles;
 
     // Carga pendientes solo si tiene acceso
     if (role === 'ADMIN' || role === 'APPROVER') {

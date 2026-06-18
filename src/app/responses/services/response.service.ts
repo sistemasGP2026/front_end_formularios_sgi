@@ -8,7 +8,8 @@ import { CreateResponse } from '../../forms/interfaces/create-response.dto';
   providedIn: 'root',
 })
 export class ResponseService {
-  private readonly baseUrl = 'http://181.207.4.226:2000'
+  // private readonly baseUrl = 'http://181.207.4.226:2000'
+  protected readonly baseUrl: string = "http://localhost:2000";
   private readonly http = inject(HttpClient);
 
   private getToken(): string {
@@ -41,22 +42,29 @@ export class ResponseService {
   }
 
   deleteResponse(id: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/responses/${id}`,this.getHeaders());
+    return this.http.delete(`${this.baseUrl}/responses/${id}`, this.getHeaders());
   }
 
   deleteResponsesByForm(formCode: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/responses/form/${formCode}`,this.getHeaders());
+    return this.http.delete(`${this.baseUrl}/responses/form/${formCode}`, this.getHeaders());
   }
 
   getPendingResponses(): Observable<ResponseInterface[]> {
-    return this.http.get<ResponseInterface[]>(`${this.baseUrl}/responses/pending`,this.getHeaders());
+    return this.http.get<ResponseInterface[]>(`${this.baseUrl}/responses/pending`, this.getHeaders());
   }
 
-  approveResponse(id: string,status: 'APPROVED' | 'REJECTED',rejectionReason?: string): Observable<any> {
+  approveResponse(id: string, status: 'APPROVED' | 'REJECTED', rejectionReason?: string): Observable<any> {
     return this.http.patch(
       `${this.baseUrl}/responses/${id}/approve`,
       { status, rejectionReason },
       this.getHeaders()
     );
   }
+
+  deleteManyResponses(ids: string[]) {
+  return this.http.delete(`${this.baseUrl}/responses/bulk`, {
+    body: { ids },
+    ...this.getHeaders()
+  });
+}
 }

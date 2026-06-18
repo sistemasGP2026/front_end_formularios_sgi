@@ -103,7 +103,7 @@ export class ListUsuariosComponent implements OnInit {
       u.fullName.toLowerCase().includes(term) ||
       u.email.toLowerCase().includes(term) ||
       u.username.toLowerCase().includes(term) ||
-      u.rol[0]?.toLowerCase().includes(term)
+      u.rol?.toLowerCase().includes(term)
     );
   });
 

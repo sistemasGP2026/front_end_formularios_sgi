@@ -1,14 +1,6 @@
-<p-toast/>
-<p-dialog
-  (visibleChange)="visibleChange.emit($event)"
-  (onHide)="closeModal()"
-  header="Editar usuario"
-  [modal]="true"
-  [(visible)]="visible"
-  [draggable]="false"
-  [resizable]="false"
-  [closable]="true"
-  [style]="{ width: '42rem' }"
+<p-toast />
+<p-dialog (visibleChange)="visibleChange.emit($event)" (onHide)="closeModal()" header="Editar usuario" [modal]="true"
+  [(visible)]="visible" [draggable]="false" [resizable]="false" [closable]="true" [style]="{ width: '42rem' }"
   styleClass="rounded-2xl overflow-hidden">
 
   @if (user) {
@@ -39,17 +31,16 @@
       <!-- ROL -->
       <div class="flex flex-col gap-2 col-span-2">
         <label class="text-sm font-semibold text-[#002E42]">Rol del usuario</label>
-        <p-select
-          [(ngModel)]="selectedRole"
-          [options]="roles"
-          placeholder="Seleccionar rol"
-          class="w-full"
-          appendTo="body">
+        <p-select [(ngModel)]="selectedRole" [options]="roles" optionLabel="label" optionValue="value"
+          placeholder="Seleccionar rol" class="w-full" appendTo="body">
           <ng-template let-role pTemplate="option">
             <div class="flex items-center gap-2 py-1">
               <div class="w-2 h-2 rounded-full bg-[#00649B]"></div>
-              <span class="text-sm text-[#002E42]">{{ role }}</span>
+              <span class="text-sm text-[#002E42]">{{ role.label }}</span>
             </div>
+          </ng-template>
+          <ng-template let-role pTemplate="selectedItem">
+            <span class="text-sm text-[#002E42]">{{ role?.label }}</span>
           </ng-template>
         </p-select>
       </div>
@@ -71,41 +62,32 @@
     <div class="flex items-center justify-between pt-4 border-t border-[#E6EEF2]">
 
       <!-- Eliminar -->
-      <button
-        type="button"
-        (click)="deleteUser()"
-        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
-               border border-red-200 text-red-500 text-sm font-medium
-               hover:bg-red-50 transition cursor-pointer">
-        <i class="pi pi-trash text-xs"></i>
-        Desactivar usuario
+      <button type="button" (click)="toggleUserStatus()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
+         border text-sm font-medium transition cursor-pointer" [class.border-red-200]="isActive"
+        [class.text-red-500]="isActive" [class.hover:bg-red-50]="isActive" [class.border-green-200]="!isActive"
+        [class.text-green-600]="!isActive" [class.hover:bg-green-50]="!isActive">
+        <i class="pi text-xs" [class.pi-ban]="isActive" [class.pi-check-circle]="!isActive"></i>
+        {{ isActive ? 'Desactivar usuario' : 'Activar usuario' }}
       </button>
 
       <!-- Cancelar + Guardar -->
       <div class="flex items-center gap-3">
-        <button
-          type="button"
-          (click)="closeModal()"
-          class="px-4 py-2 rounded-xl border border-[#D1DCE2]
+        <button type="button" (click)="closeModal()" class="px-4 py-2 rounded-xl border border-[#D1DCE2]
                  text-sm font-medium text-[#4A6A7A]
                  hover:bg-[#F4F7F9] transition cursor-pointer">
           Cancelar
         </button>
 
-        <button
-          type="button"
-          (click)="updateUser()"
-          [disabled]="saving"
-          class="inline-flex items-center gap-2 px-5 py-2 rounded-xl
+        <button type="button" (click)="updateUser()" [disabled]="saving" class="inline-flex items-center gap-2 px-5 py-2 rounded-xl
                  bg-[#00649B] text-sm font-semibold text-white
                  hover:bg-[#00517D] transition cursor-pointer
                  disabled:opacity-60 disabled:cursor-not-allowed">
           @if (saving) {
-            <i class="pi pi-spin pi-spinner text-xs"></i>
-            Guardando...
+          <i class="pi pi-spin pi-spinner text-xs"></i>
+          Guardando...
           } @else {
-            <i class="pi pi-save text-xs"></i>
-            Guardar cambios
+          <i class="pi pi-save text-xs"></i>
+          Guardar cambios
           }
         </button>
       </div>

@@ -243,8 +243,7 @@ export class FormDetailComponent implements OnInit {
     });
   }
 
-  // ─── Permisos aprobadores ─────────────────────────────────────────────────
-
+  //Permisos aprobadores
   openAssignApproverModal(): void {
     this.visibleApproverModal = true;
     this.usuarioService.getAllUsers().subscribe({

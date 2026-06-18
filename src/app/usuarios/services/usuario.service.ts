@@ -9,7 +9,8 @@ import { User } from '../../auth/interfaces/signIn.response';
   providedIn: 'root',
 })
 export class UsuarioService {
-  private readonly baseUrl = 'http://181.207.4.226:2000'
+  // private readonly baseUrl = 'http://181.207.4.226:2000'
+  protected readonly baseUrl: string = "http://localhost:2000";
   private readonly http = inject(HttpClient);
 
   private getToken(): string {
@@ -95,6 +96,19 @@ export class UsuarioService {
     }
 
     return this.http.delete(`${this.baseUrl}/users/${id}`, headers)
+  }
+
+  activateUser(id:string){
+    const token = this.getToken();
+
+    const headers = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      })
+    }
+
+    return this.http.patch(`${this.baseUrl}/users/activate/${id}`, headers)
   }
 
   resetPassword(id: string, newPassword: string): Observable<any> {

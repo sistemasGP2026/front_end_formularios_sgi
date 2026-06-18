@@ -125,6 +125,11 @@
             <span class="text-xs font-medium text-[#00649B]">
               {{ selectedResponses().length }} seleccionada{{ selectedResponses().length !== 1 ? 's' : '' }}
             </span>
+            <button pButton icon="pi pi-trash" label="Eliminar seleccionadas"
+              class="p-button-outlined p-button-sm p-button-danger"
+              [loading]="deletingMany()"
+              (click)="deleteManySelected()">
+            </button>
             }
             <p-iconfield>
               <p-inputicon class="pi pi-search" />

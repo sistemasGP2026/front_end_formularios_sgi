@@ -8,6 +8,6 @@ export interface User {
     fullName: string;
     username: string;
     email:    string;
-    roles:    string[];
+    roles:    string;
     __v:      number;
 }
