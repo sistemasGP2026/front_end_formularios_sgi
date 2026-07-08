@@ -26,7 +26,6 @@ export const routes: Routes = [
       },
       {
         path: 'respuestas',
-        // canActivateChild: [isAdminGuard],
         loadChildren: () => import('./responses/routes/responses.routes').then(m => m.ResponsesRoutes),
       },
       {
