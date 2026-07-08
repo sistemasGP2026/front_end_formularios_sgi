@@ -9,7 +9,7 @@ import { PrimeNG } from 'primeng/config';
   styleUrl: './app.css',
 })
 export class App implements OnInit {
-  protected readonly title = signal('Formularios SGI');
+  protected readonly title = signal('PharmaNet');
   constructor(private primeng: PrimeNG) { }
 
   ngOnInit() {
