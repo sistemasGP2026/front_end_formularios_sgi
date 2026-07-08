@@ -83,7 +83,7 @@ export class PdfService {
                 { text: form.name, fontSize: 11, color: this.secondary, margin: [0, 3, 0, 0] },
                 {
                   text: `Código: ${form.code}   |   Versión: ${form.version}` +
-                        (form.documentDate ? `   |   Fecha doc: ${new Date(form.documentDate).toLocaleDateString('es-CO')}` : ''),
+                        (form.documentDate ? `   |   Fecha: ${new Date(form.documentDate).toLocaleDateString('es-CO')}` : ''),
                   fontSize: 8, color: '#666', margin: [0, 3, 0, 0]
                 },
               ],

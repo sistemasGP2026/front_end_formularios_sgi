@@ -4,12 +4,14 @@ import { UserResponse } from '../interfaces/users.response.interface';
 import { Observable } from 'rxjs';
 import { CreateUser } from '../interfaces/create-user.interface';
 import { User } from '../../auth/interfaces/signIn.response';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UsuarioService {
-  private readonly baseUrl = 'http://181.207.4.226:2000'
+  protected  baseUrl: string = environment.apiProduccion;
+
   private readonly http = inject(HttpClient);
 
   private getToken(): string {

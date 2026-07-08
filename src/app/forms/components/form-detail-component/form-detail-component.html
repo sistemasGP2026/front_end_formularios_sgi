@@ -121,14 +121,14 @@
           <span class="text-xs font-semibold bg-[#E6EEF2] text-[#002E42] px-2 py-1 rounded">
             v{{ form.version }}
           </span>
-          @if (form.documentDate) {
+        
           <span class="inline-flex items-center gap-1 text-xs font-semibold
                        bg-[#CCBA86]/15 text-[#8A6B1F]
                        border border-[#CCBA86]/40 px-2 py-1 rounded">
             <i class="pi pi-file text-[10px]"></i>
-            {{ form.documentDate | date: 'dd/MM/yyyy' }}
+            {{ form.documentDate | date: 'dd/MM/yyyy' : 'UTC' }}
           </span>
-          }
+          
           @if (form.settings.requiresApproval) {
           <span class="inline-flex items-center gap-1 text-xs font-semibold
                        bg-[#32C6C6]/10 text-[#085041]
@@ -146,14 +146,7 @@
           <i class="pi pi-user text-[#32C6C6] text-xs"></i>
           Creado por <strong class="text-[#002E42] ml-1">{{ form.createdBy.name }}</strong>
         </div>
-        <div class="flex items-center gap-1">
-          <i class="pi pi-at text-[#32C6C6] text-xs"></i>
-          &#64;{{ form.createdBy.username }}
-        </div>
-        <div class="flex items-center gap-1">
-          <i class="pi pi-calendar text-[#32C6C6] text-xs"></i>
-          Registro BD: {{ form.createdAt | date: 'dd/MM/yyyy HH:mm' }}
-        </div>
+    
         <div class="flex items-center gap-1">
           <i class="pi pi-th-large text-[#32C6C6] text-xs"></i>
           {{ form.sections.length }} secciones

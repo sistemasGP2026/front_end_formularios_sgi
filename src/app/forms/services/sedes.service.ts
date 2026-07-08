@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Inject, Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface Sede {
   _id: string;
@@ -13,9 +14,9 @@ export interface Sede {
 })
 export class SedesService {
   private http = inject(HttpClient)
-  private readonly baseUrl = 'http://181.207.4.226:2000/sedes';
+    protected readonly baseUrl: string = environment.apiProduccion;
 
   findAll(): Observable<Sede[]> {
-    return this.http.get<Sede[]>(this.baseUrl);
+    return this.http.get<Sede[]>(`${this.baseUrl}/sedes`);
   }
 }

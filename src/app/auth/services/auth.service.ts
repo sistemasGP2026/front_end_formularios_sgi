@@ -4,12 +4,13 @@ import { catchError, map, Observable, of, throwError } from 'rxjs';
 import { SignInResponse, User } from '../interfaces/signIn.response';
 import { AuthStatus } from '../interfaces/auth-status.enum';
 import { CheckTokenResponse } from '../interfaces/check-token.response';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  protected readonly baseUrl: string = "http://181.207.4.226:2000";
+  protected  baseUrl: string = environment.apiProduccion;
 
   private http = inject(HttpClient);
 

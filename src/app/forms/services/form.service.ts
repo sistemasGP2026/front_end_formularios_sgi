@@ -2,12 +2,14 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Form } from '../interfaces/form.interface';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class FormService {
-  protected readonly baseUrl: string = "http://181.207.4.226:2000";
+  protected readonly baseUrl: string = environment.apiProduccion;
+
   private http = inject(HttpClient);
 
   private getToken(): string {

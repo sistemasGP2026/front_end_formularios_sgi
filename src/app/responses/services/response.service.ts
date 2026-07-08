@@ -3,13 +3,13 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ResponseInterface } from '../../responses/interfaces/response.interface';
 import { CreateResponse } from '../../forms/interfaces/create-response.dto';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ResponseService {
-  // private readonly baseUrl = 'http://181.207.4.226:2000'
-  protected readonly baseUrl: string = "http://localhost:2000";
+   protected readonly baseUrl: string = environment.apiProduccion;
   private readonly http = inject(HttpClient);
 
   private getToken(): string {
