@@ -50,8 +50,6 @@ export interface SectionWithFields {
   styleUrl: './form-detail-component.css',
 })
 export class FormDetailComponent implements OnInit {
-
-  // ─── Estado UI ───────────────────────────────────────────────────────────
   visible = false;
   visibleEdit = false;
   visibleApproverModal = false;
@@ -59,7 +57,6 @@ export class FormDetailComponent implements OnInit {
   loading = true;
   deleting = false;
 
-  // ─── Datos ───────────────────────────────────────────────────────────────
   form: Form | null = null;
   sectionsWithFields: SectionWithFields[] = [];
   responses: ResponseInterface[] = [];
@@ -70,13 +67,11 @@ export class FormDetailComponent implements OnInit {
   userList = signal<UserResponse[]>([]);
   currentUser = signal<User | null>(null);
 
-  // ─── Edición JSON ────────────────────────────────────────────────────────
   editJsonInput = '';
   editJsonError = '';
   editParsed: any = null;
   editSaving = false;
 
-  // ─── Servicios ───────────────────────────────────────────────────────────
   private message = inject(MessageService);
   private confirmService = inject(ConfirmationService);
   private usuarioService = inject(UsuarioService);
@@ -88,8 +83,6 @@ export class FormDetailComponent implements OnInit {
   private pdfService = inject(PdfService);
   private authService = inject(AuthService);
 
-  // ─── Lifecycle ───────────────────────────────────────────────────────────
-
   ngOnInit(): void {
     const code = this.route.snapshot.paramMap.get('code');
     const mode = this.route.snapshot.queryParamMap.get('mode');
@@ -100,14 +93,16 @@ export class FormDetailComponent implements OnInit {
     this.currentUser.set(this.authService.currentUser());
   }
 
-  // ─── Carga ───────────────────────────────────────────────────────────────
-
+  //carga 
   private loadForm(code: string): void {
     this.loading = true;
     this.formService.getFormByCode(code).subscribe({
       next: (form) => {
         if (!form) { this.router.navigate(['/formularios']); return; }
         this.form = form;
+         if (!form.permissions.approvers) {
+        form.permissions.approvers = [];
+      }
         this.sectionsWithFields = this.buildSectionsWithFields(form);
         this.loading = false;
         this.loadResponses();
@@ -203,9 +198,10 @@ export class FormDetailComponent implements OnInit {
     });
   }
 
-  assigPermision(usernames: string[]): void {
+  assigPermision(users: UserResponse[]): void {
     const code = this.route.snapshot.paramMap.get('code');
-    if (!code) return;
+    if (!code || users.length === 0) return;
+    const usernames = users.map(u => u.username);
     this.formService.assignPermissionToUser(code, usernames).subscribe({
       next: (data) => {
         this.form?.permissions.users.push(...data);
@@ -253,9 +249,10 @@ export class FormDetailComponent implements OnInit {
     });
   }
 
-  assigApprover(usernames: string[]): void {
+  assigApprover(users: UserResponse[]): void {
     const code = this.form?.code;
-    if (!code) return;
+    if (!code || users.length === 0) return;
+    const usernames = users.map(u => u.username);
     this.formService.assignApproverToForm(code, usernames).subscribe({
       next: (data) => {
         this.form!.permissions.approvers = [

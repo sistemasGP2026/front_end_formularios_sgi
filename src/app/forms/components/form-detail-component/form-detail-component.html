@@ -121,14 +121,14 @@
           <span class="text-xs font-semibold bg-[#E6EEF2] text-[#002E42] px-2 py-1 rounded">
             v{{ form.version }}
           </span>
-        
+
           <span class="inline-flex items-center gap-1 text-xs font-semibold
                        bg-[#CCBA86]/15 text-[#8A6B1F]
                        border border-[#CCBA86]/40 px-2 py-1 rounded">
             <i class="pi pi-file text-[10px]"></i>
             {{ form.documentDate | date: 'dd/MM/yyyy' : 'UTC' }}
           </span>
-          
+
           @if (form.settings.requiresApproval) {
           <span class="inline-flex items-center gap-1 text-xs font-semibold
                        bg-[#32C6C6]/10 text-[#085041]
@@ -146,7 +146,7 @@
           <i class="pi pi-user text-[#32C6C6] text-xs"></i>
           Creado por <strong class="text-[#002E42] ml-1">{{ form.createdBy.name }}</strong>
         </div>
-    
+
         <div class="flex items-center gap-1">
           <i class="pi pi-th-large text-[#32C6C6] text-xs"></i>
           {{ form.sections.length }} secciones
@@ -349,13 +349,12 @@
     } <!-- fin @if mode === preview -->
 
     <!-- DIALOG ASIGNAR USUARIO -->
-    <assign-user-permission-page [(visible)]="visible" [usuarios]="userList()"
-      (assign)="assigPermision(selectedUsers())">
+    <assign-user-permission-page [(visible)]="visible" [usuarios]="userList()" (assign)="assigPermision($event)">
     </assign-user-permission-page>
 
     <!-- DIALOG ASIGNAR APROBADOR -->
     <assign-user-permission-page [(visible)]="visibleApproverModal" [usuarios]="userList()"
-      (assign)="assigApprover(selectedUsers())">
+      (assign)="assigApprover($event)">
     </assign-user-permission-page>
 
     <!-- DIALOG EDITAR FORMULARIO -->

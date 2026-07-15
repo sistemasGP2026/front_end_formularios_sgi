@@ -59,7 +59,7 @@ export class SidebarComponent implements OnInit {
       this.navItems = [
         { label: 'Inicio', icon: 'pi pi-home', route: '/inicio' },
         { label: 'Historial', icon: 'pi pi-history', route: '/historial' },
-        { label: 'Respuestas', icon: 'pi pi-comments', route: '/respuestas' },
+        // { label: 'Respuestas', icon: 'pi pi-comments', route: '/respuestas' },
       ];
     }
   }

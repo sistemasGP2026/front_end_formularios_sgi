@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { environment as desarrollo } from '../../../environments/environment.development';
 
 export interface Sede {
   _id: string;
@@ -14,7 +15,7 @@ export interface Sede {
 })
 export class SedesService {
   private http = inject(HttpClient)
-    protected readonly baseUrl: string = environment.apiProduccion;
+    protected readonly baseUrl: string = desarrollo.apiProduccion;
 
   findAll(): Observable<Sede[]> {
     return this.http.get<Sede[]>(`${this.baseUrl}/sedes`);

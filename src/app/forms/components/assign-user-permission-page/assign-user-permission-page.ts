@@ -22,7 +22,6 @@ export class AssignUserPermissionPage {
   @Input() usuarios: UserResponse[] = []
   @Output() userAssigned = new EventEmitter<UserResponse>();
   @Output() visibleChange = new EventEmitter<boolean>();
-  // @Output() assign = new EventEmitter<string[]>();
   @Output() assign = new EventEmitter<UserResponse[]>();
     selectedUsers: string[] = [];
 
