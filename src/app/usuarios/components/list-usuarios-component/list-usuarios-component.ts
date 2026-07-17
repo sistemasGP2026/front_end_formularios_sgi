@@ -118,43 +118,55 @@ export class ListUsuariosComponent implements OnInit {
   }
 
   guardarUsuario() {
-    if (this.myForm.invalid) {
-      FormValidation.markFormTouched(this.myForm);
-      return;
-    }
-
-    const user = this.myForm.value;
-    this.usuarioService.createUser(user).subscribe({
-      next: (data) => {
-        this.users().push(data)
-        this.message.add({ severity: 'success', summary: 'Completado', detail: 'Usuario creado con exito', life: 3000 })
-
-        this.visible = false
-        this.myForm.reset()
-      },
-      error: (error) => {
-        const backendMessage: string = error?.error?.message || '';
-
-        if (backendMessage.includes('email')) {
-          this.message.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: `El email: ${this.myForm.get('email')?.value} ya se encuentra en uso`,
-            life: 3000
-          })
-        }
-
-        if (backendMessage.includes('username')) {
-          this.message.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: `El nombre de usuario: ${this.myForm.get('username')?.value} ya se encuentra en uso`,
-            life: 3000
-          })
-        }
-      }
-    })
+  if (this.myForm.invalid) {
+    FormValidation.markFormTouched(this.myForm);
+    return;
   }
+
+  const userFormValue = this.myForm.value;
+  
+  this.usuarioService.createUser(userFormValue).subscribe({
+    next: (data) => {
+      const nuevoUsuario: UserResponse = {
+        ...data,
+        rol: data.rol || data.rol|| userFormValue.roles
+      };
+
+      // USAR .update EN LUGAR DE .push() DIRECTO
+      this.users.update(currentUsers => [...currentUsers, nuevoUsuario]);
+      this.totalUsuarios.update(total => total + 1);
+
+      this.message.add({ 
+        severity: 'success', 
+        summary: 'Completado', 
+        detail: 'Usuario creado con éxito', 
+        life: 3000 
+      });
+
+      this.visible = false;
+      this.myForm.reset();
+    },
+    error: (error) => {
+      const backendMessage: string = error?.error?.message || '';
+      if (backendMessage.includes('email')) {
+        this.message.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `El email: ${this.myForm.get('email')?.value} ya se encuentra en uso`,
+          life: 3000
+        });
+      }
+      if (backendMessage.includes('username')) {
+        this.message.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `El nombre de usuario: ${this.myForm.get('username')?.value} ya se encuentra en uso`,
+          life: 3000
+        });
+      }
+    }
+  });
+}
 
   getRolLabel(roles: string): string {
     const map: Record<string, string> = {
