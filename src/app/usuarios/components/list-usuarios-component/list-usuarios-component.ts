@@ -132,7 +132,6 @@ export class ListUsuariosComponent implements OnInit {
         rol: data.rol || data.rol|| userFormValue.roles
       };
 
-      // USAR .update EN LUGAR DE .push() DIRECTO
       this.users.update(currentUsers => [...currentUsers, nuevoUsuario]);
       this.totalUsuarios.update(total => total + 1);
 
