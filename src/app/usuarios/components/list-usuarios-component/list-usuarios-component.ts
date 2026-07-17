@@ -96,6 +96,7 @@ export class ListUsuariosComponent implements OnInit {
   search = signal('');
 
   filteredUsers = computed(() => {
+    
     const term = this.search().toLowerCase().trim();
     if (!term) return this.users();
 
