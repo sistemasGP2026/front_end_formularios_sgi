@@ -66,6 +66,7 @@ export class CreateUserModalPage {
       : formValue.roles;
 
     const user = { ...formValue, roles };
+
     this.usuarioService.createUser(user).subscribe({
       next: (data) => {
         this.message.add({
@@ -74,7 +75,13 @@ export class CreateUserModalPage {
           detail: 'Usuario creado con éxito',
           life: 3000
         });
-        this.userCreated.emit(data);
+        const userToEmit: UserResponse = {
+          ...data,
+          rol: data.rol || data.rol || roles
+        };
+
+        this.userCreated.emit(userToEmit); 
+
         this.closeModal();
       },
       error: (error) => {
@@ -86,7 +93,7 @@ export class CreateUserModalPage {
             summary: 'Error',
             detail: `El email: ${this.myForm.get('email')?.value} ya se encuentra en uso`,
             life: 3000
-          })
+          });
         }
 
         if (backendMessage.includes('usuario')) {
@@ -95,11 +102,11 @@ export class CreateUserModalPage {
             summary: 'Error',
             detail: `El nombre de usuario: ${this.myForm.get('username')?.value} ya se encuentra en uso`,
             life: 3000
-          })
+          });
         }
         console.log(error);
       }
-    })
+    });
   }
 
   searchEvent(event: AutoCompleteCompleteEvent) {
