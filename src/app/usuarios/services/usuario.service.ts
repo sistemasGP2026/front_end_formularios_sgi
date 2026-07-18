@@ -11,7 +11,7 @@ import { environment as desarrollo } from '../../../environments/environment.dev
   providedIn: 'root',
 })
 export class UsuarioService {
-  protected  baseUrl: string = desarrollo.apiProduccion;
+  protected baseUrl: string = desarrollo.apiProduccion;
 
   private readonly http = inject(HttpClient);
 
@@ -100,17 +100,15 @@ export class UsuarioService {
     return this.http.delete(`${this.baseUrl}/users/${id}`, headers)
   }
 
-  activateUser(id:string){
+  activateUser(id: string) {
     const token = this.getToken();
-
-    const headers = {
+    const options = {
       headers: new HttpHeaders({
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + token
       })
-    }
-
-    return this.http.patch(`${this.baseUrl}/users/activate/${id}`, headers)
+    };
+    return this.http.patch(`${this.baseUrl}/users/activate/${id}`, {}, options);
   }
 
   resetPassword(id: string, newPassword: string): Observable<any> {

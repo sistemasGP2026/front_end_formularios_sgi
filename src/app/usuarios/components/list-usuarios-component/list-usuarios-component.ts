@@ -50,9 +50,6 @@ import { ResetPasswordModalPage } from '../reset-password-modal-page/reset-passw
 export class ListUsuariosComponent implements OnInit {
   FormValidation = FormValidation;
   selectedUser: UserResponse | null = null;
-
-
-
   users = signal<UserResponse[]>([])
   totalUsuarios = signal<number>(0)
 
@@ -96,7 +93,7 @@ export class ListUsuariosComponent implements OnInit {
   search = signal('');
 
   filteredUsers = computed(() => {
-    
+
     const term = this.search().toLowerCase().trim();
     if (!term) return this.users();
 
