@@ -5,13 +5,12 @@ import { SignInResponse, User } from '../interfaces/signIn.response';
 import { AuthStatus } from '../interfaces/auth-status.enum';
 import { CheckTokenResponse } from '../interfaces/check-token.response';
 import { environment } from '../../../environments/environment';
-import { environment as desarrollo } from '../../../environments/environment.development';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  protected  baseUrl: string = desarrollo.apiProduccion;
+  protected  baseUrl: string = environment.apiProduccion;
 
   private http = inject(HttpClient);
 

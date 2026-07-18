@@ -5,13 +5,12 @@ import { Observable } from 'rxjs';
 import { CreateUser } from '../interfaces/create-user.interface';
 import { User } from '../../auth/interfaces/signIn.response';
 import { environment } from '../../../environments/environment';
-import { environment as desarrollo } from '../../../environments/environment.development';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UsuarioService {
-  protected baseUrl: string = desarrollo.apiProduccion;
+  protected baseUrl: string = environment.apiProduccion;
 
   private readonly http = inject(HttpClient);
 

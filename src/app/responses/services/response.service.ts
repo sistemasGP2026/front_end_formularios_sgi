@@ -4,13 +4,12 @@ import { Observable } from 'rxjs';
 import { ResponseInterface } from '../../responses/interfaces/response.interface';
 import { CreateResponse } from '../../forms/interfaces/create-response.dto';
 import { environment } from '../../../environments/environment';
-import { environment as desarrollo } from '../../../environments/environment.development';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ResponseService {
-   protected readonly baseUrl: string = desarrollo.apiProduccion;
+   protected readonly baseUrl: string = environment.apiProduccion;
   private readonly http = inject(HttpClient);
 
   private getToken(): string {

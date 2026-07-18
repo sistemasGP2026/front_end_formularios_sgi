@@ -3,13 +3,12 @@ import { inject, Injectable } from '@angular/core';
 import { Form } from '../interfaces/form.interface';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { environment as desarrollo } from '../../../environments/environment.development';
 
 @Injectable({
   providedIn: 'root',
 })
 export class FormService {
-  protected readonly baseUrl: string = desarrollo.apiProduccion;
+  protected readonly baseUrl: string = environment.apiProduccion;
 
   private http = inject(HttpClient);
 
