@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ResponseInterface } from '../../responses/interfaces/response.interface';
 import { CreateResponse } from '../../forms/interfaces/create-response.dto';
@@ -9,7 +9,7 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root',
 })
 export class ResponseService {
-   protected readonly baseUrl: string = environment.apiProduccion;
+  protected readonly baseUrl: string = environment.apiProduccion;
   private readonly http = inject(HttpClient);
 
   private getToken(): string {
@@ -29,8 +29,15 @@ export class ResponseService {
     return this.http.post(`${this.baseUrl}/responses/${code}`, data, this.getHeaders())
   }
 
-  getResponsesByForm(codeForm: string): Observable<ResponseInterface[]> {
-    return this.http.get<ResponseInterface[]>(`${this.baseUrl}/responses/${codeForm}`, this.getHeaders());
+  getResponsesByForm(codeForm: string, startDate?: string, endDate?: string): Observable<ResponseInterface[]> {
+    let params = new HttpParams();
+    if (startDate) params = params.set('startDate', startDate);
+    if (endDate) params = params.set('endDate', endDate);
+
+    return this.http.get<ResponseInterface[]>(`${this.baseUrl}/responses/${codeForm}`, {
+      ...this.getHeaders(),
+      params
+    });
   }
 
   getResponseDetail(id: string): Observable<ResponseInterface> {
@@ -62,9 +69,9 @@ export class ResponseService {
   }
 
   deleteManyResponses(ids: string[]) {
-  return this.http.delete(`${this.baseUrl}/responses/bulk`, {
-    body: { ids },
-    ...this.getHeaders()
-  });
-}
+    return this.http.delete(`${this.baseUrl}/responses/bulk`, {
+      body: { ids },
+      ...this.getHeaders()
+    });
+  }
 }

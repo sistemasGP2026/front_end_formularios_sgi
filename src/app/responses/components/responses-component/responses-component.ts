@@ -21,6 +21,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { PdfService } from '../../../shared/services/pdf.service';
 import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { DatePickerModule } from 'primeng/datepicker';
 
 export interface FormGroup {
   formCode: string;
@@ -29,11 +30,13 @@ export interface FormGroup {
 }
 
 @Component({
+  standalone: true,
   selector: 'responses-component',
   imports: [
     CommonModule,
     ConfirmDialogModule,
     CheckboxModule,
+    DatePickerModule,
     FormsModule,
     RouterModule,
     TagModule,
@@ -51,6 +54,7 @@ export interface FormGroup {
   providers: [ConfirmationService],
   templateUrl: './responses-component.html',
 })
+
 export class ResponsesComponent implements OnInit {
 
   private readonly formService = inject(FormService);
@@ -74,6 +78,8 @@ export class ResponsesComponent implements OnInit {
 
   // Categorías únicas extraídas de los formularios
   selectedCategories = signal<string[]>([]);
+
+  today = new Date();
 
   toggleCategory(cat: string): void {
     const current = this.selectedCategories();
@@ -135,6 +141,8 @@ export class ResponsesComponent implements OnInit {
 
   deletingResponse = signal(false);
 
+  dateRange = signal<Date[] | null>(null);
+
   selectedForm(code: string) {
     this.form.set(null);
     this.responses.set([]);
@@ -142,15 +150,41 @@ export class ResponsesComponent implements OnInit {
     this.selectedResponses.set([]);
     this.selectAll.set(false);
     this.searchList.set('');
+    this.dateRange.set(null);
 
     this.formService.getFormByCode(code).subscribe({
       next: (resp) => this.form.set(resp)
     });
 
-    this.responseService.getResponsesByForm(code).subscribe({
+    this.loadResponses(code);
+  }
+
+  loadResponses(code: string, range?: Date[] | null) {
+    const [start, end] = range ?? [];
+    const startDate = start ? this.formatDate(start) : undefined;
+    const endDate = end ? this.formatDate(end) : undefined;
+
+    this.responseService.getResponsesByForm(code, startDate, endDate).subscribe({
       next: (resp) => this.responses.set(resp),
       error: (err) => console.log(err),
     });
+  }
+
+  onDateRangeChange(range: Date[] | null) {
+    this.dateRange.set(range);
+    // solo dispara la consulta cuando el rango está completo o se limpió
+    if (!range || (range[0] && range[1])) {
+      this.loadResponses(this.form()!.code, range);
+    }
+  }
+
+  clearDateRange() {
+    this.dateRange.set(null);
+    this.loadResponses(this.form()!.code, null);
+  }
+
+  private formatDate(d: Date): string {
+    return d.toISOString().split('T')[0];
   }
 
   selectResponse(response: ResponseInterface): void {

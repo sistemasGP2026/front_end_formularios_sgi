@@ -126,11 +126,26 @@
               {{ selectedResponses().length }} seleccionada{{ selectedResponses().length !== 1 ? 's' : '' }}
             </span>
             <button pButton icon="pi pi-trash" label="Eliminar seleccionadas"
-              class="p-button-outlined p-button-sm p-button-danger"
-              [loading]="deletingMany()"
+              class="p-button-outlined p-button-sm p-button-danger" [loading]="deletingMany()"
               (click)="deleteManySelected()">
             </button>
             }
+
+            <!-- Filtro de rango de fechas -->
+            <div class="flex items-center gap-1.5">
+              <p-datepicker selectionMode="range" [readonlyInput]="true" [showIcon]="true" [maxDate]="today"
+                dateFormat="dd/mm/yy" placeholder="Rango de fechas" styleClass="text-sm"
+                inputStyleClass="text-xs !py-1.5 !border-gray-200" [ngModel]="dateRange()"
+                (ngModelChange)="onDateRangeChange($event)">
+              </p-datepicker>
+
+              @if (dateRange()) {
+              <button pButton icon="pi pi-times" class="p-button-text p-button-rounded p-button-sm"
+                pTooltip="Limpiar filtro" tooltipPosition="top" (click)="clearDateRange()">
+              </button>
+              }
+            </div>
+
             <p-iconfield>
               <p-inputicon class="pi pi-search" />
               <input pInputText type="text" placeholder="Buscar respondente..." class="text-sm" [ngModel]="searchList()"
@@ -247,51 +262,51 @@
 
       <div class="shrink-0 border-b border-gray-100 px-5 py-3">
         @if (form()?.settings?.requiresApproval) {
-          @if (response.status === 'PENDING') {
-          <div class="flex items-center gap-2 rounded-lg bg-yellow-50
+        @if (response.status === 'PENDING') {
+        <div class="flex items-center gap-2 rounded-lg bg-yellow-50
                 border border-yellow-200 px-3 py-2.5">
-            <i class="pi pi-clock text-yellow-500 text-sm"></i>
-            <div>
-              <p class="text-xs font-semibold text-yellow-700">Pendiente de aprobación</p>
-              <p class="text-[10px] text-yellow-600 mt-0.5">
-                Esta respuesta aún no ha sido revisada por un aprobador
-              </p>
-            </div>
+          <i class="pi pi-clock text-yellow-500 text-sm"></i>
+          <div>
+            <p class="text-xs font-semibold text-yellow-700">Pendiente de aprobación</p>
+            <p class="text-[10px] text-yellow-600 mt-0.5">
+              Esta respuesta aún no ha sido revisada por un aprobador
+            </p>
           </div>
-          }
+        </div>
+        }
 
-          @if (response.status === 'APPROVED') {
-          <div class="flex items-center gap-2 rounded-lg bg-green-50
+        @if (response.status === 'APPROVED') {
+        <div class="flex items-center gap-2 rounded-lg bg-green-50
                 border border-green-200 px-3 py-2.5">
-            <i class="pi pi-check-circle text-green-500 text-sm"></i>
-            <div>
-              <p class="text-xs font-semibold text-green-700">Aprobada</p>
-              <p class="text-[10px] text-green-600 mt-0.5">
-                Por <strong>{{ response.approval.approverName }}</strong>
-                — {{ response.approval.approvedAt | date: 'dd/MM/yyyy HH:mm' }}
-              </p>
-            </div>
+          <i class="pi pi-check-circle text-green-500 text-sm"></i>
+          <div>
+            <p class="text-xs font-semibold text-green-700">Aprobada</p>
+            <p class="text-[10px] text-green-600 mt-0.5">
+              Por <strong>{{ response.approval.approverName }}</strong>
+              — {{ response.approval.approvedAt | date: 'dd/MM/yyyy HH:mm' }}
+            </p>
           </div>
-          }
+        </div>
+        }
 
-          @if (response.status === 'REJECTED') {
-          <div class="flex items-center gap-2 rounded-lg bg-red-50
+        @if (response.status === 'REJECTED') {
+        <div class="flex items-center gap-2 rounded-lg bg-red-50
                 border border-red-200 px-3 py-2.5">
-            <i class="pi pi-times-circle text-red-500 text-sm"></i>
-            <div>
-              <p class="text-xs font-semibold text-red-700">Rechazada</p>
-              <p class="text-[10px] text-red-600 mt-0.5">
-                Por <strong>{{ response.approval.approverName }}</strong>
-                — {{ response.approval.approvedAt | date: 'dd/MM/yyyy HH:mm' }}
-              </p>
-              @if (response.approval.rejectionReason) {
-              <p class="text-[10px] text-red-500 mt-1 italic">
-                "{{ response.approval.rejectionReason }}"
-              </p>
-              }
-            </div>
+          <i class="pi pi-times-circle text-red-500 text-sm"></i>
+          <div>
+            <p class="text-xs font-semibold text-red-700">Rechazada</p>
+            <p class="text-[10px] text-red-600 mt-0.5">
+              Por <strong>{{ response.approval.approverName }}</strong>
+              — {{ response.approval.approvedAt | date: 'dd/MM/yyyy HH:mm' }}
+            </p>
+            @if (response.approval.rejectionReason) {
+            <p class="text-[10px] text-red-500 mt-1 italic">
+              "{{ response.approval.rejectionReason }}"
+            </p>
+            }
           </div>
-          }
+        </div>
+        }
         }
       </div>
 
