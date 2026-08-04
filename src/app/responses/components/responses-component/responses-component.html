@@ -133,11 +133,20 @@
 
             <!-- Filtro de rango de fechas -->
             <div class="flex items-center gap-1.5">
-              <p-datepicker selectionMode="range" [readonlyInput]="true" [showIcon]="true" [maxDate]="today"
-                dateFormat="dd/mm/yy" placeholder="Rango de fechas" styleClass="text-sm"
-                inputStyleClass="text-xs !py-1.5 !border-gray-200" [ngModel]="dateRange()"
-                (ngModelChange)="onDateRangeChange($event)">
-              </p-datepicker>
+              <div class="flex items-center gap-1.5">
+                <p-datepicker selectionMode="range" [readonlyInput]="true" [showIcon]="true" [maxDate]="today"
+                  dateFormat="dd/mm/yy" placeholder="Rango de fechas" appendTo="body" [numberOfMonths]="2"
+                  styleClass="text-sm" inputStyleClass="text-xs !py-1.5 !border-gray-200 !rounded-lg"
+                  panelStyleClass="shadow-lg !border !border-gray-200 !rounded-xl" [ngModel]="dateRange()"
+                  (ngModelChange)="onDateRangeChange($event)">
+                </p-datepicker>
+
+                @if (dateRange()) {
+                <button pButton icon="pi pi-times" class="p-button-text p-button-rounded p-button-sm"
+                  pTooltip="Limpiar filtro" tooltipPosition="top" (click)="clearDateRange()">
+                </button>
+                }
+              </div>
 
               @if (dateRange()) {
               <button pButton icon="pi pi-times" class="p-button-text p-button-rounded p-button-sm"
