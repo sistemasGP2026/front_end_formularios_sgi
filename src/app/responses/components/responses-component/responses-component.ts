@@ -54,7 +54,6 @@ export interface FormGroup {
   providers: [ConfirmationService],
   templateUrl: './responses-component.html',
 })
-
 export class ResponsesComponent implements OnInit {
 
   private readonly formService = inject(FormService);
@@ -76,10 +75,12 @@ export class ResponsesComponent implements OnInit {
   selectedCategory = signal<string | null>(null);
   deletingMany = signal(false);
 
-  // Categorías únicas extraídas de los formularios
   selectedCategories = signal<string[]>([]);
 
   today = new Date();
+
+  deletingResponse = signal(false);
+  dateRange = signal<Date[] | null>(null);
 
   toggleCategory(cat: string): void {
     const current = this.selectedCategories();
@@ -102,7 +103,7 @@ export class ResponsesComponent implements OnInit {
     { value: 'PREPARADOS_ESTERILES', label: 'Preparados Estériles' },
     { value: 'DISTRIBUCION_MEDICAMENTOS', label: 'Distribución de Medicamentos' },
   ];
-  // Actualiza filteredForms
+
   filteredForms = computed(() => {
     const search = this.searchSidebar().toLowerCase().trim();
     const cats = this.selectedCategories();
@@ -116,7 +117,6 @@ export class ResponsesComponent implements OnInit {
     });
   });
 
-  // Respuestas filtradas por búsqueda
   filteredResponses = computed(() => {
     const search = this.searchList().toLowerCase().trim();
     if (!search) return this.responses();
@@ -139,10 +139,6 @@ export class ResponsesComponent implements OnInit {
     });
   }
 
-  deletingResponse = signal(false);
-
-  dateRange = signal<Date[] | null>(null);
-
   selectedForm(code: string) {
     this.form.set(null);
     this.responses.set([]);
@@ -164,6 +160,8 @@ export class ResponsesComponent implements OnInit {
     const startDate = start ? this.formatDate(start) : undefined;
     const endDate = end ? this.formatDate(end) : undefined;
 
+    console.log('[loadResponses] code:', code, 'startDate:', startDate, 'endDate:', endDate);
+
     this.responseService.getResponsesByForm(code, startDate, endDate).subscribe({
       next: (resp) => this.responses.set(resp),
       error: (err) => console.log(err),
@@ -172,7 +170,6 @@ export class ResponsesComponent implements OnInit {
 
   onDateRangeChange(range: Date[] | null) {
     this.dateRange.set(range);
-    // solo dispara la consulta cuando el rango está completo o se limpió
     if (!range || (range[0] && range[1])) {
       this.loadResponses(this.form()!.code, range);
     }
@@ -317,7 +314,6 @@ export class ResponsesComponent implements OnInit {
           next: () => {
             this.selectedResponse.set(null);
             this.deletingResponse.set(false);
-            // Recargar desde el backend
             const code = this.form()?.code;
             if (code) {
               this.responseService.getResponsesByForm(code).subscribe({
@@ -345,22 +341,18 @@ export class ResponsesComponent implements OnInit {
       accept: () => {
         this.deletingMany.set(true);
 
-        // Llamada corregida al servicio
         this.responseService.deleteManyResponses(ids).subscribe({
           next: () => {
-            // 1. Filtramos localmente para que la UI cambie INSTANTÁNEAMENTE
-            const idsEliminados = ids; // Los IDs que enviaste
+            const idsEliminados = ids;
             this.responses.update(current =>
               current.filter(r => !idsEliminados.includes(r._id))
             );
 
-            // 2. Limpieza de estado
             this.selectedResponses.set([]);
             this.selectAll.set(false);
             this.selectedResponse.set(null);
             this.deletingMany.set(false);
 
-            // (Opcional) Si quieres asegurar que los datos estén sincronizados con BD:
             this.getResponses();
           },
           error: (error) => {
