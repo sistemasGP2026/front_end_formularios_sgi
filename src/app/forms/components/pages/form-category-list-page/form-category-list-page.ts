@@ -40,17 +40,6 @@ export class FormCategoryListPage implements OnInit {
   { code: 'DISTRIBUCION_MEDICAMENTOS', label: 'Distribución de Medicamentos', descripcion: 'Distribución y medicamentos',  imagen: 'categories/comercial.png',    bgColor: '#E0F7FA', textColor: '#006064' },
 ];
 
-  // Filtra categorías según los formularios asignados al usuario
-  categoriasVisibles = computed(() => {
-    if (this.isAdmin()) return this.categorias;
-
-    const cats = new Set(
-      this.forms().map(f => f.category?.toUpperCase())
-    );
-
-    return this.categorias.filter(c => cats.has(c.code));
-  });
-
   ngOnInit(): void {
     const user       = this.authService.currentUser();
     this.isUserAdmin = user?.roles?.includes('ADMIN') ?? false;

@@ -160,6 +160,7 @@
           }
 
           <!-- TABLAS -->
+          <!-- TABLAS -->
           @if (isTableType(field.type)) {
           <div class="overflow-x-auto rounded-2xl border border-gray-200">
             <table class="min-w-full border-collapse text-sm">
@@ -203,15 +204,15 @@
                     }
 
                     @if (col.inputType === 'textarea') {
-                    <textarea rows="1"
-                      class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-[#32C6C6] focus:bg-white resize-none"
+                    <textarea rows="1" [title]="getTableCellValue(field.id, row.id, col.key) ?? ''"
+                      class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none transition-all duration-200 hover:min-h-[80px] focus:min-h-[80px] focus:border-[#32C6C6] focus:bg-white"
                       [disabled]="isPreview"
                       (input)="onTableCellChange(field.id, row.id, col.key, $any($event.target).value)">{{ getTableCellValue(field.id, row.id, col.key) }}</textarea>
                     }
 
                     @if (col.inputType !== 'select' && col.inputType !== 'textarea') {
-                    <input
-                      class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-[#32C6C6] focus:bg-white"
+                    <input [title]="getTableCellValue(field.id, row.id, col.key) ?? ''"
+                      class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none transition focus:border-[#32C6C6] focus:bg-white"
                       [type]="getInputType(col.inputType)" [disabled]="isPreview"
                       [value]="getTableCellValue(field.id, row.id, col.key) ?? ''"
                       (input)="onTableCellChange(field.id, row.id, col.key, $any($event.target).value)" />
