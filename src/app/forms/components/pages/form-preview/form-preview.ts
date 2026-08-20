@@ -274,8 +274,7 @@ export class FormPreviewComponent implements OnInit, OnChanges {
   evaluateCalculatedFields(): void {
     const allFields = this.sectionsWithFields.flatMap(sw => sw.fields);
 
-    // Primero WEIGHTED_SCORE, luego THRESHOLD, luego EXPRESSION
-    const order = ['WEIGHTED_SCORE', 'EXPRESSION', 'THRESHOLD'];
+    const order = ['SUM', 'WEIGHTED_SCORE', 'EXPRESSION', 'THRESHOLD'];
     const calcFields = allFields
       .filter(f => f.type === 'calculated')
       .sort((a, b) => {
@@ -295,6 +294,11 @@ export class FormPreviewComponent implements OnInit, OnChanges {
   }
 
   private evaluateCalculatedField(field: FormField, allFields: FormField[]): any {
+    // SUM se detecta por dataSource, independiente del valor de formula
+    if (field.dataSource?.startsWith('sum:')) {
+      return this.calcSum(field.dataSource, allFields);
+    }
+
     switch (field.formula) {
 
       case 'WEIGHTED_SCORE':
@@ -309,6 +313,25 @@ export class FormPreviewComponent implements OnInit, OnChanges {
       default:
         return null;
     }
+  }
+
+  private calcSum(dataSource: string, allFields: FormField[]): number {
+    const fieldRefs = dataSource
+      .replace('sum:', '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    let total = 0;
+    for (const ref of fieldRefs) {
+      const sourceField = allFields.find(f => f.name === ref || f.id === ref);
+      if (!sourceField) continue;
+
+      const raw = parseFloat(this.formGroup.get(sourceField.id)?.value ?? '0');
+      if (!isNaN(raw)) total += raw;
+    }
+
+    return Math.round(total * 100) / 100;
   }
 
   private calcWeightedScore(allFields: FormField[]): number {

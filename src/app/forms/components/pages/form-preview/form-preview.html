@@ -25,7 +25,7 @@
   <form [formGroup]="formGroup" (ngSubmit)="onSubmit()">
 
     @for (sw of sectionsWithFields; track $index) {
-    <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm mb-5">
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-sm mb-5">
 
       <!-- HEADER SECCIÓN -->
       <div class="flex items-center gap-4 border-b border-gray-100 bg-[#002E42]/[0.03] px-6 py-4">
@@ -58,6 +58,7 @@
           <!-- TEXT / EMAIL / NUMBER / DATE / TIME / DATETIME -->
           @if (isSimpleInput(field.type)) {
           <input [formControlName]="field.id" [type]="getInputType(field.type)" [placeholder]="field.placeholder ?? ''"
+            [attr.step]="field.type === 'number' ? 'any' : null"
             class="w-full rounded-xl border px-4 py-3 text-sm text-gray-700 outline-none transition"
             [class.border-gray-200]="!isFieldInvalid(field.id)" [class.bg-gray-50]="!isFieldInvalid(field.id)"
             [class.border-red-400]="isFieldInvalid(field.id)" [class.bg-red-50]="isFieldInvalid(field.id)"
@@ -160,10 +161,9 @@
           }
 
           <!-- TABLAS -->
-          <!-- TABLAS -->
           @if (isTableType(field.type)) {
-          <div class="overflow-x-auto rounded-2xl border border-gray-200">
-            <table class="min-w-full border-collapse text-sm">
+          <div class="w-full overflow-x-auto rounded-2xl border border-gray-200 -webkit-overflow-scrolling-touch">
+            <table class="w-full min-w-[600px] border-collapse text-sm">
               <thead class="bg-[#002E42]/[0.04]">
                 <tr>
                   <th
@@ -205,16 +205,16 @@
 
                     @if (col.inputType === 'textarea') {
                     <textarea rows="1" [title]="getTableCellValue(field.id, row.id, col.key) ?? ''"
-                      class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none transition-all duration-200 hover:min-h-[80px] focus:min-h-[80px] focus:border-[#32C6C6] focus:bg-white"
+                      class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none transition-all duration-200 focus:border-[#32C6C6] focus:bg-white focus:min-h-[80px] hover:min-h-[80px] resize-y"
                       [disabled]="isPreview"
                       (input)="onTableCellChange(field.id, row.id, col.key, $any($event.target).value)">{{ getTableCellValue(field.id, row.id, col.key) }}</textarea>
                     }
 
                     @if (col.inputType !== 'select' && col.inputType !== 'textarea') {
                     <input [title]="getTableCellValue(field.id, row.id, col.key) ?? ''"
-                      class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none transition focus:border-[#32C6C6] focus:bg-white"
-                      [type]="getInputType(col.inputType)" [disabled]="isPreview"
-                      [value]="getTableCellValue(field.id, row.id, col.key) ?? ''"
+                      class="w-full min-w-[120px] rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none transition focus:border-[#32C6C6] focus:bg-white"
+                      [type]="getInputType(col.inputType)" [attr.step]="col.inputType === 'number' ? 'any' : null"
+                      [disabled]="isPreview" [value]="getTableCellValue(field.id, row.id, col.key) ?? ''"
                       (input)="onTableCellChange(field.id, row.id, col.key, $any($event.target).value)" />
                     }
 
