@@ -162,8 +162,8 @@
 
           <!-- TABLAS -->
           @if (isTableType(field.type)) {
-          <div class="w-full overflow-x-auto rounded-2xl border border-gray-200 -webkit-overflow-scrolling-touch">
-            <table class="w-full min-w-[600px] border-collapse text-sm">
+          <div class="-mx-6 sm:mx-0 overflow-x-auto border-y sm:border sm:rounded-2xl border-gray-200 bg-white">
+            <table class="w-full min-w-[500px] border-collapse text-sm">
               <thead class="bg-[#002E42]/[0.04]">
                 <tr>
                   <th
@@ -182,14 +182,16 @@
               <tbody>
                 @for (row of field.rows; track row.id) {
                 <tr class="border-b border-gray-100 last:border-none hover:bg-gray-50">
-                  <td class="px-4 py-3 font-medium text-[#002E42]">
+                  <td
+                    class="min-w-[180px] max-w-[250px] whitespace-normal px-4 py-3 font-medium text-[#002E42] break-words">
                     {{ row.label }}
                     @if (row.unitLabel) {
                     <span class="text-xs text-gray-400 ml-1">({{ row.unitLabel }})</span>
-                    }
+                    @}
                   </td>
                   @for (col of field.columns; track col.key) {
-                  <td class="px-4 py-3">
+
+                  <td class="px-4 py-3 min-w-[140px]">
 
                     @if (col.inputType === 'select') {
                     <select
@@ -212,7 +214,7 @@
 
                     @if (col.inputType !== 'select' && col.inputType !== 'textarea') {
                     <input [title]="getTableCellValue(field.id, row.id, col.key) ?? ''"
-                      class="w-full min-w-[120px] rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none transition focus:border-[#32C6C6] focus:bg-white"
+                      class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none transition focus:border-[#32C6C6] focus:bg-white"
                       [type]="getInputType(col.inputType)" [attr.step]="col.inputType === 'number' ? 'any' : null"
                       [disabled]="isPreview" [value]="getTableCellValue(field.id, row.id, col.key) ?? ''"
                       (input)="onTableCellChange(field.id, row.id, col.key, $any($event.target).value)" />
