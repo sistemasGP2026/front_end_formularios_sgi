@@ -54,8 +54,12 @@ export class SignInComponent {
     const { username, password } = this.myForm.value;
 
     this.authService.signin(username, password).subscribe({
-      next: () => {
-        this.router.navigateByUrl('/inicio');
+      next: (user) => {
+        if(user.mustChangePassword){
+          this.router.navigateByUrl('/cambiar-clave-inicial');  
+        }else{
+          this.router.navigateByUrl('/inicio');
+        }
       },
       error: (error) => {
         console.error(error);

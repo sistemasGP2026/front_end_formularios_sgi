@@ -1,0 +1,107 @@
+<p-toast />
+@if (usuario) {
+<div class="min-h-screen flex items-center justify-center bg-surface-50 dark:bg-surface-950 px-4 py-8">
+
+    <div class="w-full max-w-md">
+        <p-card styleClass="shadow-xl border border-surface-200 dark:border-surface-700">
+
+            <div class="flex flex-col items-center text-center mb-8">
+
+                <h1 class="text-2xl font-bold text-surface-900 dark:text-surface-0 mb-2">
+                    Cambia tu contraseña
+                </h1>
+
+                <p class="text-surface-500 dark:text-surface-400 text-sm leading-relaxed max-w-sm">
+                    Hola <span class="font-semibold text-primary">{{ nombre }}</span>.
+                    Por seguridad, debes actualizar tu contraseña antes de continuar.
+                </p>
+
+            </div>
+
+            <div class="flex flex-col gap-5">
+                <!-- Nueva contraseña -->
+                <div class="flex flex-col gap-2">
+
+                    <label for="password1" class="font-semibold text-surface-700 dark:text-surface-200">
+                        Nueva contraseña
+                    </label>
+
+                    <p-password [(ngModel)]="password1" inputId="password1" name="password1" [feedback]="true" [toggleMask]="true"
+                        placeholder="Ingresa tu nueva contraseña" styleClass="w-full" inputStyleClass="w-full"/>
+                </div>
+
+                <div class="flex flex-col gap-2">
+
+                    <label for="password2" class="font-semibold text-surface-700 dark:text-surface-200">
+                        Confirmar contraseña
+                    </label>
+
+                    <p-password [(ngModel)]="password2" inputId="password2" name="password2" [feedback]="false" [toggleMask]="true"
+                        placeholder="Repite tu nueva contraseña" styleClass="w-full" inputStyleClass="w-full" />
+
+                </div>
+
+                <div class="rounded-xl border border-surface-200 dark:border-surface-700
+                   bg-surface-50 dark:bg-surface-900 p-4">
+
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="pi pi-info-circle text-primary"></i>
+
+                        <span class="font-semibold text-sm text-surface-700 dark:text-surface-200">
+                            Recomendaciones de seguridad
+                        </span>
+                    </div>
+
+                    <ul class="flex flex-col gap-2 text-sm text-surface-500 dark:text-surface-400">
+
+                        <li class="flex items-center gap-2">
+                            <i class="pi pi-check-circle text-xs"></i>
+                            Utiliza al menos 8 caracteres.
+                        </li>
+
+                        <li class="flex items-center gap-2">
+                            <i class="pi pi-check-circle text-xs"></i>
+                            Combina letras mayúsculas y minúsculas.
+                        </li>
+
+                        <li class="flex items-center gap-2">
+                            <i class="pi pi-check-circle text-xs"></i>
+                            Incluye números y caracteres especiales.
+                        </li>
+
+                    </ul>
+
+                </div>
+
+                <p-button (onClick)="changePassword()" label="Actualizar contraseña" icon="pi pi-check" styleClass="w-full mt-2" type="button" />
+            </div>
+
+        </p-card>
+
+    </div>
+</div>
+}
+
+@else {
+<div class="min-h-screen flex items-center justify-center bg-surface-50 dark:bg-surface-950 px-4">
+
+    <div class="text-center">
+
+        <div class="w-20 h-20 mx-auto rounded-full
+               bg-green-50 dark:bg-green-900/20
+               flex items-center justify-center mb-5">
+            <i class="pi pi-check-circle text-green-500 text-4xl"></i>
+        </div>
+
+        <h2 class="text-2xl font-bold text-surface-900 dark:text-surface-0 mb-2">
+            Contraseña actualizada
+        </h2>
+
+        <p class="text-surface-500 dark:text-surface-400">
+            Tu contraseña ya fue cambiada correctamente.
+        </p>
+
+    </div>
+
+</div>
+}

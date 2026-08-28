@@ -4,6 +4,7 @@ import { isAuthenticatedGuard } from './auth/guards/is-authenticated.guard';
 import { SharedComponent } from './shared/shared';
 import { isAdminGuard } from './auth/guards/is-admin.guard';
 import { isAdminOrApproverGuard } from './auth/guards/is-admin-or-approver.guard';
+import { mustChangePasswordGuard } from './auth/guards/must-change-password.guard';
 
 export const routes: Routes = [
   {
@@ -12,8 +13,13 @@ export const routes: Routes = [
     loadChildren: () => import('./auth/routes/auth.routes').then(m => m.authRoutes),
   },
   {
-    path: '',
+    path: 'cambiar-clave-inicial',
     canActivate: [isAuthenticatedGuard],
+    loadComponent: () => import('./auth/components/change-pass-modal/change-pass-modal').then(m => m.ChangePassModal)
+  },
+  {
+    path: '',
+    canActivate: [isAuthenticatedGuard, mustChangePasswordGuard],
     component: SharedComponent,
     children: [
       {

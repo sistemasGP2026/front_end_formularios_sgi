@@ -9,5 +9,6 @@ export interface User {
     username: string;
     email:    string;
     roles:    string;
+    mustChangePassword: boolean
     __v:      number;
 }

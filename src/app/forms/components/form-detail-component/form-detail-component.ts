@@ -93,7 +93,6 @@ export class FormDetailComponent implements OnInit {
     this.currentUser.set(this.authService.currentUser());
   }
 
-  //carga 
   private loadForm(code: string): void {
     this.loading = true;
     this.formService.getFormByCode(code).subscribe({
@@ -123,8 +122,6 @@ export class FormDetailComponent implements OnInit {
       }));
   }
 
-  // ─── Respuestas ──────────────────────────────────────────────────────────
-
   loadResponses(): void {
     if (!this.form) return;
     this.responseService.getResponsesByForm(this.form.code).subscribe({
@@ -149,8 +146,6 @@ export class FormDetailComponent implements OnInit {
   }
 
   closeResponsesPanel(): void { this.showResponsesPanel = false; }
-
-  // ─── Eliminar formulario ─────────────────────────────────────────────────
 
   deleteForm(): void {
     if (!this.form) return;
@@ -187,8 +182,6 @@ export class FormDetailComponent implements OnInit {
       },
     });
   }
-
-  // ─── Permisos usuarios ───────────────────────────────────────────────────
 
   openAssignModal(): void {
     this.visible = true;
@@ -239,7 +232,6 @@ export class FormDetailComponent implements OnInit {
     });
   }
 
-  //Permisos aprobadores
   openAssignApproverModal(): void {
     this.visibleApproverModal = true;
     this.usuarioService.getAllUsers().subscribe({
@@ -308,11 +300,10 @@ export class FormDetailComponent implements OnInit {
     });
   }
 
-  //Edición JSON
   openEditModal(): void {
     if (!this.form) return;
     const { _id, __v, createdAt, updatedAt, createdBy, deleted, ...editableForm } = this.form as any;
-    // Normaliza documentDate a YYYY-MM-DD para el editor
+
     if (editableForm.documentDate) {
       const d = new Date(editableForm.documentDate);
       if (!isNaN(d.getTime())) {
@@ -382,8 +373,6 @@ export class FormDetailComponent implements OnInit {
     });
   }
 
-  // ─── PDF ─────────────────────────────────────────────────────────────────
-
   printForm(): void {
     if (!this.form) return;
     this.pdfService.printForm(this.form);
@@ -393,8 +382,6 @@ export class FormDetailComponent implements OnInit {
     if (!this.form) return;
     this.pdfService.generateFormPdf(this.form);
   }
-
-  // ─── Helpers ─────────────────────────────────────────────────────────────
 
   getInitials(fullName: string): string {
     return fullName.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase();

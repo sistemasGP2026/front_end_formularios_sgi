@@ -4,13 +4,13 @@ import { catchError, map, Observable, of, throwError } from 'rxjs';
 import { SignInResponse, User } from '../interfaces/signIn.response';
 import { AuthStatus } from '../interfaces/auth-status.enum';
 import { CheckTokenResponse } from '../interfaces/check-token.response';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../../environments/environment.development';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  protected  baseUrl: string = environment.apiProduccion;
+  protected baseUrl: string = environment.apiProduccion;
 
   private http = inject(HttpClient);
 
@@ -31,6 +31,19 @@ export class AuthService {
     localStorage.setItem('token', token);
 
     return true;
+  }
+
+  private getToken(): string {
+    return localStorage.getItem('token') ?? '';
+  }
+
+  private getHeaders() {
+    return {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + this.getToken()
+      })
+    };
   }
 
   public signin(username: string, password: string) {
@@ -71,8 +84,20 @@ export class AuthService {
       );
   }
 
+  changePassword(newPassword: string) {
+    const url = `${this.baseUrl}/auth/change-first-password`;
+    return this.http.post(url, { newPassword }, this.getHeaders())
+  }
+
   isApprover(): boolean {
     return this.currentUser()?.roles?.includes('APPROVER') ?? false;
+  }
+
+  updateMustChangePassword(value: boolean): void {
+    const user = this.currentUser();
+    if (user) {
+      this._currentUser.set({ ...user, mustChangePassword: value });
+    }
   }
 
   isAdmin(): boolean {
