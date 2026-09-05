@@ -170,14 +170,18 @@
 <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
 
   @if (mascotaVisible) {
-  <div class="bg-white rounded-xl rounded-tr-none px-3 py-2 shadow-md
-              text-xs font-medium text-center leading-snug max-w-[140px]
-              cursor-pointer transition-all duration-200 hover:shadow-lg"
-       style="color:#002E42"
-       (click)="toggleMascota()">
+  <a href="https://wa.me/573114642801" 
+     target="_blank" 
+     rel="noopener noreferrer"
+     class="bg-white rounded-xl rounded-tr-none px-3 py-2 shadow-md
+            text-xs font-medium text-center leading-snug max-w-[140px]
+            cursor-pointer transition-all duration-200 hover:shadow-lg block"
+     style="color:#002E42">
     Bienvenido al sistema de evaluaciones de SGI
-    <div class="text-gray-300 text-[10px] mt-1">clic para cerrar</div>
-  </div>
+    <div class="text-green-600 font-bold text-[11px] mt-1 hover:underline">
+      ¿Necesitas ayuda?
+    </div>
+  </a>
   }
 
   <img src="/mascota.png" alt="mascota"

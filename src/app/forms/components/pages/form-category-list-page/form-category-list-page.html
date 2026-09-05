@@ -16,12 +16,12 @@
 
     @if (isUserAdmin) {
     <a routerLink="/formularios/crear/nuevo" class="inline-flex items-center justify-center gap-2
-             bg-[#00649B]
-             hover:bg-[#00517D]
-             text-white text-sm font-semibold
-             px-5 py-3 rounded-xl
-             shadow-sm hover:shadow-md
-             transition-all duration-200">
+               bg-[#00649B]
+               hover:bg-[#00517D]
+               text-white text-sm font-semibold
+               px-5 py-3 rounded-xl
+               shadow-sm hover:shadow-md
+               transition-all duration-200">
 
       <i class="pi pi-plus text-xs"></i>
       Crear formulario
@@ -30,53 +30,53 @@
 
   </div>
 
-  @if (categorias.length === 0) {
+  <div class="max-w-5xl mx-auto flex flex-col gap-6">
 
-  <div class="flex flex-col items-center gap-3 py-16 text-[#7A96A3]">
-    <i class="pi pi-inbox text-5xl opacity-30"></i>
-    <p class="text-sm">No hay formularios disponibles</p>
-  </div>
+    @for (grupo of gruposProcesos; track grupo.titulo; let last = $last) {
+    
+    <div class="bg-[#5B88D6]/15 border border-[#5B88D6]/30 rounded-2xl p-6 shadow-sm">
+      
+      <div class="text-center mb-5">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-white bg-[#5B88D6] py-1.5 px-6 rounded-lg inline-block shadow-sm">
+          {{ grupo.titulo }}
+        </h2>
+      </div>
 
-  } @else {
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 justify-items-center">
 
-  <div class="max-w-5xl mx-auto">
+        @for (cat of grupo.items; track cat.code) {
 
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <button [routerLink]="['/formularios/categoria', cat.code]" (click)="selectCategoria(cat.code)" class="group bg-white border border-[#E6EEF2]
+                   rounded-2xl p-5 text-left w-full
+                   transition-all duration-200
+                   hover:border-[#00649B]
+                   hover:shadow-md flex items-center justify-between">
 
-      @for (cat of categorias; track cat.code) {
-
-      <button [routerLink]="['/formularios/categoria', cat.code]" (click)="selectCategoria(cat.code)" class="group bg-white border border-[#E6EEF2]
-                 rounded-2xl p-6 text-left
-                 transition-all duration-200
-                 hover:border-[#00649B]
-                 hover:shadow-md">
-
-        <div class="flex items-start justify-between">
-
-          <div>
-            <h3 class="mt-3 text-lg font-bold text-[#002E42]
-                       group-hover:text-[#00649B]">
-
+          <div class="flex items-center gap-3 w-full">
+            <h3 class="text-sm font-bold text-[#002E42] group-hover:text-[#00649B] leading-snug flex-1">
               {{ cat.label }}
-
             </h3>
-
+            <i class="pi pi-arrow-right text-[#D1DCE2] group-hover:text-[#00649B] shrink-0"></i>
           </div>
 
-          <i class="pi pi-arrow-right text-[#D1DCE2]
-                     group-hover:text-[#00649B]">
-          </i>
+        </button>
 
-        </div>
+        }
 
-      </button>
-
-      }
+      </div>
 
     </div>
 
-  </div>
+    @if (!last) {
+    <div class="flex justify-center my-[-10px]">
+      <div class="bg-white p-2 rounded-full shadow-md border border-gray-100 text-[#00649B] z-10">
+        <i class="pi pi-arrow-down-arrow-up text-sm font-bold"></i>
+      </div>
+    </div>
+    }
 
-  }
+    }
+
+  </div>
 
 </div>

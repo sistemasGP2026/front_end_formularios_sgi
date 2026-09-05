@@ -4,7 +4,7 @@ import { catchError, map, Observable, of, throwError } from 'rxjs';
 import { SignInResponse, User } from '../interfaces/signIn.response';
 import { AuthStatus } from '../interfaces/auth-status.enum';
 import { CheckTokenResponse } from '../interfaces/check-token.response';
-import { environment } from '../../../environments/environment.development';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',

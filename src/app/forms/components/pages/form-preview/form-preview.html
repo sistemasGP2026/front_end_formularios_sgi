@@ -55,8 +55,22 @@
           <small class="text-xs text-gray-500 mb-1">{{ field.helpText }}</small>
           }
 
-          <!-- TEXT / EMAIL / NUMBER / DATE / TIME / DATETIME -->
-          @if (isSimpleInput(field.type)) {
+          <!-- 1. CAMPO CALCULADO (NUNCA EDITABLE / CAJA DE SOLO LECTURA) -->
+          @if (field.type === 'calculated') {
+          <div class="flex items-center gap-3 rounded-xl border px-4 py-3 bg-[#F8FAFB] border-[#E6EEF2] shadow-sm pointer-events-none select-none">
+            <div class="flex-1">
+              <p class="text-xs text-[#7A96A3] mb-0.5">{{ field.label }}</p>
+              <p class="text-lg font-bold text-[#002E42]">
+                {{ formGroup.get(field.id)?.value ?? '0.00' }}
+                @if (field.formula === 'WEIGHTED_SCORE') { % }
+              </p>
+            </div>
+            <i class="pi pi-calculator text-[#7A96A3] text-base"></i>
+          </div>
+          }
+
+          <!-- 2. INPUTS SIMPLES (TEXTO, NÚMERO, DÍA, HORA) -->
+          @else if (isSimpleInput(field.type)) {
           <input [formControlName]="field.id" [type]="getInputType(field.type)" [placeholder]="field.placeholder ?? ''"
             [attr.step]="field.type === 'number' ? 'any' : null"
             class="w-full rounded-xl border px-4 py-3 text-sm text-gray-700 outline-none transition"
@@ -65,16 +79,17 @@
             (input)="onFieldChange(field.id, $any($event.target).value, field.type)" (blur)="evaluateConditionals()" />
           }
 
-          <!-- TEXTAREA -->
-          @if (field.type === 'textarea') {
+          <!-- 3. TEXTAREA -->
+          @else if (field.type === 'textarea') {
           <textarea [formControlName]="field.id" [placeholder]="field.placeholder ?? ''" rows="4"
             class="w-full rounded-xl border px-4 py-3 text-sm text-gray-700 outline-none transition resize-none"
             [class.border-gray-200]="!isFieldInvalid(field.id)" [class.bg-gray-50]="!isFieldInvalid(field.id)"
-            [class.border-red-400]="isFieldInvalid(field.id)" [class.bg-red-50]="isFieldInvalid(field.id)"></textarea>
+            [class.border-red-400]="isFieldInvalid(field.id)" [class.bg-red-50]="isFieldInvalid(field.id)"
+            (blur)="evaluateConditionals()"></textarea>
           }
 
-          <!-- SELECT -->
-          @if (field.type === 'select') {
+          <!-- 4. SELECT -->
+          @else if (field.type === 'select') {
           <select [formControlName]="field.id"
             class="w-full rounded-xl border px-4 py-3 text-sm text-gray-700 outline-none transition"
             [class.border-gray-200]="!isFieldInvalid(field.id)" [class.bg-gray-50]="!isFieldInvalid(field.id)"
@@ -87,31 +102,8 @@
           </select>
           }
 
-          <!-- CALCULATED -->
-          @if (field.type === 'calculated') {
-          <div class="flex items-center gap-3 rounded-xl border px-4 py-3"
-            [class.border-green-200]="isPositiveResult(field, formGroup.get(field.id)?.value)"
-            [class.bg-green-50]="isPositiveResult(field, formGroup.get(field.id)?.value)"
-            [class.border-red-200]="isNegativeResult(field, formGroup.get(field.id)?.value)"
-            [class.bg-red-50]="isNegativeResult(field, formGroup.get(field.id)?.value)"
-            [class.border-[#E6EEF2]]="!isPositiveResult(field, formGroup.get(field.id)?.value) && !isNegativeResult(field, formGroup.get(field.id)?.value)"
-            [class.bg-[#F8FAFB]]="!isPositiveResult(field, formGroup.get(field.id)?.value) && !isNegativeResult(field, formGroup.get(field.id)?.value)">
-            <div class="flex-1">
-              <p class="text-xs text-[#7A96A3] mb-0.5">{{ field.label }}</p>
-              <p class="text-lg font-bold"
-                [class.text-green-700]="isPositiveResult(field, formGroup.get(field.id)?.value)"
-                [class.text-red-600]="isNegativeResult(field, formGroup.get(field.id)?.value)"
-                [class.text-[#002E42]]="!isPositiveResult(field, formGroup.get(field.id)?.value) && !isNegativeResult(field, formGroup.get(field.id)?.value)">
-                {{ formGroup.get(field.id)?.value || '—' }}
-                @if (field.formula === 'WEIGHTED_SCORE') { % }
-              </p>
-            </div>
-            <i class="pi pi-calculator text-[#7A96A3] text-sm"></i>
-          </div>
-          }
-
-          <!-- RADIO -->
-          @if (field.type === 'radio') {
+          <!-- 5. RADIO -->
+          @else if (field.type === 'radio') {
           <div class="flex flex-col gap-3 pt-1">
             @for (opt of field.options; track opt.value) {
             <label class="flex items-center gap-3 text-sm text-gray-700 cursor-pointer">
@@ -123,8 +115,8 @@
           </div>
           }
 
-          <!-- CHECKBOX -->
-          @if (field.type === 'checkbox') {
+          <!-- 6. CHECKBOX -->
+          @else if (field.type === 'checkbox') {
           <div class="flex flex-col gap-3 pt-1">
             @for (opt of field.options; track opt.value) {
             <label class="flex items-center gap-3 text-sm text-gray-700 cursor-pointer">
@@ -137,8 +129,8 @@
           </div>
           }
 
-          <!-- FILE -->
-          @if (field.type === 'file') {
+          <!-- 7. ARCHIVO -->
+          @else if (field.type === 'file') {
           @if (isPreview) {
           <div
             class="flex w-fit items-center gap-3 rounded-xl border-2 border-dashed border-[#32C6C6]/40 bg-[#32C6C6]/5 px-5 py-3 text-sm font-medium text-[#00649B]">
@@ -151,8 +143,8 @@
           }
           }
 
-          <!-- SIGNATURE -->
-          @if (field.type === 'signature') {
+          <!-- 8. FIRMA -->
+          @else if (field.type === 'signature') {
           <div
             class="flex h-28 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#00649B]/30 bg-[#00649B]/5 text-[#00649B]">
             <i class="pi pi-pen-to-square text-2xl"></i>
@@ -160,8 +152,8 @@
           </div>
           }
 
-          <!-- TABLAS -->
-          @if (isTableType(field.type)) {
+          <!-- 9. TABLAS -->
+          @else if (isTableType(field.type)) {
           <div class="-mx-6 sm:mx-0 overflow-x-auto border-y sm:border sm:rounded-2xl border-gray-200 bg-white">
             <table class="w-full min-w-[500px] border-collapse text-sm">
               <thead class="bg-[#002E42]/[0.04]">
@@ -187,7 +179,7 @@
                     {{ row.label }}
                     @if (row.unitLabel) {
                     <span class="text-xs text-gray-400 ml-1">({{ row.unitLabel }})</span>
-                    @}
+                    }
                   </td>
                   @for (col of field.columns; track col.key) {
 
@@ -229,7 +221,7 @@
           </div>
           }
 
-          <!-- MENSAJE DE ERROR -->
+          <!-- ERROR -->
           @if (getFieldError(field); as errorMsg) {
           <span class="flex items-center gap-1 text-xs text-red-500 mt-1">
             <i class="pi pi-exclamation-circle text-xs"></i>

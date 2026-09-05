@@ -110,9 +110,11 @@
             </div>
           </div>
 
-          <button (click)="downloadResponse(selectedResponse())"
-            [disabled]="selectedResponse() === null && selectedResponses().length === 0" pButton icon="pi pi-download"
-            label="Exportar" class="p-button-outlined p-button-sm" style="color:#002E42; border-color:#e2e8f0">
+          <button (click)="exportSelected()"
+            [disabled]="selectedResponse() === null && selectedResponses().length === 0" 
+            pButton icon="pi pi-download"
+            label="Exportar" class="p-button-outlined p-button-sm" 
+            style="color:#002E42; border-color:#e2e8f0">
           </button>
         </div>
 

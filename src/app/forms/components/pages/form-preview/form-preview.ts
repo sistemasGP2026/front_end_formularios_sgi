@@ -53,8 +53,6 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     return this.mode === 'preview' || this.mode === 'view';
   }
 
-  //LIFECYCLE
-
   ngOnInit(): void {
     this.formCode = this.route.snapshot.paramMap.get('code') ?? '';
     this.loadSedesIfNeeded();
@@ -65,6 +63,8 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     if (this.isPreview) {
       this.formGroup.disable({ emitEvent: false });
     }
+
+    this.evaluateCalculatedFields();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -81,7 +81,6 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     }
   }
 
-  //PRIVADOS
   private applyResponseData(): void {
     if (!this.responseData || !Object.keys(this.responseData).length) return;
 
@@ -89,13 +88,13 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     const mapped: Record<string, unknown> = {};
 
     for (const field of allFields) {
-      // Los datos vienen por field.name, el formGroup tiene controles por field.id
       if (this.responseData[field.name] !== undefined) {
         mapped[field.id] = this.responseData[field.name];
       }
     }
 
     this.formGroup.patchValue(mapped, { emitEvent: false });
+    this.evaluateCalculatedFields();
   }
 
   private buildFormGroup(): void {
@@ -107,6 +106,11 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     for (const field of allFields) {
       const validators = this.mode === 'respond' ? this.buildValidators(field) : [];
 
+      if (field.type === 'calculated') {
+        controls[field.id] = this.fb.control({ value: '0.00', disabled: true });
+        continue;
+      }
+
       switch (field.type) {
         case 'checkbox':
         case 'checklist-table':
@@ -117,15 +121,16 @@ export class FormPreviewComponent implements OnInit, OnChanges {
         case 'rating':
           controls[field.id] = this.fb.control(null, validators);
           break;
-        case 'calculated':
-          controls[field.id] = this.fb.control({ value: '', disabled: true });
-          break;
         default:
           controls[field.id] = this.fb.control('', validators);
       }
     }
 
     this.formGroup = this.fb.group(controls);
+
+    this.formGroup.valueChanges.subscribe(() => {
+      this.evaluateCalculatedFields();
+    });
 
     if (this.isPreview) {
       this.formGroup.disable({ emitEvent: false });
@@ -210,7 +215,6 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     });
   }
 
-  //CONDICIONALES
   evaluateConditionals(): void {
     this.activeFieldIds.clear();
     const allFields = this.sectionsWithFields.flatMap(sw => sw.fields);
@@ -222,13 +226,13 @@ export class FormPreviewComponent implements OnInit, OnChanges {
 
       if (active) {
         this.activeFieldIds.add(field.id);
-        if (!this.isPreview) {
+        if (!this.isPreview && field.type !== 'calculated') {
           this.formGroup?.get(field.id)?.enable({ emitEvent: false });
         }
       } else {
         this.formGroup?.get(field.id)?.disable({ emitEvent: false });
         if (!this.isPreview) {
-          this.formGroup?.get(field.id)?.reset();
+          this.formGroup?.get(field.id)?.reset('', { emitEvent: false });
         }
       }
     }
@@ -272,21 +276,19 @@ export class FormPreviewComponent implements OnInit, OnChanges {
   }
 
   evaluateCalculatedFields(): void {
-    const allFields = this.sectionsWithFields.flatMap(sw => sw.fields);
+    if (!this.formGroup) return;
 
-    const order = ['SUM', 'WEIGHTED_SCORE', 'EXPRESSION', 'THRESHOLD'];
-    const calcFields = allFields
-      .filter(f => f.type === 'calculated')
-      .sort((a, b) => {
-        const ai = order.indexOf(a.formula ?? '');
-        const bi = order.indexOf(b.formula ?? '');
-        return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
-      });
+    const allFields = this.sectionsWithFields.flatMap(sw => sw.fields);
+    const calcFields = allFields.filter(f => f.type === 'calculated');
 
     for (const field of calcFields) {
       const result = this.evaluateCalculatedField(field, allFields);
       if (result !== null && result !== undefined) {
-        this.formGroup.get(field.id)?.setValue(result, { emitEvent: false });
+        const formatted = typeof result === 'number' ? result.toFixed(2) : String(result);
+        const control = this.formGroup.get(field.id);
+        if (control) {
+          control.setValue(formatted, { emitEvent: false });
+        }
       }
     }
 
@@ -294,12 +296,13 @@ export class FormPreviewComponent implements OnInit, OnChanges {
   }
 
   private evaluateCalculatedField(field: FormField, allFields: FormField[]): any {
-    // SUM se detecta por dataSource, independiente del valor de formula
-    if (field.dataSource?.startsWith('sum:')) {
+    if (field.dataSource && field.dataSource.startsWith('sum:')) {
       return this.calcSum(field.dataSource, allFields);
     }
 
     switch (field.formula) {
+      case 'SUM':
+        return this.calcSumOrSectionSum(field, allFields);
 
       case 'WEIGHTED_SCORE':
         return this.calcWeightedScore(allFields);
@@ -311,24 +314,65 @@ export class FormPreviewComponent implements OnInit, OnChanges {
         return this.evalExpression(field.dataSource ?? '', allFields);
 
       default:
-        return null;
+        return this.calcSumOrSectionSum(field, allFields);
     }
   }
 
+  private getNumericValue(controlId: string): number {
+    const rawValue = this.formGroup?.get(controlId)?.value;
+    if (rawValue === null || rawValue === undefined || rawValue === '') return 0;
+    const normalized = String(rawValue).replace(',', '.');
+    const parsed = parseFloat(normalized);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+
+  private calcSumOrSectionSum(field: FormField, allFields: FormField[]): number {
+    if (field.dataSource) {
+      return this.calcSum(field.dataSource, allFields);
+    }
+
+    const sources = (field as any).sourceFieldIds || (field as any).sourceFields;
+    if (Array.isArray(sources) && sources.length > 0) {
+      return this.calcSum(sources.join(','), allFields);
+    }
+
+    // Algoritmo de respaldo: Suma todos los campos numéricos anteriores en la misma sección
+    for (const sw of this.sectionsWithFields) {
+      const fieldIdx = sw.fields.findIndex(f => f.id === field.id);
+      if (fieldIdx !== -1) {
+        let total = 0;
+        for (let i = 0; i < fieldIdx; i++) {
+          const f = sw.fields[i];
+          if (f.type === 'number' || this.isSimpleInput(f.type)) {
+            total += this.getNumericValue(f.id);
+          }
+        }
+        return Math.round(total * 100) / 100;
+      }
+    }
+
+    return 0;
+  }
+
   private calcSum(dataSource: string, allFields: FormField[]): number {
-    const fieldRefs = dataSource
-      .replace('sum:', '')
+    const cleaned = dataSource.startsWith('sum:') ? dataSource.replace('sum:', '') : dataSource;
+    const fieldRefs = cleaned
       .split(',')
-      .map(s => s.trim())
+      .map(s => s.trim().toLowerCase())
       .filter(Boolean);
 
     let total = 0;
-    for (const ref of fieldRefs) {
-      const sourceField = allFields.find(f => f.name === ref || f.id === ref);
-      if (!sourceField) continue;
 
-      const raw = parseFloat(this.formGroup.get(sourceField.id)?.value ?? '0');
-      if (!isNaN(raw)) total += raw;
+    for (const ref of fieldRefs) {
+      const sourceField = allFields.find(f => 
+        f.id.toLowerCase() === ref || 
+        f.name?.toLowerCase() === ref ||
+        f.label?.toLowerCase().includes(ref) ||
+        (f.label && f.label.toLowerCase().includes(`(${ref})`))
+      );
+
+      const targetControlId = sourceField ? sourceField.id : ref;
+      total += this.getNumericValue(targetControlId);
     }
 
     return Math.round(total * 100) / 100;
@@ -341,8 +385,8 @@ export class FormPreviewComponent implements OnInit, OnChanges {
 
     let total = 0;
     for (const f of weightedFields) {
-      const raw = parseFloat(this.formGroup.get(f.id)?.value ?? '0');
-      if (!isNaN(raw) && raw > 0) {
+      const raw = this.getNumericValue(f.id);
+      if (raw > 0) {
         total += (raw / f.maxScore!) * f.weight!;
       }
     }
@@ -359,11 +403,9 @@ export class FormPreviewComponent implements OnInit, OnChanges {
 
     if (!sourceField) return '';
 
-    const value = parseFloat(
-      this.formGroup.get(sourceField.id)?.value ?? '0'
-    );
+    const value = this.getNumericValue(sourceField.id);
 
-    if (isNaN(value) || value === 0) return '';
+    if (value === 0) return '';
     const match = field.thresholds.find(t => value >= t.min && value <= t.max);
     return match?.label ?? '';
   }
@@ -372,8 +414,7 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     try {
       const vars: Record<string, number> = {};
       for (const f of allFields) {
-        const val = parseFloat(this.formGroup.get(f.id)?.value ?? '0');
-        vars[f.name] = isNaN(val) ? 0 : val;
+        vars[f.name] = this.getNumericValue(f.id);
       }
       const fn = new Function(...Object.keys(vars), `return ${expression}`);
       const result = fn(...Object.values(vars));
@@ -382,8 +423,6 @@ export class FormPreviewComponent implements OnInit, OnChanges {
       return null;
     }
   }
-
-  //HELPERS TEMPLATE
 
   isFieldActive(fieldId: string): boolean {
     return this.isPreview || this.activeFieldIds.has(fieldId);
@@ -431,6 +470,7 @@ export class FormPreviewComponent implements OnInit, OnChanges {
   }
 
   isSimpleInput(type: string): boolean {
+    if (type === 'calculated') return false;
     return ['text', 'email', 'number', 'date', 'time', 'datetime', 'phone', 'url'].includes(type);
   }
 
@@ -452,11 +492,10 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     return rows.find(r => r['rowId'] === rowId)?.[colKey] ?? '';
   }
 
-  //EVENTOS
   onFieldChange(fieldId: string, value: unknown, fieldtype?: string): void {
     let parsed = value;
     if (fieldtype === 'number' && value !== '' && value !== null) {
-      parsed = Number(value);
+      parsed = Number(String(value).replace(',', '.'));
     }
     this.formGroup.get(fieldId)?.setValue(parsed);
     this.formGroup.get(fieldId)?.markAsTouched();
@@ -467,7 +506,6 @@ export class FormPreviewComponent implements OnInit, OnChanges {
   onSelectChange(fieldId: string): void {
     this.formGroup.get(fieldId)?.markAsTouched();
     this.evaluateConditionals();
-    this.evaluateCalculatedFields();
   }
 
   onCheckboxChange(fieldId: string, optionValue: string, checked: boolean): void {
@@ -478,7 +516,6 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     this.formGroup.get(fieldId)?.setValue(updated);
     this.formGroup.get(fieldId)?.markAsTouched();
     this.evaluateConditionals();
-    this.evaluateCalculatedFields()
   }
 
   onTableCellChange(fieldId: string, rowId: string, colKey: string, value: unknown): void {
@@ -496,7 +533,6 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     this.evaluateCalculatedFields();
   }
 
-  //SUBMIT
   onSubmit(): void {
     if (this.isPreview) return;
 
@@ -512,28 +548,33 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     this.submitError = '';
     this.submitting = true;
 
+    // Asegura actualizar todos los cálculos antes de compilar la respuesta
+    this.evaluateCalculatedFields();
+
     const allFields = this.sectionsWithFields.flatMap(sw => sw.fields);
     const fieldMap = new Map(allFields.map(f => [f.id, f]));
 
-
     const filteredData: Record<string, unknown> = {};
+
+    // 1. Mapea campos de entrada activos
     for (const fieldId of this.activeFieldIds) {
       const field = fieldMap.get(fieldId);
-      if (!field) continue;
+      if (!field || field.type === 'calculated') continue;
 
       const control = this.formGroup.get(fieldId);
       const value = control?.value;
 
       filteredData[field.name] = field.type === 'number' && value !== null && value !== ''
-        ? Number(value)
+        ? Number(String(value).replace(',', '.'))
         : value;
     }
+
+    // 2. Mapea campos calculados explícitamente al payload
     for (const field of allFields.filter(f => f.type === 'calculated')) {
       const value = this.formGroup.get(field.id)?.value;
-      if (value !== null && value !== undefined && value !== '') {
-        filteredData[field.name] = value;
-      }
+      filteredData[field.name] = value ?? '0.00';
     }
+
     const payload: CreateResponse = { data: filteredData };
 
     this.responseService.submitdData(this.formCode, payload).subscribe({

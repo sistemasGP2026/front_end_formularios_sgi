@@ -224,13 +224,21 @@ export class ResponsesComponent implements OnInit {
     return this.selectedResponses().includes(responseId);
   }
 
-  downloadResponse(response: ResponseInterface | null) {
+  exportSelected() {
     const form = this.form();
-    const target = response ?? this.responses().find(
-      r => this.selectedResponses().includes(r._id)
-    ) ?? null;
-    if (!target || !form) return;
-    this.pdfService.generateResponsePdf(target, form);
+    if (!form) return;
+
+    if (this.selectedResponses().length > 0) {
+      const responsesToExport = this.responses().filter(r => 
+        this.selectedResponses().includes(r._id)
+      );
+      
+      responsesToExport.forEach(response => {
+        this.pdfService.generateResponsePdf(response, form);
+      });
+    } else if (this.selectedResponse()) {
+      this.pdfService.generateResponsePdf(this.selectedResponse()!, form);
+    }
   }
 
   getInitials(name: string): string {
