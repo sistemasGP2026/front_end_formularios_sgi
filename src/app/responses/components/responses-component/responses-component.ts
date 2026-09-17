@@ -23,6 +23,8 @@ import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DatePickerModule } from 'primeng/datepicker';
 
+import { saveAs } from 'file-saver';
+
 export interface FormGroup {
   formCode: string;
   count: number;
@@ -224,21 +226,76 @@ export class ResponsesComponent implements OnInit {
     return this.selectedResponses().includes(responseId);
   }
 
-  exportSelected() {
+  // DESCARGA DIRECTA DE PDF PARA UNA RESPUESTA INDIVIDUAL
+  downloadResponsePdf(response: ResponseInterface): void {
+    const form = this.form();
+    if (response && form) {
+      this.pdfService.generateResponsePdf(response, form);
+    }
+  }
+
+  // DESCARGA DIRECTA DE PDFS SELECCIONADOS
+  downloadSelectedPdfs(): void {
     const form = this.form();
     if (!form) return;
 
+    let targets: ResponseInterface[] = [];
     if (this.selectedResponses().length > 0) {
-      const responsesToExport = this.responses().filter(r => 
-        this.selectedResponses().includes(r._id)
-      );
-      
-      responsesToExport.forEach(response => {
-        this.pdfService.generateResponsePdf(response, form);
-      });
+      targets = this.responses().filter(r => this.selectedResponses().includes(r._id));
     } else if (this.selectedResponse()) {
-      this.pdfService.generateResponsePdf(this.selectedResponse()!, form);
+      targets = [this.selectedResponse()!];
     }
+
+    targets.forEach((response, index) => {
+      setTimeout(() => {
+        this.pdfService.generateResponsePdf(response, form);
+      }, index * 300);
+    });
+  }
+
+  exportToCSV(): void {
+    const form = this.form();
+    const responsesList = this.filteredResponses();
+
+    if (!form || responsesList.length === 0) return;
+
+    const fields = form.fields || [];
+    const headers = ['ID Respuesta', 'Nombre Usuario', 'Email', 'Fecha Envio', 'Estado'];
+    fields.forEach(f => headers.push(`"${f.label.replace(/"/g, '""')}"`));
+
+    const csvRows: string[] = [];
+    csvRows.push(headers.join(','));
+
+    for (const r of responsesList) {
+      const row: string[] = [
+        `"${r._id}"`,
+        `"${r.filledBy.fullName.replace(/"/g, '""')}"`,
+        `"${r.filledBy.email}"`,
+        `"${new Date(r.submittedAt).toLocaleString()}"`,
+        `"${r.status || 'N/A'}"`
+      ];
+
+      fields.forEach(f => {
+        const val = r.data ? r.data[f.name] : '';
+        let formattedVal = '';
+
+        if (Array.isArray(val)) {
+          formattedVal = val.map(v => typeof v === 'object' ? JSON.stringify(v) : v).join('; ');
+        } else if (typeof val === 'object' && val !== null) {
+          formattedVal = JSON.stringify(val);
+        } else {
+          formattedVal = String(val ?? '');
+        }
+
+        row.push(`"${formattedVal.replace(/"/g, '""')}"`);
+      });
+
+      csvRows.push(row.join(','));
+    }
+
+    const csvContent = '\uFEFF' + csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    saveAs(blob, `Reporte_Respuestas_${form.code}_${new Date().toISOString().slice(0, 10)}.csv`);
   }
 
   getInitials(name: string): string {

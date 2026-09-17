@@ -387,5 +387,11 @@ export class FormDetailComponent implements OnInit {
     return fullName.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase();
   }
 
-  goBack(): void { this.router.navigate(['/formularios']); }
+  goBack(): void {
+    if (this.form?.category) {
+      this.router.navigate(['/formularios', 'categoria', this.form.category]);
+    } else {
+      this.router.navigate(['/formularios']);
+    }
+  }
 }

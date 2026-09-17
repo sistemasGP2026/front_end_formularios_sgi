@@ -11,6 +11,16 @@ import { BASE64LOGO } from '../../assets/base64-logo';
 export class PdfService {
 
   private readonly base64Img = BASE64LOGO;
+
+  /** Fecha del documento sin desplazamiento de zona horaria (dd/mm/aaaa). */
+  private formatDocumentDate(value: string | Date): string {
+    const d = typeof value === 'string' ? new Date(value) : value;
+    if (isNaN(d.getTime())) return String(value);
+    // Las fechas llegan como medianoche UTC; se toman los componentes UTC para no restar un día.
+    const dd = String(d.getUTCDate()).padStart(2, '0');
+    const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+    return `${dd}/${mm}/${d.getUTCFullYear()}`;
+  }
   private primary   = '#002E42';
   private secondary = '#00649B';
 
@@ -83,7 +93,7 @@ export class PdfService {
                 { text: form.name, fontSize: 11, color: this.secondary, margin: [0, 3, 0, 0] },
                 {
                   text: `Código: ${form.code}   |   Versión: ${form.version}` +
-                        (form.documentDate ? `   |   Fecha: ${new Date(form.documentDate).toLocaleDateString('es-CO')}` : ''),
+                        (form.documentDate ? `   |   Fecha: ${this.formatDocumentDate(form.documentDate)}` : ''),
                   fontSize: 8, color: '#666', margin: [0, 3, 0, 0]
                 },
               ],

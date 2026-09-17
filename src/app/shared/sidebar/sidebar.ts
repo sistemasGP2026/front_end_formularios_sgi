@@ -58,8 +58,9 @@ export class SidebarComponent implements OnInit {
     } else {
       this.navItems = [
         { label: 'Inicio', icon: 'pi pi-home', route: '/inicio' },
+        { label: 'Gestión de Formularios', icon: 'pi pi-file', route: '/formularios' },
+        { label: 'Respuestas', icon: 'pi pi-comments', route: '/respuestas' },
         { label: 'Historial', icon: 'pi pi-history', route: '/historial' },
-        // { label: 'Respuestas', icon: 'pi pi-comments', route: '/respuestas' },
       ];
     }
   }
