@@ -253,49 +253,29 @@ export class ResponsesComponent implements OnInit {
     });
   }
 
-  exportToCSV(): void {
+  exportingExcel = signal(false);
+
+  /** Exporta las respuestas del formulario a Excel (.xlsx) generado en el servidor con ExcelJS. */
+  exportToExcel(): void {
     const form = this.form();
-    const responsesList = this.filteredResponses();
+    if (!form || this.exportingExcel()) return;
 
-    if (!form || responsesList.length === 0) return;
+    const [start, end] = this.dateRange() ?? [];
+    const startDate = start ? this.formatDate(start) : undefined;
+    const endDate = end ? this.formatDate(end) : undefined;
 
-    const fields = form.fields || [];
-    const headers = ['ID Respuesta', 'Nombre Usuario', 'Email', 'Fecha Envio', 'Estado'];
-    fields.forEach(f => headers.push(`"${f.label.replace(/"/g, '""')}"`));
-
-    const csvRows: string[] = [];
-    csvRows.push(headers.join(','));
-
-    for (const r of responsesList) {
-      const row: string[] = [
-        `"${r._id}"`,
-        `"${r.filledBy.fullName.replace(/"/g, '""')}"`,
-        `"${r.filledBy.email}"`,
-        `"${new Date(r.submittedAt).toLocaleString()}"`,
-        `"${r.status || 'N/A'}"`
-      ];
-
-      fields.forEach(f => {
-        const val = r.data ? r.data[f.name] : '';
-        let formattedVal = '';
-
-        if (Array.isArray(val)) {
-          formattedVal = val.map(v => typeof v === 'object' ? JSON.stringify(v) : v).join('; ');
-        } else if (typeof val === 'object' && val !== null) {
-          formattedVal = JSON.stringify(val);
-        } else {
-          formattedVal = String(val ?? '');
-        }
-
-        row.push(`"${formattedVal.replace(/"/g, '""')}"`);
-      });
-
-      csvRows.push(row.join(','));
-    }
-
-    const csvContent = '\uFEFF' + csvRows.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    saveAs(blob, `Reporte_Respuestas_${form.code}_${new Date().toISOString().slice(0, 10)}.csv`);
+    this.exportingExcel.set(true);
+    this.responseService.exportExcel(form.code, startDate, endDate).subscribe({
+      next: (blob) => {
+        const fecha = new Date().toISOString().slice(0, 10);
+        saveAs(blob, `Respuestas_${form.code}_${fecha}.xlsx`);
+        this.exportingExcel.set(false);
+      },
+      error: (err) => {
+        console.error('Error al exportar Excel:', err);
+        this.exportingExcel.set(false);
+      },
+    });
   }
 
   getInitials(name: string): string {

@@ -56,7 +56,7 @@
           }
 
           <!-- 1. CAMPO CALCULADO (NUNCA EDITABLE / CAJA DE SOLO LECTURA) -->
-          @if (field.type === 'calculated') {
+          @if (isCalculatedField(field)) {
           <div class="flex items-center gap-3 rounded-xl border px-4 py-3 bg-[#F8FAFB] border-[#E6EEF2] shadow-sm pointer-events-none select-none">
             <div class="flex-1">
               <p class="text-xs text-[#7A96A3] mb-0.5">{{ field.label }}</p>

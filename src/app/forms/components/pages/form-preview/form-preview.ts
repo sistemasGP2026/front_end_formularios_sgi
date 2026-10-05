@@ -106,7 +106,7 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     for (const field of allFields) {
       const validators = this.mode === 'respond' ? this.buildValidators(field) : [];
 
-      if (field.type === 'calculated') {
+      if (this.isCalculatedField(field)) {
         controls[field.id] = this.fb.control({ value: '0.00', disabled: true });
         continue;
       }
@@ -226,7 +226,7 @@ export class FormPreviewComponent implements OnInit, OnChanges {
 
       if (active) {
         this.activeFieldIds.add(field.id);
-        if (!this.isPreview && field.type !== 'calculated') {
+        if (!this.isPreview && !this.isCalculatedField(field)) {
           this.formGroup?.get(field.id)?.enable({ emitEvent: false });
         }
       } else {
@@ -279,7 +279,7 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     if (!this.formGroup) return;
 
     const allFields = this.sectionsWithFields.flatMap(sw => sw.fields);
-    const calcFields = allFields.filter(f => f.type === 'calculated');
+    const calcFields = allFields.filter(f => this.isCalculatedField(f));
 
     for (const field of calcFields) {
       const result = this.evaluateCalculatedField(field, allFields);
@@ -380,7 +380,7 @@ export class FormPreviewComponent implements OnInit, OnChanges {
 
   private calcWeightedScore(allFields: FormField[]): number {
     const weightedFields = allFields.filter(
-      f => f.weight != null && f.maxScore != null && f.type !== 'calculated'
+      f => f.weight != null && f.maxScore != null && !this.isCalculatedField(f)
     );
 
     let total = 0;
@@ -469,6 +469,12 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     return type === 'checklist-table' || type === 'inventory-table';
   }
 
+  /** Un campo es calculado si su tipo es 'calculated' o si es numérico con una suma automática (dataSource 'sum:...'). */
+  isCalculatedField(field: FormField | null | undefined): boolean {
+    if (!field) return false;
+    return field.type === 'calculated' || (typeof field.dataSource === 'string' && field.dataSource.startsWith('sum:'));
+  }
+
   isSimpleInput(type: string): boolean {
     if (type === 'calculated') return false;
     return ['text', 'email', 'number', 'date', 'time', 'datetime', 'phone', 'url'].includes(type);
@@ -493,11 +499,12 @@ export class FormPreviewComponent implements OnInit, OnChanges {
   }
 
   onFieldChange(fieldId: string, value: unknown, fieldtype?: string): void {
-    let parsed = value;
-    if (fieldtype === 'number' && value !== '' && value !== null) {
-      parsed = Number(String(value).replace(',', '.'));
+    // Para campos numéricos no se sobrescribe el valor mientras se escribe:
+    // al teclear "4." el navegador reporta un valor intermedio vacío y setValue() borraba el punto.
+    // formControlName ya mantiene el valor; la conversión a número se hace al enviar.
+    if (fieldtype !== 'number') {
+      this.formGroup.get(fieldId)?.setValue(value);
     }
-    this.formGroup.get(fieldId)?.setValue(parsed);
     this.formGroup.get(fieldId)?.markAsTouched();
     this.evaluateConditionals();
     this.evaluateCalculatedFields();
@@ -559,7 +566,7 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     // 1. Mapea campos de entrada activos
     for (const fieldId of this.activeFieldIds) {
       const field = fieldMap.get(fieldId);
-      if (!field || field.type === 'calculated') continue;
+      if (!field || this.isCalculatedField(field)) continue;
 
       const control = this.formGroup.get(fieldId);
       const value = control?.value;
@@ -570,7 +577,7 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     }
 
     // 2. Mapea campos calculados explícitamente al payload
-    for (const field of allFields.filter(f => f.type === 'calculated')) {
+    for (const field of allFields.filter(f => this.isCalculatedField(f))) {
       const value = this.formGroup.get(field.id)?.value;
       filteredData[field.name] = value ?? '0.00';
     }

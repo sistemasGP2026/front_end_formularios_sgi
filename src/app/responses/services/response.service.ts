@@ -40,6 +40,19 @@ export class ResponseService {
     });
   }
 
+  /** Descarga el Excel (.xlsx) de respuestas generado por la API. Respeta el rango de fechas. */
+  exportExcel(codeForm: string, startDate?: string, endDate?: string): Observable<Blob> {
+    let params = new HttpParams();
+    if (startDate) params = params.set('startDate', startDate);
+    if (endDate) params = params.set('endDate', endDate);
+
+    return this.http.get(`${this.baseUrl}/responses/export/${codeForm}`, {
+      headers: new HttpHeaders({ 'Authorization': 'Bearer ' + this.getToken() }),
+      params,
+      responseType: 'blob',
+    });
+  }
+
   getResponseDetail(id: string): Observable<ResponseInterface> {
     return this.http.get<ResponseInterface>(`${this.baseUrl}/responses/detail/${id}`, this.getHeaders())
   }

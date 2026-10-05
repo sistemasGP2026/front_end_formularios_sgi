@@ -112,10 +112,10 @@
 
           <!-- Botones de Exportación -->
           <div class="flex items-center gap-2">
-            <button (click)="exportToCSV()"
-              [disabled]="filteredResponses().length === 0" 
+            <button (click)="exportToExcel()"
+              [disabled]="responses().length === 0" [loading]="exportingExcel()"
               pButton icon="pi pi-file-excel"
-              label="Exportar CSV" class="p-button-outlined p-button-sm p-button-success">
+              label="Exportar Excel" class="p-button-outlined p-button-sm p-button-success">
             </button>
 
             <button (click)="downloadSelectedPdfs()"
