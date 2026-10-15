@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidatorFn } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -6,6 +6,8 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { Form, FormField, FormSection } from '../../../interfaces/form.interface';
 import { ResponseService } from '../../../../responses/services/response.service';
+import { DraftService } from '../../../../responses/services/draft.service';
+import { DraftInterface, DraftProgress } from '../../../../responses/interfaces/draft.interface';
 import { SedesService } from '../../../services/sedes.service';
 import { CreateResponse } from '../../../interfaces/create-response.dto';
 
@@ -29,6 +31,7 @@ export class FormPreviewComponent implements OnInit, OnChanges {
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private responseService = inject(ResponseService);
+  private draftService = inject(DraftService);
   private sedeService = inject(SedesService);
   private router = inject(Router);
   private messageService = inject(MessageService);
@@ -39,6 +42,11 @@ export class FormPreviewComponent implements OnInit, OnChanges {
   @Input() form!: Form;
   @Input() mode: 'preview' | 'respond' | 'view' = 'preview';
   @Input() responseData: Record<string, unknown> | null = null;
+  /** Borrador que se está continuando (modo respond). Se actualiza al guardar. */
+  @Input() draftId: string | null = null;
+  @Input() draftSavedAt: string | null = null;
+  /** Avisa al padre cada vez que se guarda el borrador (nuevo o actualizado). */
+  @Output() draftSaved = new EventEmitter<DraftInterface>();
 
   formGroup!: FormGroup;
   activeFieldIds = new Set<string>();
@@ -48,6 +56,7 @@ export class FormPreviewComponent implements OnInit, OnChanges {
   submitting = false;
   submitError = '';
   submitSuccess = false;
+  savingDraft = false;
 
   get isPreview(): boolean {
     return this.mode === 'preview' || this.mode === 'view';
@@ -55,6 +64,21 @@ export class FormPreviewComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.formCode = this.route.snapshot.paramMap.get('code') ?? '';
+    this.initializeForm();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    const sectionsChanged = changes['sectionsWithFields'] && !changes['sectionsWithFields'].firstChange;
+    const dataChanged = changes['responseData'] && !changes['responseData'].firstChange;
+
+    // Se reconstruye también cuando llegan datos nuevos (p. ej. al continuar un borrador
+    // sobre un formulario que ya está en pantalla).
+    if (sectionsChanged || dataChanged) {
+      this.initializeForm();
+    }
+  }
+
+  private initializeForm(): void {
     this.loadSedesIfNeeded();
     this.buildFormGroup();
     this.evaluateConditionals();
@@ -65,20 +89,6 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     }
 
     this.evaluateCalculatedFields();
-  }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['sectionsWithFields'] && !changes['sectionsWithFields'].firstChange) {
-      this.loadSedesIfNeeded();
-      this.buildFormGroup();
-      this.evaluateConditionals();
-      this.applyResponseData();
-
-      if (this.isPreview) {
-        this.formGroup.disable({ emitEvent: false });
-      }
-      this.evaluateCalculatedFields();
-    }
   }
 
   private applyResponseData(): void {
@@ -94,6 +104,13 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     }
 
     this.formGroup.patchValue(mapped, { emitEvent: false });
+
+    // Con los valores restaurados, los campos condicionales deben mostrarse/ocultarse
+    // como si el usuario los hubiera diligenciado (solo aplica cuando se puede editar).
+    if (!this.isPreview) {
+      this.evaluateConditionals();
+    }
+
     this.evaluateCalculatedFields();
   }
 
@@ -558,35 +575,15 @@ export class FormPreviewComponent implements OnInit, OnChanges {
     // Asegura actualizar todos los cálculos antes de compilar la respuesta
     this.evaluateCalculatedFields();
 
-    const allFields = this.sectionsWithFields.flatMap(sw => sw.fields);
-    const fieldMap = new Map(allFields.map(f => [f.id, f]));
-
-    const filteredData: Record<string, unknown> = {};
-
-    // 1. Mapea campos de entrada activos
-    for (const fieldId of this.activeFieldIds) {
-      const field = fieldMap.get(fieldId);
-      if (!field || this.isCalculatedField(field)) continue;
-
-      const control = this.formGroup.get(fieldId);
-      const value = control?.value;
-
-      filteredData[field.name] = field.type === 'number' && value !== null && value !== ''
-        ? Number(String(value).replace(',', '.'))
-        : value;
-    }
-
-    // 2. Mapea campos calculados explícitamente al payload
-    for (const field of allFields.filter(f => this.isCalculatedField(f))) {
-      const value = this.formGroup.get(field.id)?.value;
-      filteredData[field.name] = value ?? '0.00';
-    }
-
-    const payload: CreateResponse = { data: filteredData };
+    const payload: CreateResponse = { data: this.collectData() };
+    if (this.draftId) payload.draftId = this.draftId;
 
     this.responseService.submitdData(this.formCode, payload).subscribe({
       next: () => {
         this.submitting = false;
+        // La respuesta quedó registrada: se ocultan los botones y el borrador (ya eliminado) deja de aplicar.
+        this.submitSuccess = true;
+        this.draftId = null;
         this.messageService.add({
           severity: 'success',
           summary: '¡Formulario enviado!',
@@ -602,6 +599,126 @@ export class FormPreviewComponent implements OnInit, OnChanges {
       error: (err) => {
         this.submitting = false;
         this.submitError = err?.error?.message ?? 'Error al enviar el formulario';
+      },
+    });
+  }
+
+  /**
+   * Compila lo diligenciado con claves = field.name (formato de las respuestas).
+   * Con `forDraft` se omiten los archivos, que no pueden guardarse en un borrador.
+   */
+  private collectData(forDraft = false): Record<string, unknown> {
+    const allFields = this.sectionsWithFields.flatMap(sw => sw.fields);
+    const fieldMap = new Map(allFields.map(f => [f.id, f]));
+
+    const data: Record<string, unknown> = {};
+
+    // 1. Mapea campos de entrada activos
+    for (const fieldId of this.activeFieldIds) {
+      const field = fieldMap.get(fieldId);
+      if (!field || this.isCalculatedField(field)) continue;
+
+      const value = this.formGroup.get(fieldId)?.value;
+      if (forDraft && (field.type === 'file' || value instanceof File)) continue;
+
+      data[field.name] = field.type === 'number' && value !== null && value !== ''
+        ? Number(String(value).replace(',', '.'))
+        : value;
+    }
+
+    // 2. Mapea campos calculados explícitamente al payload
+    for (const field of allFields.filter(f => this.isCalculatedField(f))) {
+      const value = this.formGroup.get(field.id)?.value;
+      data[field.name] = value ?? '0.00';
+    }
+
+    return data;
+  }
+
+  /** Avance del borrador: campos activos diligenciados sobre el total de campos activos. */
+  private computeProgress(): DraftProgress {
+    const allFields = this.sectionsWithFields.flatMap(sw => sw.fields);
+    let filled = 0, total = 0;
+
+    for (const field of allFields) {
+      if (!this.activeFieldIds.has(field.id) || this.isCalculatedField(field)) continue;
+      // Archivos y firmas no se guardan en el borrador, así que no cuentan para el avance.
+      if (field.type === 'file' || field.type === 'signature') continue;
+      total++;
+      if (this.hasValue(this.formGroup.get(field.id)?.value)) filled++;
+    }
+
+    return { filled, total };
+  }
+
+  private hasValue(value: unknown): boolean {
+    if (value === null || value === undefined) return false;
+    if (typeof value === 'string') return value.trim() !== '';
+    if (Array.isArray(value)) {
+      // Tablas: filas con al menos una celda diligenciada. Checkbox: al menos una opción.
+      return value.some(v =>
+        typeof v === 'object' && v !== null
+          ? Object.entries(v as Record<string, unknown>).some(([k, c]) => k !== 'rowId' && this.hasValue(c))
+          : this.hasValue(v),
+      );
+    }
+    return true;
+  }
+
+  /** Guarda lo diligenciado hasta ahora sin validar: el usuario puede continuar después. */
+  onSaveDraft(): void {
+    if (this.isPreview || this.savingDraft || this.submitting) return;
+
+    const progress = this.computeProgress();
+    if (progress.filled === 0) {
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Nada que guardar',
+        detail: 'Diligencia al menos un campo para guardar el borrador',
+        life: 3000,
+      });
+      return;
+    }
+
+    this.savingDraft = true;
+    const payload = { data: this.collectData(true), progress };
+
+    const request$ = this.draftId
+      ? this.draftService.updateDraft(this.formCode, this.draftId, payload)
+      : this.draftService.createDraft(this.formCode, payload);
+
+    request$.subscribe({
+      next: (draft) => {
+        this.savingDraft = false;
+        this.draftId = draft._id;
+        this.draftSavedAt = draft.updatedAt;
+        this.draftSaved.emit(draft);
+
+        // Deja el id en la URL: al recargar o volver se continúa este mismo borrador.
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { draft: draft._id },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Borrador guardado',
+          detail: `${progress.filled} de ${progress.total} campos diligenciados. Puedes continuarlo desde "Borradores".`,
+          life: 4000,
+        });
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.savingDraft = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'No se pudo guardar el borrador',
+          detail: err?.error?.message ?? 'Intenta de nuevo',
+          life: 4000,
+        });
+        this.cdr.detectChanges();
       },
     });
   }

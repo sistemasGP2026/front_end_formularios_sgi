@@ -7,3 +7,56 @@ html, body {
   margin: 0;
   padding: 0;
 }
+/* ── Constructor visual de formularios (form-builder-component) ── */
+@layer components {
+.fb-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #7A96A3;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+}
+.fb-label > .fb-input { margin-top: 4px; }
+.fb-input {
+  display: block;
+  width: 100%;
+  border: 1px solid #E6EEF2;
+  border-radius: 10px;
+  background: #F8FAFB;
+  padding: 7px 10px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #002E42;
+  text-transform: none;
+  letter-spacing: normal;
+  outline: none;
+}
+.fb-input:focus { border-color: #00649B; background: #fff; }
+.fb-input:disabled { opacity: .6; cursor: not-allowed; }
+.fb-input.uppercase { text-transform: uppercase; }
+.fb-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.fb-check input[type="checkbox"] { width: 15px; height: 15px; accent-color: #00649B; }
+.fb-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #7A96A3;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+}
+.fb-icon:hover:not(:disabled) { background: #E6EEF2; color: #002E42; }
+.fb-icon:disabled { opacity: .35; cursor: not-allowed; }
+}

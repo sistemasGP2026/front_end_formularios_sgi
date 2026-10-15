@@ -1,0 +1,128 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="flex flex-col gap-6 min-h-screen bg-[#F8FAFB] p-2">
+
+  <!-- HEADER -->
+  <div>
+    <h1 class="text-2xl font-bold text-[#002E42]">Borradores</h1>
+    <p class="text-sm text-[#7A96A3] mt-1">
+      Formularios que empezaste a diligenciar y aún no has enviado
+    </p>
+  </div>
+
+  <!-- LOADING -->
+  @if (loading()) {
+  <div class="flex flex-col gap-3">
+    @for (i of [1,2,3]; track i) {
+    <div class="bg-white border border-[#E6EEF2] rounded-2xl px-5 py-4
+                flex items-center gap-4 animate-pulse">
+      <div class="w-10 h-10 rounded-xl bg-gray-100 shrink-0"></div>
+      <div class="flex-1 flex flex-col gap-2">
+        <div class="h-3 bg-gray-100 rounded w-1/3"></div>
+        <div class="h-3 bg-gray-100 rounded w-1/5"></div>
+      </div>
+      <div class="h-3 bg-gray-100 rounded w-20"></div>
+    </div>
+    }
+  </div>
+  }
+
+  @if (!loading()) {
+
+    <!-- EMPTY -->
+    @if (drafts().length === 0) {
+    <div class="flex flex-col items-center gap-3 py-20 text-[#7A96A3]">
+      <i class="pi pi-file-edit text-5xl opacity-30"></i>
+      <p class="text-sm">No tienes borradores guardados</p>
+      <p class="text-xs max-w-sm text-center">
+        Mientras diligencias un formulario, usa <strong>Guardar borrador</strong> para continuarlo después desde aquí.
+      </p>
+    </div>
+    }
+
+    <!-- LISTA -->
+    @if (drafts().length > 0) {
+
+    <!-- CONTADOR -->
+    <div class="flex items-center gap-2">
+      <span class="text-sm font-medium text-[#002E42]">
+        {{ drafts().length }} borrador{{ drafts().length !== 1 ? 'es' : '' }}
+      </span>
+      <span class="text-xs text-[#7A96A3]">pendiente{{ drafts().length !== 1 ? 's' : '' }} de enviar</span>
+    </div>
+
+    <div class="flex flex-col gap-3">
+      @for (d of drafts(); track d._id) {
+      <div (click)="continueDraft(d)"
+           class="bg-white border border-[#E6EEF2] rounded-2xl px-5 py-4
+                  flex items-center gap-4 hover:border-[#00649B]
+                  hover:shadow-sm transition cursor-pointer group">
+
+        <!-- Icono -->
+        <div class="w-10 h-10 rounded-xl bg-[#CCBA86]/15 flex items-center
+                    justify-center text-[#8A6B1F] shrink-0">
+          <i class="pi pi-file-edit text-base"></i>
+        </div>
+
+        <!-- Info -->
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold text-[#002E42] truncate">
+            {{ d.formName }}
+          </p>
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5">
+            <span class="text-[10px] text-[#00649B] font-mono">{{ d.formCode }}</span>
+            <p class="text-xs text-[#7A96A3]">
+              <i class="pi pi-clock text-[10px] mr-1"></i>
+              Guardado el {{ d.updatedAt | date: 'dd/MM/yyyy · HH:mm' }}
+            </p>
+            <p class="text-xs text-[#7A96A3]">
+              <i class="pi pi-list-check text-[10px] mr-1"></i>
+              {{ d.progress.filled }} de {{ d.progress.total }} campos
+            </p>
+          </div>
+
+          <!-- Avance -->
+          <div class="mt-2 h-1.5 w-full max-w-xs rounded-full bg-[#E6EEF2] overflow-hidden">
+            <div class="h-full rounded-full bg-[#32C6C6] transition-all"
+                 [style.width.%]="progressPercent(d)"></div>
+          </div>
+        </div>
+
+        <!-- Badge -->
+        <span class="text-[10px] px-2 py-0.5 rounded-full font-medium
+                     bg-[#CCBA86]/15 text-[#8A6B1F] border border-[#CCBA86]/40 shrink-0">
+          Borrador
+        </span>
+
+        <!-- Continuar -->
+        <button type="button" (click)="continueDraft(d); $event.stopPropagation()"
+                class="hidden sm:inline-flex items-center gap-2 rounded-xl bg-[#00649B]
+                       px-4 py-2 text-xs font-semibold text-white
+                       hover:bg-[#00517D] transition cursor-pointer shrink-0">
+          <i class="pi pi-play text-[10px]"></i>
+          Continuar
+        </button>
+
+        <!-- Descartar -->
+        <button type="button" (click)="discardDraft(d, $event)" [disabled]="deletingId() === d._id"
+                title="Descartar borrador"
+                class="flex items-center justify-center w-9 h-9 rounded-xl border
+                       border-red-200 bg-red-50 text-red-500
+                       hover:bg-red-100 transition cursor-pointer shrink-0
+                       disabled:opacity-60 disabled:cursor-not-allowed">
+          @if (deletingId() === d._id) {
+          <i class="pi pi-spin pi-spinner text-sm"></i>
+          } @else {
+          <i class="pi pi-trash text-sm"></i>
+          }
+        </button>
+
+      </div>
+      }
+    </div>
+
+    }
+  }
+
+</div>

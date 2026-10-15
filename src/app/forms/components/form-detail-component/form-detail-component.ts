@@ -21,6 +21,9 @@ import { PdfService } from '../../../shared/services/pdf.service';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { AuthService } from '../../../auth/services/auth.service';
 import { User } from '../../../auth/interfaces/signIn.response';
+import { DraftService } from '../../../responses/services/draft.service';
+import { DraftInterface } from '../../../responses/interfaces/draft.interface';
+import { catchError, forkJoin, of } from 'rxjs';
 
 export interface SectionWithFields {
   section: FormSection;
@@ -67,6 +70,13 @@ export class FormDetailComponent implements OnInit {
   userList = signal<UserResponse[]>([]);
   currentUser = signal<User | null>(null);
 
+  // Borradores (modo respond)
+  draftId: string | null = null;
+  draftData: Record<string, unknown> | null = null;
+  draftSavedAt: string | null = null;
+  /** Borradores previos del usuario para este formulario (se ofrece continuar el más reciente). */
+  availableDrafts: DraftInterface[] = [];
+
   editJsonInput = '';
   editJsonError = '';
   editParsed: any = null;
@@ -82,11 +92,15 @@ export class FormDetailComponent implements OnInit {
   private responseService = inject(ResponseService);
   private pdfService = inject(PdfService);
   private authService = inject(AuthService);
+  private draftService = inject(DraftService);
 
   ngOnInit(): void {
     const code = this.route.snapshot.paramMap.get('code');
     const mode = this.route.snapshot.queryParamMap.get('mode');
     this.mode = mode === 'respond' ? 'respond' : 'preview';
+    this.draftId = this.mode === 'respond'
+      ? this.route.snapshot.queryParamMap.get('draft')
+      : null;
 
     if (!code) { this.router.navigate(['/formularios']); return; }
     this.loadForm(code.toUpperCase());
@@ -95,20 +109,98 @@ export class FormDetailComponent implements OnInit {
 
   private loadForm(code: string): void {
     this.loading = true;
-    this.formService.getFormByCode(code).subscribe({
-      next: (form) => {
+
+    // En modo respond el borrador (si viene en la URL) se carga junto con el formulario,
+    // para que la vista previa nazca ya con los datos restaurados.
+    // Un 404 significa que ya no existe; cualquier otro error se reporta como fallo de carga.
+    const draft$ = this.draftId
+      ? this.draftService.getDraft(this.draftId).pipe(
+          catchError((err) => of(err?.status === 404 ? null : 'error' as const)),
+        )
+      : of(null);
+
+    forkJoin({ form: this.formService.getFormByCode(code), draft: draft$ }).subscribe({
+      next: ({ form, draft }) => {
         if (!form) { this.router.navigate(['/formularios']); return; }
         this.form = form;
          if (!form.permissions.approvers) {
         form.permissions.approvers = [];
       }
+        this.applyDraft(draft, form);
         this.sectionsWithFields = this.buildSectionsWithFields(form);
         this.loading = false;
         this.loadResponses();
+        if (this.mode === 'respond' && !this.draftId) this.loadAvailableDrafts();
         this.cdr.detectChanges();
       },
       error: () => { this.loading = false; this.cdr.detectChanges(); },
     });
+  }
+
+  private applyDraft(draft: DraftInterface | null | 'error', form: Form): void {
+    // Un borrador solo puede continuarse sobre el formulario al que pertenece.
+    if (draft && draft !== 'error' && draft.formCode === form.code) {
+      this.draftId = draft._id;
+      this.draftData = draft.data;
+      this.draftSavedAt = draft.updatedAt;
+      return;
+    }
+
+    if (this.draftId) {
+      // El borrador de la URL no sirve aquí (se envió, se descartó, es de otro formulario
+      // o no se pudo cargar): se continúa en limpio y se limpia la URL.
+      this.draftId = null;
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { draft: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+      this.message.add({
+        severity: draft === 'error' ? 'warn' : 'info',
+        summary: draft === 'error' ? 'No se pudo cargar el borrador' : 'Borrador no disponible',
+        detail: draft === 'error'
+          ? 'Revisa tu conexión e inténtalo de nuevo desde "Borradores". Puedes diligenciar el formulario desde cero.'
+          : 'Ese borrador ya fue enviado, descartado o pertenece a otro formulario. Puedes diligenciar el formulario desde cero.',
+        life: 5000,
+      });
+    }
+  }
+
+  /** Borradores previos del usuario para este formulario, el más reciente primero. */
+  private loadAvailableDrafts(): void {
+    if (!this.form) return;
+    this.draftService.getMyDrafts(this.form.code).subscribe({
+      next: (drafts) => {
+        this.availableDrafts = drafts;
+        this.cdr.detectChanges();
+      },
+      error: () => { this.availableDrafts = []; },
+    });
+  }
+
+  /** El hijo guardó un borrador: se sincroniza el id y se oculta el aviso de borradores previos. */
+  onDraftSaved(draft: DraftInterface): void {
+    this.draftId = draft._id;
+    this.draftSavedAt = draft.updatedAt;
+    this.availableDrafts = [];
+    this.cdr.detectChanges();
+  }
+
+  /** Continúa un borrador sobre el formulario ya cargado (sin recargar la página). */
+  continueDraft(draft: DraftInterface): void {
+    this.draftId = draft._id;
+    this.draftData = draft.data;
+    this.draftSavedAt = draft.updatedAt;
+    this.availableDrafts = [];
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { draft: draft._id },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+    this.cdr.detectChanges();
   }
 
   private buildSectionsWithFields(form: Form): SectionWithFields[] {
@@ -349,7 +441,9 @@ export class FormDetailComponent implements OnInit {
     if (!this.editParsed || !this.form) return;
     this.editSaving = true;
 
-    const { _id, __v, code, createdAt, updatedAt, createdBy, deleted, ...payload } = this.editParsed;
+    // La versión la asigna el backend (versión actual + 1): no se envía para que el
+    // incremento sea automático aunque el JSON editado conserve la versión anterior (OQ-010).
+    const { _id, __v, code, version, createdAt, updatedAt, createdBy, deleted, ...payload } = this.editParsed;
 
     this.formService.updateForm(this.form.code, payload).subscribe({
       next: (updated) => {

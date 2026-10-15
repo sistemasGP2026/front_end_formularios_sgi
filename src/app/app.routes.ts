@@ -49,6 +49,10 @@ export const routes: Routes = [
         loadComponent: () => import('./historial-component/historial-component').then(m => m.HistorialComponent)
       },
       {
+        path: 'borradores',
+        loadComponent: () => import('./borradores-component/borradores-component').then(m => m.BorradoresComponent)
+      },
+      {
         path: 'aprobaciones',
         canActivate: [isAdminOrApproverGuard],
         loadComponent: () =>

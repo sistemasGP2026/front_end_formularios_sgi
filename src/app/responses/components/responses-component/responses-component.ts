@@ -22,6 +22,7 @@ import { PdfService } from '../../../shared/services/pdf.service';
 import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DatePickerModule } from 'primeng/datepicker';
+import { AuthService } from '../../../auth/services/auth.service';
 
 import { saveAs } from 'file-saver';
 
@@ -62,6 +63,10 @@ export class ResponsesComponent implements OnInit {
   private readonly responseService = inject(ResponseService);
   private readonly pdfService = inject(PdfService);
   private confirmService = inject(ConfirmationService);
+  private readonly authService = inject(AuthService);
+
+  /** Solo el ADMIN puede eliminar respuestas (el API también lo exige). */
+  isAdmin = computed(() => this.authService.isAdmin());
 
   loading = signal(true);
   responses = signal<ResponseInterface[]>([]);

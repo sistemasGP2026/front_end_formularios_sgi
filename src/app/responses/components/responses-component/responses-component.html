@@ -136,10 +136,12 @@
             <span class="text-xs font-medium text-[#00649B]">
               {{ selectedResponses().length }} seleccionada{{ selectedResponses().length !== 1 ? 's' : '' }}
             </span>
+            @if (isAdmin()) {
             <button pButton icon="pi pi-trash" label="Eliminar seleccionadas"
               class="p-button-outlined p-button-sm p-button-danger" [loading]="deletingMany()"
               (click)="deleteManySelected()">
             </button>
+            }
             }
 
             <!-- Filtro de rango de fechas -->
@@ -249,10 +251,12 @@
             pTooltip="Descargar PDF" tooltipPosition="left"
             (click)="downloadResponsePdf(response)">
           </button>
+          @if (isAdmin()) {
           <button pButton icon="pi pi-trash" class="p-button-text p-button-rounded p-button-danger p-button-sm"
             pTooltip="Eliminar respuesta" tooltipPosition="left" [loading]="deletingResponse()"
             (click)="deleteResponse(response._id)">
           </button>
+          }
           <button pButton icon="pi pi-times" class="p-button-text p-button-rounded p-button-plain p-button-sm"
             (click)="selectedResponse.set(null)">
           </button>

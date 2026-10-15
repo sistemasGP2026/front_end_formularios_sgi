@@ -13,6 +13,18 @@
       }
     </span>
   </div>
+  } @else if (draftId) {
+  <div
+    class="flex items-center gap-3 rounded-xl border border-[#CCBA86]/40 bg-[#CCBA86]/10 px-4 py-3 text-sm text-[#8A6B1F]">
+    <i class="pi pi-file-edit"></i>
+    <span>
+      Continúas un borrador
+      @if (draftSavedAt) {
+      guardado el {{ draftSavedAt | date: 'dd/MM/yyyy · HH:mm' }}
+      }
+      — tus avances se conservan hasta que envíes la respuesta
+    </span>
+  </div>
   } @else {
   <div
     class="flex items-center gap-3 rounded-xl border border-[#32C6C6]/30 bg-[#32C6C6]/10 px-4 py-3 text-sm text-[#00649B]">
@@ -108,6 +120,7 @@
             @for (opt of field.options; track opt.value) {
             <label class="flex items-center gap-3 text-sm text-gray-700 cursor-pointer">
               <input type="radio" [name]="field.id" [value]="opt.value" [disabled]="isPreview"
+                [checked]="formGroup.get(field.id)?.value === opt.value"
                 class="h-4 w-4 accent-[#00649B]" (change)="onFieldChange(field.id, opt.value)" />
               <span>{{ opt.label }}</span>
             </label>
@@ -186,13 +199,17 @@
                   <td class="px-4 py-3 min-w-[140px]">
 
                     @if (col.inputType === 'select') {
+                    <!-- La opción elegida se marca en el <option> (no en el <select>) para que
+                         se conserve al restaurar una respuesta o un borrador. -->
                     <select
                       class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-[#32C6C6] focus:bg-white"
-                      [disabled]="isPreview" [value]="getTableCellValue(field.id, row.id, col.key)"
+                      [disabled]="isPreview"
                       (change)="onTableCellChange(field.id, row.id, col.key, $any($event.target).value)">
-                      <option value="" disabled selected>—</option>
+                      <option value="" disabled [selected]="!getTableCellValue(field.id, row.id, col.key)">—</option>
                       @for (opt of col.options ?? []; track opt.value) {
-                      <option [value]="opt.value">{{ opt.label }}</option>
+                      <option [value]="opt.value" [selected]="getTableCellValue(field.id, row.id, col.key) === opt.value">
+                        {{ opt.label }}
+                      </option>
                       }
                     </select>
                     }
@@ -239,7 +256,20 @@
 
     <!-- SUBMIT -->
     @if (!isPreview && !submitSuccess) {
-    <div class="flex justify-end pt-2">
+    <div class="flex flex-wrap justify-end gap-3 pt-2">
+
+      <!-- GUARDAR BORRADOR: guarda lo diligenciado sin validar, para continuar después -->
+      <button type="button" (click)="onSaveDraft()" [disabled]="savingDraft || submitting"
+        class="inline-flex items-center gap-2 rounded-xl border border-[#00649B]/20 bg-[#00649B]/5 px-6 py-3 text-sm font-semibold text-[#00649B] transition hover:bg-[#00649B]/10 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
+        @if (savingDraft) {
+        <i class="pi pi-spin pi-spinner"></i>
+        Guardando...
+        } @else {
+        <i class="pi pi-save"></i>
+        Guardar borrador
+        }
+      </button>
+
       <button type="submit" [disabled]="submitting"
         class="inline-flex items-center gap-2 rounded-xl bg-[#00649B] px-6 py-3 text-sm font-semibold text-white shadow transition hover:bg-[#00517D] disabled:opacity-60 disabled:cursor-not-allowed">
         @if (submitting) {

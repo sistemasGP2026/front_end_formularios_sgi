@@ -1,0 +1,427 @@
+<div class="flex flex-col gap-4">
+
+  <!-- ═══════════════════ DATOS DEL FORMULARIO ═══════════════════ -->
+  <div class="bg-white rounded-2xl border border-[#E6EEF2] p-5 flex flex-col gap-4">
+    <div class="flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-xl bg-[#00649B]/10 flex items-center justify-center">
+          <i class="pi pi-file-edit text-[#00649B]"></i>
+        </div>
+        <div>
+          <h2 class="font-bold text-[#002E42]">Datos del formulario</h2>
+          <p class="text-xs text-[#7A96A3]">Código, nombre, categoría y configuración</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-1">
+        <button pButton type="button" size="small" text icon="pi pi-code" label="JSON" class="whitespace-nowrap"
+                pTooltip="Ver el JSON generado" tooltipPosition="bottom" (click)="openJson()"></button>
+        <button pButton type="button" size="small" text icon="pi pi-upload" label="Importar" class="whitespace-nowrap"
+                pTooltip="Cargar un formulario desde su JSON" tooltipPosition="bottom" (click)="openImport()"></button>
+        <button pButton type="button" size="small" text severity="secondary" icon="pi pi-eraser" label="Limpiar" class="whitespace-nowrap"
+                pTooltip="Vacía el constructor" tooltipPosition="bottom" (click)="reset()"></button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-12 gap-3">
+      <label class="col-span-3 fb-label">Código *
+        <input type="text" class="fb-input font-mono uppercase" placeholder="GI-FR-001" maxlength="20"
+               [disabled]="lockCode()" [ngModel]="meta().code" (ngModelChange)="onCodeInput($event)">
+      </label>
+      <label class="col-span-9 fb-label">Nombre *
+        <input type="text" class="fb-input" placeholder="Nombre del formulario" maxlength="200"
+               [ngModel]="meta().name" (ngModelChange)="updateMeta('name', $event)">
+      </label>
+      <label class="col-span-12 fb-label">Descripción
+        <textarea rows="2" class="fb-input resize-none" placeholder="Para qué se usa este formulario"
+                  [ngModel]="meta().description" (ngModelChange)="updateMeta('description', $event)"></textarea>
+      </label>
+      <label class="col-span-6 fb-label">Categoría *
+        <select class="fb-input" [ngModel]="meta().category" (ngModelChange)="updateMeta('category', $event)">
+          <option value="">Seleccione...</option>
+          @for (c of categories; track c.value) {
+          <option [value]="c.value">{{ c.label }}</option>
+          }
+        </select>
+      </label>
+      <label class="col-span-2 fb-label">Versión
+        <input type="number" min="1" step="1" class="fb-input" [ngModel]="meta().version" (ngModelChange)="updateMeta('version', $event)">
+      </label>
+      <label class="col-span-4 fb-label">Fecha del documento
+        <input type="date" class="fb-input" [ngModel]="meta().documentDate" (ngModelChange)="updateMeta('documentDate', $event)">
+      </label>
+    </div>
+
+    <!-- acceso -->
+    <div class="grid grid-cols-12 gap-3 items-start">
+      <div class="col-span-5">
+        <p class="fb-label mb-1">Acceso</p>
+        <div class="inline-flex rounded-xl border border-[#E6EEF2] overflow-hidden text-sm">
+          <button type="button" class="px-3 py-1.5 flex items-center gap-1.5"
+                  [class.bg-[#00649B]]="meta().accessType === 'PUBLIC'" [class.text-white]="meta().accessType === 'PUBLIC'"
+                  [class.text-[#002E42]]="meta().accessType !== 'PUBLIC'"
+                  (click)="updateMeta('accessType', 'PUBLIC')">
+            <i class="pi pi-globe text-xs"></i> Público
+          </button>
+          <button type="button" class="px-3 py-1.5 flex items-center gap-1.5 border-l border-[#E6EEF2]"
+                  [class.bg-[#00649B]]="meta().accessType === 'RESTRICTED'" [class.text-white]="meta().accessType === 'RESTRICTED'"
+                  [class.text-[#002E42]]="meta().accessType !== 'RESTRICTED'"
+                  (click)="updateMeta('accessType', 'RESTRICTED')">
+            <i class="pi pi-lock text-xs"></i> Restringido
+          </button>
+        </div>
+        <p class="text-[11px] text-[#7A96A3] mt-1">
+          @if (meta().accessType === 'RESTRICTED') { Solo los usuarios autorizados (panel derecho) podrán verlo y responderlo. }
+          @else { Todos los usuarios activos pueden responderlo. }
+        </p>
+      </div>
+      <div class="col-span-7 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm text-[#002E42]">
+        <label class="fb-check"><input type="checkbox" [ngModel]="meta().requiresApproval" (ngModelChange)="updateMeta('requiresApproval', $event)"> Requiere aprobación</label>
+        <label class="fb-check"><input type="checkbox" [ngModel]="meta().allowDraft" (ngModelChange)="updateMeta('allowDraft', $event)"> Permite borradores</label>
+        <label class="fb-check"><input type="checkbox" [ngModel]="meta().requiresSede" (ngModelChange)="updateMeta('requiresSede', $event)"> Requiere sede</label>
+        <label class="fb-check"><input type="checkbox" [ngModel]="meta().showCompliance" (ngModelChange)="updateMeta('showCompliance', $event)"> Mostrar cumplimiento</label>
+        <label class="fb-check"><input type="checkbox" [ngModel]="meta().requiresReviewSignature" (ngModelChange)="updateMeta('requiresReviewSignature', $event)"> Requiere firma de revisión</label>
+        <label class="fb-check"><input type="checkbox" [ngModel]="meta().preventDuplicates" (ngModelChange)="updateMeta('preventDuplicates', $event)"> Evitar duplicados
+          @if (meta().preventDuplicates) {
+          <select class="fb-input !py-0.5 !w-auto ml-1" [ngModel]="meta().duplicateBy" (ngModelChange)="updateMeta('duplicateBy', $event)">
+            <option value="userId">por usuario</option>
+            <option value="email">por correo</option>
+            <option value="document">por documento</option>
+          </select>
+          }
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ SECCIONES ═══════════════════ -->
+  @for (section of sections(); track section.id; let si = $index) {
+  <div class="bg-white rounded-2xl border border-[#E6EEF2] overflow-hidden">
+
+    <!-- cabecera de sección -->
+    <div class="flex items-center gap-2 px-4 py-3 bg-[#F8FAFB] border-b border-[#E6EEF2]">
+      <button type="button" class="fb-icon" (click)="toggleSection(section.id)" [pTooltip]="section.collapsed ? 'Expandir' : 'Contraer'" tooltipPosition="top">
+        <i class="pi" [class.pi-chevron-down]="!section.collapsed" [class.pi-chevron-right]="section.collapsed"></i>
+      </button>
+      <span class="text-[11px] font-bold font-mono bg-[#CCBA86]/25 text-[#002E42] px-2 py-0.5 rounded">{{ section.code }}</span>
+      <input type="text" class="fb-input flex-1 !bg-white" placeholder="Título de la sección *" maxlength="200"
+             [(ngModel)]="section.title" (ngModelChange)="touchSections()">
+      <span class="text-xs text-[#7A96A3] whitespace-nowrap">{{ fieldsOf(section.id).length }} campo(s)</span>
+      <button type="button" class="fb-icon" [disabled]="si === 0" (click)="moveSection(section.id, -1)" pTooltip="Subir" tooltipPosition="top"><i class="pi pi-arrow-up"></i></button>
+      <button type="button" class="fb-icon" [disabled]="si === sections().length - 1" (click)="moveSection(section.id, 1)" pTooltip="Bajar" tooltipPosition="top"><i class="pi pi-arrow-down"></i></button>
+      <button type="button" class="fb-icon text-red-500" [disabled]="sections().length <= 1" (click)="removeSection(section.id)" pTooltip="Eliminar sección" tooltipPosition="top"><i class="pi pi-trash"></i></button>
+    </div>
+
+    @if (!section.collapsed) {
+    <div class="p-4 flex flex-col gap-3">
+
+      @if (fieldsOf(section.id).length === 0) {
+      <div class="rounded-xl border border-dashed border-[#E6EEF2] bg-[#F8FAFB] p-5 text-center">
+        <p class="text-xs text-[#7A96A3]">Esta sección no tiene campos. Agrega el primero con el botón de abajo.</p>
+      </div>
+      }
+
+      <!-- ─────────── campos ─────────── -->
+      @for (field of fieldsOf(section.id); track field.id; let fi = $index) {
+      <div class="rounded-xl border transition-colors" [class.border-[#00649B]]="field.open" [class.border-[#E6EEF2]]="!field.open">
+
+        <!-- cabecera del campo -->
+        <div class="flex items-center gap-2 px-3 py-2 cursor-pointer select-none" (click)="toggleField(field.id)">
+          <span class="w-7 h-7 rounded-lg bg-[#00649B]/10 text-[#00649B] flex items-center justify-center shrink-0">
+            <i [class]="typeInfo(field.type).icon + ' text-xs'"></i>
+          </span>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-[#002E42] truncate">
+              {{ field.label || 'Campo sin etiqueta' }}
+              @if (field.required) { <span class="text-red-500">*</span> }
+            </p>
+            <p class="text-[11px] text-[#7A96A3] truncate">
+              {{ typeInfo(field.type).label }} · <span class="font-mono">{{ field.name || '—' }}</span>
+              @if (field.hidden) { · oculto }
+              @if (field.readOnly && field.type !== 'calculated') { · solo lectura }
+            </p>
+          </div>
+          <button type="button" class="fb-icon" [disabled]="fi === 0" (click)="moveField(field.id, -1); $event.stopPropagation()" pTooltip="Subir" tooltipPosition="top"><i class="pi pi-arrow-up"></i></button>
+          <button type="button" class="fb-icon" [disabled]="fi === fieldsOf(section.id).length - 1" (click)="moveField(field.id, 1); $event.stopPropagation()" pTooltip="Bajar" tooltipPosition="top"><i class="pi pi-arrow-down"></i></button>
+          <button type="button" class="fb-icon" (click)="duplicateField(field.id); $event.stopPropagation()" pTooltip="Duplicar" tooltipPosition="top"><i class="pi pi-copy"></i></button>
+          <button type="button" class="fb-icon text-red-500" (click)="removeField(field.id); $event.stopPropagation()" pTooltip="Eliminar campo" tooltipPosition="top"><i class="pi pi-trash"></i></button>
+          <i class="pi text-xs text-[#7A96A3] ml-1" [class.pi-chevron-up]="field.open" [class.pi-chevron-down]="!field.open"></i>
+        </div>
+
+        <!-- detalle del campo -->
+        @if (field.open) {
+        <div class="border-t border-[#E6EEF2] px-4 py-3 flex flex-col gap-3 bg-[#FCFDFE]">
+
+          <div class="grid grid-cols-12 gap-3">
+            <label class="col-span-6 fb-label">Etiqueta (lo que ve el usuario) *
+              <input type="text" class="fb-input" maxlength="300" [ngModel]="field.label" (ngModelChange)="onLabelInput(field, $event)">
+            </label>
+            <label class="col-span-3 fb-label">Nombre interno *
+              <input type="text" class="fb-input font-mono" maxlength="100" [ngModel]="field.name" (ngModelChange)="onNameInput(field, $event)"
+                     pTooltip="Clave con la que se guarda el dato. Se genera sola desde la etiqueta." tooltipPosition="top">
+            </label>
+            <label class="col-span-3 fb-label">Tipo
+              <select class="fb-input" [ngModel]="field.type" (ngModelChange)="changeType(field, $event)">
+                @for (t of fieldTypes; track t.type) { <option [value]="t.type">{{ t.label }}</option> }
+              </select>
+            </label>
+          </div>
+
+          <div class="flex flex-wrap gap-x-5 gap-y-1 text-sm text-[#002E42]">
+            @if (field.type !== 'calculated') {
+            <label class="fb-check"><input type="checkbox" [(ngModel)]="field.required" (ngModelChange)="touch()"> Obligatorio</label>
+            <label class="fb-check"><input type="checkbox" [(ngModel)]="field.readOnly" (ngModelChange)="touch()"> Solo lectura</label>
+            }
+            <label class="fb-check"><input type="checkbox" [(ngModel)]="field.hidden" (ngModelChange)="touch()"> Oculto</label>
+          </div>
+
+          @if (field.type === 'text' || field.type === 'textarea' || field.type === 'number' || field.type === 'date' || field.type === 'select') {
+          <div class="grid grid-cols-12 gap-3">
+            <label class="col-span-6 fb-label">Texto de ayuda dentro del campo
+              <input type="text" class="fb-input" [(ngModel)]="field.placeholder" (ngModelChange)="touch()">
+            </label>
+            <label class="col-span-6 fb-label">Nota bajo el campo
+              <input type="text" class="fb-input" [(ngModel)]="field.helpText" (ngModelChange)="touch()">
+            </label>
+          </div>
+          }
+
+          <!-- texto -->
+          @if (field.type === 'text' || field.type === 'textarea') {
+          <div class="grid grid-cols-12 gap-3">
+            <label class="col-span-3 fb-label">Mín. caracteres <input type="number" min="0" class="fb-input" [(ngModel)]="field.minLength" (ngModelChange)="touch()"></label>
+            <label class="col-span-3 fb-label">Máx. caracteres <input type="number" min="0" class="fb-input" [(ngModel)]="field.maxLength" (ngModelChange)="touch()"></label>
+            <label class="col-span-6 fb-label">Patrón (expresión regular, opcional)
+              <input type="text" class="fb-input font-mono" placeholder="^[0-9]{6,10}$" [(ngModel)]="field.pattern" (ngModelChange)="touch()">
+            </label>
+          </div>
+          }
+
+          <!-- número -->
+          @if (field.type === 'number') {
+          <div class="grid grid-cols-12 gap-3">
+            <label class="col-span-3 fb-label">Valor mínimo <input type="number" class="fb-input" [(ngModel)]="field.min" (ngModelChange)="touch()"></label>
+            <label class="col-span-3 fb-label">Valor máximo <input type="number" class="fb-input" [(ngModel)]="field.max" (ngModelChange)="touch()"></label>
+            <label class="col-span-3 fb-label">Peso (%) <input type="number" min="0" class="fb-input" [(ngModel)]="field.weight" (ngModelChange)="touch()"
+                   pTooltip="Solo para puntaje ponderado: cuánto aporta este campo al total" tooltipPosition="top"></label>
+            <label class="col-span-3 fb-label">Puntaje máximo <input type="number" min="0" class="fb-input" [(ngModel)]="field.maxScore" (ngModelChange)="touch()"
+                   pTooltip="Valor que equivale al 100 % de este campo" tooltipPosition="top"></label>
+          </div>
+          }
+
+          <!-- lista / casillas -->
+          @if (field.type === 'select' || field.type === 'checkbox') {
+          <div class="flex flex-col gap-2">
+            @if (field.type === 'select') {
+            <label class="fb-check text-sm text-[#002E42]"><input type="checkbox" [(ngModel)]="field.useSedes" (ngModelChange)="touch()"> Usar las sedes registradas como opciones</label>
+            }
+            @if (!(field.type === 'select' && field.useSedes)) {
+            <p class="fb-label">Opciones</p>
+            @for (opt of field.options; track $index; let oi = $index) {
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-[#7A96A3] w-5 text-right">{{ oi + 1 }}.</span>
+              <input type="text" class="fb-input flex-1" placeholder="Etiqueta" [ngModel]="opt.label" (ngModelChange)="onOptionLabel(opt, $event)">
+              <input type="text" class="fb-input w-40 font-mono" placeholder="VALOR" [(ngModel)]="opt.value" (ngModelChange)="touch()">
+              <button type="button" class="fb-icon text-red-500" [disabled]="field.options.length <= 1" (click)="removeOption(field.options, oi)"><i class="pi pi-times"></i></button>
+            </div>
+            }
+            <button pButton type="button" size="small" text icon="pi pi-plus" label="Agregar opción" class="self-start" (click)="addOption(field.options)"></button>
+            }
+          </div>
+          }
+
+          <!-- tablas -->
+          @if (field.type === 'checklist-table' || field.type === 'inventory-table') {
+          <div class="grid grid-cols-12 gap-4">
+            <div class="col-span-7 flex flex-col gap-2">
+              <p class="fb-label">Ítems (filas)</p>
+              @for (row of field.rows; track $index; let ri = $index) {
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-[#7A96A3] w-5 text-right">{{ ri + 1 }}.</span>
+                <input type="text" class="fb-input flex-1" placeholder="Descripción del ítem" [(ngModel)]="row.label" (ngModelChange)="touch()">
+                @if (field.type === 'inventory-table') {
+                <input type="text" class="fb-input w-20" placeholder="unidad" [(ngModel)]="row.unitLabel" (ngModelChange)="touch()" pTooltip="Unidad (und, kg, caja…)" tooltipPosition="top">
+                <input type="number" min="0" class="fb-input w-20" placeholder="mín." [(ngModel)]="row.minQuantity" (ngModelChange)="touch()" pTooltip="Cantidad mínima" tooltipPosition="top">
+                }
+                <button type="button" class="fb-icon text-red-500" [disabled]="field.rows.length <= 1" (click)="removeRow(field, ri)"><i class="pi pi-times"></i></button>
+              </div>
+              }
+              <button pButton type="button" size="small" text icon="pi pi-plus" label="Agregar ítem" class="self-start" (click)="addRow(field)"></button>
+            </div>
+            <div class="col-span-5 flex flex-col gap-2">
+              <p class="fb-label">Columnas</p>
+              @for (col of field.columns; track $index; let ci = $index) {
+              <div class="rounded-lg border border-[#E6EEF2] p-2 flex flex-col gap-1.5">
+                <div class="flex items-center gap-1.5">
+                  <input type="text" class="fb-input flex-1" placeholder="Título" [ngModel]="col.label" (ngModelChange)="onColumnLabel(col, $event)">
+                  <select class="fb-input w-24" [ngModel]="col.inputType" (ngModelChange)="onColumnType(col, $event)">
+                    @for (t of columnTypes; track t.value) { <option [value]="t.value">{{ t.label }}</option> }
+                  </select>
+                  <button type="button" class="fb-icon text-red-500" [disabled]="field.columns.length <= 1" (click)="removeColumn(field, ci)"><i class="pi pi-times"></i></button>
+                </div>
+                <div class="flex items-center gap-2 text-[11px] text-[#7A96A3]">
+                  <span class="font-mono">clave: {{ col.key || '—' }}</span>
+                  <label class="fb-check ml-auto"><input type="checkbox" [(ngModel)]="col.required" (ngModelChange)="touch()"> obligatoria</label>
+                </div>
+                @if (col.inputType === 'select') {
+                <div class="flex flex-col gap-1">
+                  @for (opt of col.options; track $index; let oi = $index) {
+                  <div class="flex items-center gap-1">
+                    <input type="text" class="fb-input flex-1 !py-1" placeholder="Etiqueta" [ngModel]="opt.label" (ngModelChange)="onOptionLabel(opt, $event)">
+                    <input type="text" class="fb-input w-20 !py-1 font-mono" placeholder="VALOR" [(ngModel)]="opt.value" (ngModelChange)="touch()">
+                    <button type="button" class="fb-icon text-red-500" (click)="removeOption(col.options, oi)"><i class="pi pi-times"></i></button>
+                  </div>
+                  }
+                  <button pButton type="button" size="small" text icon="pi pi-plus" label="Opción" class="self-start" (click)="addOption(col.options)"></button>
+                </div>
+                }
+              </div>
+              }
+              <button pButton type="button" size="small" text icon="pi pi-plus" label="Agregar columna" class="self-start" (click)="addColumn(field)"></button>
+            </div>
+          </div>
+          }
+
+          <!-- calculado -->
+          @if (field.type === 'calculated') {
+          <div class="flex flex-col gap-3">
+            <label class="fb-label w-72">Fórmula
+              <select class="fb-input" [(ngModel)]="field.formula" (ngModelChange)="touch()">
+                @for (f of formulas; track f.value) { <option [value]="f.value">{{ f.label }}</option> }
+              </select>
+            </label>
+            @for (f of formulas; track f.value) {
+              @if (f.value === field.formula) { <p class="text-[11px] text-[#7A96A3] -mt-2">{{ f.hint }}</p> }
+            }
+
+            @if (field.formula === 'SUM') {
+            <div>
+              <p class="fb-label mb-1">Campos numéricos a sumar</p>
+              @if (numericFields(field.id).length === 0) {
+              <p class="text-xs text-[#7A96A3]">Agrega primero campos de tipo Número.</p>
+              }
+              <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[#002E42]">
+                @for (n of numericFields(field.id); track n.id) {
+                <label class="fb-check">
+                  <input type="checkbox" [checked]="field.sumSources.includes(n.name)" (change)="toggleSumSource(field, n.name, $any($event.target).checked)">
+                  {{ n.label || n.name }}
+                </label>
+                }
+              </div>
+            </div>
+            }
+
+            @if (field.formula === 'WEIGHTED_SCORE') {
+            <p class="text-xs text-[#7A96A3]">
+              Resultado = Σ (valor ÷ puntaje máximo × peso) sobre los campos numéricos que tengan peso y puntaje máximo.
+              Campos configurados: <strong>{{ numericFields(field.id).length }}</strong>.
+            </p>
+            }
+
+            @if (field.formula === 'THRESHOLD') {
+            <div class="flex flex-col gap-2">
+              <label class="fb-label w-72">Campo de referencia
+                <select class="fb-input" [(ngModel)]="field.sourceField" (ngModelChange)="touch()">
+                  <option value="">Seleccione...</option>
+                  @for (n of fields(); track n.id) {
+                    @if (n.id !== field.id && (n.type === 'number' || n.type === 'calculated')) {
+                    <option [value]="n.name">{{ n.label || n.name }}</option>
+                    }
+                  }
+                </select>
+              </label>
+              <p class="fb-label">Rangos</p>
+              @for (t of field.thresholds; track $index; let ti = $index) {
+              <div class="flex items-center gap-2">
+                <input type="number" class="fb-input w-24" placeholder="desde" [(ngModel)]="t.min" (ngModelChange)="touch()">
+                <input type="number" class="fb-input w-24" placeholder="hasta" [(ngModel)]="t.max" (ngModelChange)="touch()">
+                <input type="text" class="fb-input flex-1" placeholder="Etiqueta (p. ej. CONDICIONAL)" [(ngModel)]="t.label" (ngModelChange)="touch()">
+                <input type="color" class="w-9 h-9 rounded-lg border border-[#E6EEF2] bg-white cursor-pointer" [ngModel]="t.color || '#16a34a'" (ngModelChange)="t.color = $event; touch()" pTooltip="Color" tooltipPosition="top">
+                <button type="button" class="fb-icon text-red-500" (click)="removeThreshold(field, ti)"><i class="pi pi-times"></i></button>
+              </div>
+              }
+              <button pButton type="button" size="small" text icon="pi pi-plus" label="Agregar rango" class="self-start" (click)="addThreshold(field)"></button>
+            </div>
+            }
+
+            @if (field.formula === 'EXPRESSION') {
+            <label class="fb-label">Expresión (usa los nombres internos de los campos)
+              <input type="text" class="fb-input font-mono" placeholder="(peso / (altura * altura))" [(ngModel)]="field.expression" (ngModelChange)="touch()">
+            </label>
+            <p class="text-[11px] text-[#7A96A3] -mt-2">Disponibles:
+              @for (n of numericFields(field.id); track n.id) { <span class="font-mono">{{ n.name }}</span>@if (!$last) {, } }
+            </p>
+            }
+          </div>
+          }
+
+        </div>
+        }
+      </div>
+      }
+
+      <!-- agregar campo -->
+      @if (pickingTypeFor() === section.id) {
+      <div class="rounded-xl border border-[#00649B]/40 bg-[#00649B]/5 p-3">
+        <p class="text-xs font-semibold text-[#002E42] mb-2">¿Qué tipo de campo quieres agregar?</p>
+        <div class="grid grid-cols-3 gap-2">
+          @for (t of fieldTypes; track t.type) {
+          <button type="button" class="flex items-center gap-2 rounded-lg border border-[#E6EEF2] bg-white px-3 py-2 text-left hover:border-[#00649B] transition-colors"
+                  (click)="addField(section.id, t.type)">
+            <i [class]="t.icon + ' text-[#00649B]'"></i>
+            <span>
+              <span class="block text-sm font-semibold text-[#002E42]">{{ t.label }}</span>
+              <span class="block text-[11px] text-[#7A96A3]">{{ t.hint }}</span>
+            </span>
+          </button>
+          }
+        </div>
+        <button pButton type="button" size="small" text label="Cancelar" class="mt-2" (click)="pickingTypeFor.set(null)"></button>
+      </div>
+      } @else {
+      <button pButton type="button" size="small" outlined icon="pi pi-plus" label="Agregar campo" class="self-start" (click)="startAddField(section.id)"></button>
+      }
+    </div>
+    }
+  </div>
+  }
+
+  <button pButton type="button" outlined icon="pi pi-plus" label="Agregar sección" class="self-start" (click)="addSection()"></button>
+
+  <!-- ═══════════════════ ESTADO ═══════════════════ -->
+  @if (result().errors.length > 0) {
+  <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+    <p class="text-sm font-semibold text-amber-800 mb-1">Falta completar:</p>
+    <ul class="list-disc pl-5 text-sm text-amber-800">
+      @for (e of result().errors; track $index) { <li>{{ e }}</li> }
+    </ul>
+  </div>
+  } @else {
+  <div class="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3">
+    <i class="pi pi-check-circle text-green-500 text-sm"></i>
+    <p class="text-sm text-green-700">
+      Formulario válido — <strong>{{ meta().name }}</strong>
+      ({{ sections().length }} secciones, {{ fieldCount() }} campos)
+    </p>
+  </div>
+  }
+</div>
+
+<!-- ═══════════════════ DIÁLOGOS ═══════════════════ -->
+<p-dialog header="JSON generado" [(visible)]="jsonVisible" [modal]="true" [style]="{ width: '720px' }" [dismissableMask]="true">
+  <p class="text-xs text-[#7A96A3] mb-2">Es el mismo JSON que acepta la creación por JSON; puedes copiarlo para guardarlo o reutilizarlo.</p>
+  <textarea readonly rows="22" class="fb-input font-mono text-xs w-full resize-none">{{ jsonText() }}</textarea>
+  <ng-template #footer>
+    <button pButton type="button" [icon]="copied ? 'pi pi-check' : 'pi pi-copy'" [label]="copied ? 'Copiado' : 'Copiar'" (click)="copyJson()"></button>
+    <button pButton type="button" text label="Cerrar" (click)="jsonVisible = false"></button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog header="Importar desde JSON" [(visible)]="importVisible" [modal]="true" [style]="{ width: '720px' }" [dismissableMask]="true">
+  <p class="text-xs text-[#7A96A3] mb-2">Pega el JSON de un formulario para cargarlo en el constructor y seguir editándolo cuadro por cuadro. Reemplaza lo que haya en pantalla.</p>
+  <textarea rows="18" class="fb-input font-mono text-xs w-full resize-none" [(ngModel)]="importText" placeholder='{ "code": "...", "name": "...", "sections": [...], "fields": [...] }'></textarea>
+  @if (importError) { <p class="text-sm text-red-600 mt-2">{{ importError }}</p> }
+  <ng-template #footer>
+    <button pButton type="button" icon="pi pi-upload" label="Cargar" [disabled]="!importText.trim()" (click)="importJson()"></button>
+    <button pButton type="button" text label="Cancelar" (click)="importVisible = false"></button>
+  </ng-template>
+</p-dialog>

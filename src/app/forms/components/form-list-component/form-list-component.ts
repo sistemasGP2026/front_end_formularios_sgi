@@ -81,7 +81,8 @@ export class FormListComponent implements OnInit {
     this.loading = true;
     this.formService.getFormByCategory(category).subscribe({
       next: (data) => {
-        this.formList.set(data);
+        // Los formularios desactivados solo los ve el ADMIN (para reactivarlos).
+        this.formList.set(this.isAdmin ? data : data.filter(f => !f.deleted));
         this.loading = false;
         this.cdr.detectChanges();
       },

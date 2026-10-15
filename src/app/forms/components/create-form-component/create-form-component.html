@@ -5,26 +5,62 @@
   <!-- TOPBAR -->
   <div class="h-[72px] bg-white border-b border-[#E6EEF2]
               flex items-center justify-between px-6 shrink-0">
-    <div>
-      <h1 class="text-[22px] font-bold text-[#002E42] leading-none">
-        Crear Formulario
-      </h1>
-      <p class="text-sm text-[#7A96A3] mt-1">
-        Pega el JSON del formulario para crearlo
-      </p>
+    <div class="flex items-center gap-6">
+      <div>
+        <h1 class="text-[22px] font-bold text-[#002E42] leading-none">
+          Crear Formulario
+        </h1>
+        <p class="text-sm text-[#7A96A3] mt-1">
+          @if (mode() === 'builder') { Arma el formulario cuadro por cuadro }
+          @else { Pega el JSON del formulario para crearlo }
+        </p>
+      </div>
+
+      <!-- MODO -->
+      <div class="inline-flex rounded-xl border border-[#E6EEF2] bg-[#F8FAFB] p-1 text-sm">
+        <button type="button" class="px-3 py-1.5 rounded-lg flex items-center gap-2 transition-colors"
+                [class.bg-white]="mode() === 'builder'" [class.shadow-sm]="mode() === 'builder'"
+                [class.font-semibold]="mode() === 'builder'" [class.text-[#002E42]]="mode() === 'builder'"
+                [class.text-[#7A96A3]]="mode() !== 'builder'"
+                (click)="setMode('builder')">
+          <i class="pi pi-th-large text-xs"></i> Cuadro por cuadro
+        </button>
+        <button type="button" class="px-3 py-1.5 rounded-lg flex items-center gap-2 transition-colors"
+                [class.bg-white]="mode() === 'json'" [class.shadow-sm]="mode() === 'json'"
+                [class.font-semibold]="mode() === 'json'" [class.text-[#002E42]]="mode() === 'json'"
+                [class.text-[#7A96A3]]="mode() !== 'json'"
+                (click)="setMode('json')">
+          <i class="pi pi-code text-xs"></i> Por JSON
+        </button>
+      </div>
     </div>
-    <button pButton icon="pi pi-save" label="Guardar formulario"
-            [disabled]="!parsedForm() || loading()"
-            [loading]="loading()"
-            (click)="createForm()">
-    </button>
+
+    <div class="flex items-center gap-2">
+      <button pButton outlined icon="pi pi-eye" label="Vista previa"
+              [disabled]="!parsedForm()"
+              (click)="openPreview()">
+      </button>
+      <button pButton icon="pi pi-save" label="Guardar formulario"
+              [disabled]="!parsedForm() || loading()"
+              [loading]="loading()"
+              (click)="createForm()">
+      </button>
+    </div>
   </div>
 
   <!-- CONTENT -->
   <div class="flex-1 overflow-hidden grid grid-cols-[1fr_400px]">
 
-    <!-- LEFT — JSON EDITOR -->
+    <!-- LEFT — CONSTRUCTOR O JSON -->
     <div class="overflow-y-auto p-6 flex flex-col gap-4">
+
+      @if (mode() === 'builder') {
+      @for (k of [builderKey()]; track k) {
+      <form-builder-component (formChange)="onBuilderChange($event)" />
+      }
+      }
+
+      @if (mode() === 'json') {
       <div class="bg-white rounded-2xl border border-[#E6EEF2] p-5 flex flex-col gap-3">
 
         <div class="flex items-center gap-2">
@@ -69,6 +105,7 @@
         }
 
       </div>
+      }
     </div>
 
     <!-- RIGHT — USUARIOS + PREVIEW -->
@@ -79,10 +116,12 @@
         <div class="flex items-center justify-between mb-4">
           <div>
             <h2 class="font-bold text-[#002E42]">Usuarios autorizados</h2>
-            <p class="text-xs text-[#7A96A3]">Acceso restringido al formulario</p>
+            <p class="text-xs text-[#7A96A3]">
+              @if (parsedForm() && !isRestricted()) { El formulario es público: no requiere usuarios }
+              @else { Acceso restringido al formulario }
+            </p>
           </div>
           <button pButton size="small" icon="pi pi-plus" label="Agregar"
-                  [disabled]="!parsedForm()"
                   (click)="openModal()">
           </button>
           <assign-user-permission-page
@@ -92,22 +131,14 @@
           </assign-user-permission-page>
         </div>
 
-        @if (!parsedForm()) {
-        <div class="rounded-xl border border-dashed border-[#E6EEF2]
-                    bg-[#F8FAFB] p-6 text-center">
-          <p class="text-xs text-[#7A96A3]">Pega un JSON válido para agregar usuarios</p>
-        </div>
-        }
-
-        @if (parsedForm()) {
         <div class="flex flex-col gap-2">
-          @if ((parsedForm()?.permissions?.users ?? []).length === 0) {
+          @if (selectedUsers().length === 0) {
           <div class="rounded-xl border border-dashed border-[#E6EEF2]
                       bg-[#F8FAFB] p-6 text-center">
             <p class="text-xs text-[#7A96A3]">Sin usuarios asignados aún</p>
           </div>
           }
-          @for (user of parsedForm()?.permissions?.users ?? []; track user.username) {
+          @for (user of selectedUsers(); track user.username) {
           <div class="border border-[#E6EEF2] rounded-xl px-3 py-2
                       flex items-center justify-between">
             <div>
@@ -120,13 +151,15 @@
           </div>
           }
         </div>
-        }
       </div>
 
       <!-- PREVIEW -->
       @if (parsedForm()) {
       <div>
-        <h2 class="font-bold text-[#002E42] mb-3">Preview</h2>
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-bold text-[#002E42]">Resumen</h2>
+          <button pButton size="small" text icon="pi pi-eye" label="Vista previa completa" (click)="openPreview()"></button>
+        </div>
         <div class="bg-[#F7FAFC] border border-[#E6EEF2] rounded-2xl p-4">
 
           <!-- CÓDIGO + CATEGORÍA + VERSIÓN -->
@@ -141,6 +174,9 @@
             <span class="text-xs bg-[#E6EEF2] text-[#002E42] font-semibold px-2 py-0.5 rounded">
               v{{ parsedForm()?.version ?? 1 }}
             </span>
+            @if (parsedForm()?.settings?.requiresApproval) {
+            <span class="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded">Requiere aprobación</span>
+            }
           </div>
 
           <!-- NOMBRE -->
@@ -170,7 +206,7 @@
                 @for (field of getFieldsBySection(section.id); track field.id) {
                 <div class="bg-white border border-[#E6EEF2] rounded-lg px-3 py-2
                             flex items-center justify-between">
-                  <span class="text-xs text-[#002E42]">{{ field.label }}</span>
+                  <span class="text-xs text-[#002E42]">{{ field.label }}@if (field.required) {<span class="text-red-500"> *</span>}</span>
                   <span class="text-[10px] text-[#7A96A3] font-mono">{{ field.type }}</span>
                 </div>
                 }
@@ -188,3 +224,11 @@
   </div>
 
 </div>
+
+<!-- VISTA PREVIA COMPLETA -->
+<p-dialog [header]="'Vista previa — ' + formName()" [(visible)]="previewVisible" [modal]="true"
+          [style]="{ width: '900px', maxWidth: '95vw' }" [dismissableMask]="true" [maximizable]="true">
+  @if (previewVisible && previewForm()) {
+  <form-preview [sectionsWithFields]="previewSections()" [formName]="formName()" [form]="previewForm()!" mode="preview" />
+  }
+</p-dialog>
